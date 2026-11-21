@@ -67,6 +67,28 @@ Todo texto visível ao jogador está em `src/data/textos.json` (com flexão de g
 - **`escalaPersonagens`** (padrão 1): tamanho do herói, moradores e seguidores, dos pés, das interações e da velocidade. Salão 2,5× (porta de 175 px), biblioteca 4× (porta de 310 px).
 - **`destinos`**: `{ "id", "x", "y", "cor": "vermelho", "requer" }` mostra o "!" que pula sobre o ponto e a seta na borda da tela quando ele está fora de vista.
 
+### Füllmun de chão + objetos (Fase 5)
+
+- **Chão limpo** (`assets-src/mapas/chao-fullmun.png`, ampliado para 2400 × 1351 em `assets-fonte/mapas/fullmun.png`) e **objetos como sprites**: `npm run sprites` roda `scripts/build-objetos.mjs`, que recorta as folhas de `assets-src/objetos/fullmun/` por componentes conectados, normaliza a escala pelo mapa antigo e gera o atlas (`public/assets/img/mapas/fullmun-objetos.*`) e a folha de conferência (`tests/screenshots/objetos-recortados.png`).
+- **`src/data/objetos.json`**: por tipo de objeto, o `pe` (retângulo da base que bloqueia, relativo ao centro da base), a `linhaY` (profundidade), `copa` (árvore: fica a 60% quando alguém passa atrás) e as `animacao` (fumaça, fogo, lanterna, varal, balanço). Os valores iniciais são automáticos; os já editados não mudam ao rodar o script de novo.
+- **`src/data/mapas/fullmun.json`**: `objetos` (`{ id, x, y, espelhar?, pe?, linhaY? }`), `colisoesExtras`, `itens`, `gatilhos`, `npcs`, `retornos`, `destinos`. O jogo monta as colisões a partir dos pés (`src/exploracao/montagem.ts`). Objetos e personagens são ordenados juntos pela linha de profundidade (y-sort).
+- **Saves antigos** em Füllmun têm a posição convertida para o mapa novo (2400/1672).
+- **Prévia sem abrir o jogo:** `node scripts/ver-cenario.mjs saida.png fullmun [--fantasma] [--sem-marcas]`.
+
+### Editor de mapa (`?editor=1`)
+
+Abra o jogo com `?editor=1` (ex.: `https://game.icarusrpg.com.br/aforjadoheroi/?editor=1`), continue um jogo que esteja em Füllmun e use o painel à direita:
+1. **Toque num objeto** (ou morador, item, gatilho) e **arraste**. Os campos mostram x, y, o pé (x0, y0, x1, y1, relativos à base) e a linhaY; mude os números para ajustar o pé e a profundidade.
+2. **Espelhar, Duplicar, Apagar**; **Adicionar no centro** cria um objeto do tipo escolhido no meio da tela.
+3. **Mapa antigo (fantasma)** mostra o mapa antigo por cima, semitransparente, para alinhar.
+4. **Exportar JSON** baixa o `fullmun.json` atualizado (ou **Copiar** para a área de transferência). Nada é salvo no servidor: mande o arquivo para aplicar no projeto.
+
+### Dado, celular deitado e tela cheia (Fase 5)
+
+- **Dado** (`src/data/dados.json`, imagens em `public/assets/img/dados/`, geradas por `scripts/build-dados.mjs` com a face central limpa): escolhido na revisão da criação e em Opções (padrão azul), guardado em `fdg.opcoes.dado`. O resultado é sorteado antes; a animação só encena (`src/narrativa/dado.ts`). **Animações reduzidas** (Opções; segue o `prefers-reduced-motion` por padrão) mostra só um fade e desliga as animações do mapa e os tremores.
+- **Celular deitado:** `src/styles/paisagem.css` (`@media (orientation: landscape) and (max-height: 500px)`). Os testes rodam em cinco viewports: três em pé e 844 × 390 e 915 × 412 deitados.
+- **Tela cheia:** botão no menu inicial, na pausa e em Opções (Fullscreen API; "Travar na horizontal" em mapas e batalhas). No iPhone, a dica "Adicionar à Tela de Início". `public/manifest.webmanifest` + ícones em `public/icons/` (`scripts/build-icones.mjs`). Sem service worker.
+
 ### Carregamento por etapa
 
 `src/core/etapas.ts` monta o manifesto de cada etapa (intro, sonho, Capítulo 01, Capítulo 02) a partir dos dados. Ao começar uma etapa, o que falta é baixado com a tela de carregamento; a próxima vem em segundo plano, com prioridade baixa. Imagens HTML só trocam depois de `decode()`; o mapa só aparece (com joystick e HUD) com o Phaser pronto.

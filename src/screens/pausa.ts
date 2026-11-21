@@ -1,3 +1,4 @@
+import { botaoTelaCheia } from '../core/telaCheia';
 import { ASSETS, src } from '../core/assets';
 import { audio } from '../core/audio';
 import { getEstado } from '../core/estado';
@@ -65,6 +66,7 @@ export function abrirMenuPausa(o: {
     botao(textos.cenas.diario.titulo, () => abrirDiario()),
     o.ajuda ? botao(o.ajuda.rotulo, () => { fechar(); o.ajuda!.abrir(); }, { classe: 'btn-ajuda-fullmun' }) : null,
     botao(textos.sonho.opcoes, () => abrirOpcoes()),
+    botaoTelaCheia('btn btn-tela-cheia-pausa', true),
     o.destravar ? botao(textos.mapa.destravar, () => o.destravar!(), { classe: 'btn-destravar', som: 'ui-back' }) : null,
     botao(textos.sonho.voltarMenu, () => { fechar(); void irPara('menu'); }, { som: 'ui-back' }),
   );

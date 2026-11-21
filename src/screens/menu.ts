@@ -1,6 +1,7 @@
+import { botaoTelaCheia, dicaIphone } from '../core/telaCheia';
 import { ASSETS, src } from '../core/assets';
 import { audio } from '../core/audio';
-import { carregarSlot, getEstado, temSave } from '../core/estado';
+import { atualizarConfig, carregarSlot, getEstado, temSave } from '../core/estado';
 import { lerSlot, maisRecente, temAlgumSave, type IdSlot } from '../core/saves';
 import { irPara, type Tela } from '../core/telas';
 import { ehToque, fmt, textos } from '../core/textos';
@@ -14,6 +15,18 @@ import { tutorialRespondido } from '../core/tutorial';
 import { perguntarTutorial } from './tutorial';
 
 /** Retoma o jogo que está em memória (recém-carregado de um slot) no ponto em que foi salvo. */
+/** A dica do iPhone aparece no menu inicial uma única vez (depois, só em Opções). */
+function dicaIphoneUmaVez(): HTMLElement | null {
+  if (getEstado().config.dicaIphoneVista) return null;
+  const d = dicaIphone('menu-dica-iphone');
+  if (!d) return null;
+  atualizarConfig({ dicaIphoneVista: true });
+  const fechar = h('button', { type: 'button', class: 'menu-dica-fechar', 'aria-label': 'Fechar a dica' }, '×');
+  fechar.addEventListener('click', () => d.remove());
+  d.append(fechar);
+  return d;
+}
+
 export function retomarJogo(): void {
   const p = getEstado().personagem;
   // Heróis salvos antes da escolha de classe retomam a criação no passo Classe.
@@ -87,6 +100,10 @@ export function telaMenu(): Tela {
       botoes,
     ),
     h('div', { class: 'menu-versao' }, t.versao),
+    // Fase 5: tela cheia (Android e desktop); no iPhone, a dica de "Adicionar à Tela de Início" (uma vez só),
+    // no topo, sobre o logo: nunca por cima de um botão.
+    botaoTelaCheia('menu-tela-cheia'),
+    dicaIphoneUmaVez(),
   );
 
   return {
