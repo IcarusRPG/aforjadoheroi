@@ -44,7 +44,7 @@ export const SFX_SONHO = [
 ] as const;
 /** Efeitos do Capítulo 01 (cenas e batalha): carregados ao entrar no capítulo. */
 export const SFX_CAPITULO = [
-  'text-blip', 'dice-roll', 'grito-crianca', 'kick', 'miss', 'crit', 'pig-squeal', 'pig-charge', 'fall', 'tremor',
+  'text-blip', 'dice-roll', 'dado-toc', 'grito-crianca', 'kick', 'miss', 'crit', 'pig-squeal', 'pig-charge', 'fall', 'tremor',
 ] as const;
 /** Efeitos da Fase 4 (Füllmun, templo, tragédia). */
 export const SFX_FASE4 = [

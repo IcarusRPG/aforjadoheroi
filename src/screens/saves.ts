@@ -71,7 +71,9 @@ export function cardSave(info: InfoSlot, acoes: Node[] = [], aviso?: string): HT
   } else {
     const m = info.meta;
     card.append(
-      h('img', { class: 'save-busto', src: src(ASSETS.bustoHeroi(m.raca, m.genero)), alt: '', draggable: 'false' }),
+      h('div', { class: 'save-retratos' },
+        h('img', { class: 'save-busto', src: src(ASSETS.bustoHeroi(m.raca, m.genero)), alt: '', draggable: 'false' }),
+        h('img', { class: 'save-dado', src: src(`img/dados/${m.dado ?? 'azul'}-128.webp`), alt: '', 'data-dado': m.dado ?? 'azul', draggable: 'false' })),
       h('div', { class: 'save-info' },
         selo(info.slot),
         h('p', { class: 'save-nome' }, m.nomeHeroi),

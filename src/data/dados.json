@@ -1,0 +1,15 @@
+{
+  "padrao": "azul",
+  "dados": [
+    {
+      "id": "azul",
+      "nome": "Dado azul",
+      "imagem": "img/dados/azul"
+    },
+    {
+      "id": "vermelho",
+      "nome": "Dado vermelho",
+      "imagem": "img/dados/vermelho"
+    }
+  ]
+}

@@ -72,7 +72,17 @@
     "dicas": "Dicas de tutorial",
     "reverDicas": "Rever todas as dicas",
     "dicasZeradas": "Pronto: as dicas vão aparecer de novo.",
-    "versao": "versão {v}"
+    "versao": "versão {v}",
+    "dado": "Dado",
+    "animacoesReduzidas": "Animações reduzidas",
+    "animacoesDica": "O dado aparece sem girar e o mapa fica sem fumaça, fogo, lanternas e tremores.",
+    "telaCheia": "Tela cheia",
+    "travarHorizontal": "Travar na horizontal (em tela cheia, nos mapas e batalhas)"
+  },
+  "telaCheia": {
+    "entrar": "Tela cheia",
+    "sair": "Sair da tela cheia",
+    "dicaIphone": "Para jogar em tela cheia no iPhone: toque em Compartilhar → Adicionar à Tela de Início."
   },
   "creditos": {
     "titulo": "Créditos",
@@ -138,7 +148,8 @@
     "revisao": {
       "titulo": "{Seu} {heroi} está {pronto}",
       "confirmar": "Confirmar {heroi}",
-      "reliquia": "Relíquia"
+      "reliquia": "Relíquia",
+      "seuDado": "Seu dado"
     },
     "resumo": {
       "genero": "Gênero",

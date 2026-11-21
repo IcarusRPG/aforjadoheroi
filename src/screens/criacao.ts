@@ -1,3 +1,5 @@
+import { modoTeste, registrarGanchos } from '../core/ganchos';
+import { escolhaDoDado } from './escolhaDado';
 import { ASSETS, src, type Genero } from '../core/assets';
 import { audio } from '../core/audio';
 import { dica } from '../core/tutorial';
@@ -596,6 +598,8 @@ export function telaCriacao(params?: unknown): Tela {
         h('div', { class: 'revisao-atributos' },
           ...ATRIBUTOS.map((a) => h('div', { class: `atributo-grande ${finais[a] > 0 ? 'pos' : finais[a] < 0 ? 'neg' : ''}` },
             h('span', { class: 'ag-sigla' }, a), h('span', { class: 'ag-valor' }, sinal(finais[a])), h('span', { class: 'ag-nome' }, textos.atributos[a])))),
+        // Fase 5: "Seu dado" (vale para todas as aventuras; dá para trocar em Opções).
+        h('div', { class: 'revisao-dado' }, h('h4', { class: 'revisao-dado-titulo' }, T.revisao.seuDado), escolhaDoDado()),
       ),
     );
   }
@@ -610,6 +614,14 @@ export function telaCriacao(params?: unknown): Tela {
   return {
     el,
     aoEntrar() {
+      // Só nos testes: pula para a revisão com um herói pronto (a escolha do dado fica lá).
+      if (modoTeste()) registrarGanchos({
+        irParaRevisao: () => {
+          Object.assign(r, { genero: 'm', raca: 'ayoran', origem: 'campones', classe: 'arcanista', nome: 'Thaelion' });
+          passo = ULTIMO;
+          renderizar(true);
+        },
+      });
       // A mesma faixa do menu: se já estiver tocando, continua sem reiniciar.
       audio.tocarMusica(ASSETS.musicaMenu, 2000);
       void dica('criacao');

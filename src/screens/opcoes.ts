@@ -1,5 +1,7 @@
 import { audio } from '../core/audio';
-import { atualizarConfig, getEstado, tremoresLigados, type Config } from '../core/estado';
+import { animacoesReduzidas, atualizarConfig, getEstado, tremoresLigados, type Config } from '../core/estado';
+import { botaoTelaCheia, dicaIphone, suportaTelaCheia } from '../core/telaCheia';
+import { escolhaDoDado } from './escolhaDado';
 import { textos } from '../core/textos';
 import { abrirModal, botao, h } from '../core/ui';
 import { VERSAO_JOGO } from '../core/erros';
@@ -46,6 +48,20 @@ export function abrirOpcoes(): void {
     definirTutorial(dicas.checked);
     audio.sfx('ui-click');
   });
+  // Fase 5: animações reduzidas (dado sem giro, mapa sem animações, sem tremores).
+  const reduzidas = h('input', { id: 'opcao-animacoes', type: 'checkbox', class: 'interruptor', checked: animacoesReduzidas() });
+  reduzidas.addEventListener('change', () => {
+    atualizarConfig({ animacoesReduzidas: reduzidas.checked });
+    (tremores as HTMLInputElement).checked = tremoresLigados();
+    window.dispatchEvent(new CustomEvent('fdg:animacoes'));
+    audio.sfx('ui-click');
+  });
+  const travar = h('input', { id: 'opcao-travar', type: 'checkbox', class: 'interruptor', checked: !!getEstado().config.travarHorizontal });
+  travar.addEventListener('change', () => { atualizarConfig({ travarHorizontal: travar.checked }); audio.sfx('ui-click'); });
+  const telaCheia = suportaTelaCheia()
+    ? h('div', { class: 'opcao opcao-tela-cheia' }, h('p', { class: 'opcao-rotulo' }, t.telaCheia), botaoTelaCheia('btn btn-discreto', true),
+      h('div', { class: 'opcao-linha' }, h('label', { for: 'opcao-travar' }, t.travarHorizontal), travar))
+    : null;
   const aviso = h('p', { class: 'opcao-aviso', role: 'status' });
   const rever = botao(t.reverDicas, () => {
     zerarDicas();
@@ -56,6 +72,11 @@ export function abrirOpcoes(): void {
     controleVolume(t.efeitos, 'efeitos', testarEfeito),
     h('div', { class: 'opcao opcao-linha' }, h('label', { for: 'opcao-mudo' }, t.mudo), mudo),
     h('div', { class: 'opcao opcao-linha' }, h('label', { for: 'opcao-tremores' }, t.tremores), tremores),
+    h('div', { class: 'opcao opcao-linha' }, h('label', { for: 'opcao-animacoes' }, t.animacoesReduzidas), reduzidas),
+    h('p', { class: 'opcao-nota' }, t.animacoesDica),
+    h('div', { class: 'opcao opcao-dado' }, h('p', { class: 'opcao-rotulo' }, t.dado), escolhaDoDado()),
+    telaCheia,
+    dicaIphone('opcao-dica-iphone'),
     h('div', { class: 'opcao opcao-linha' }, h('label', { for: 'opcao-dicas' }, t.dicas), dicas),
     h('div', { class: 'opcao' }, rever, aviso),
     h('p', { class: 'opcoes-versao' }, t.versao.replace('{v}', VERSAO_JOGO)),

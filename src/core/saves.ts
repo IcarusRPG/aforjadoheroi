@@ -34,6 +34,8 @@ export interface MetaSave {
   salvoEm: string;
   tipo: 'auto' | 'manual';
   versaoSave: number;
+  /** Dado escolhido quando o jogo foi salvo (aparece no card). */
+  dado?: string;
 }
 
 /** O retrato do jogo guardado no save (o formato interno é do estado do jogo). */

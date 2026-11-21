@@ -413,6 +413,13 @@ const efeitos = {
     tom(b, { inicio: 0.44, freq: 880, freqFim: 1320, dur: 0.16, amp: 0.12, ataque: 0.02, decai: 0.1, parciais: [[1, 1], [2, 0.3]] });
     return normalizar(b, 0.6);
   },
+  // Fase 5: "toc" curto do dado quicando na mesa (madeira, sem cauda)
+  'dado-toc': () => {
+    const b = buffer(0.12);
+    ruido(b, { dur: 0.04, amp: 0.6, ataque: 0.001, decai: 0.01, corte: 4200, passaAlta: 600 });
+    tom(b, { freq: 1500, freqFim: 1150, dur: 0.06, amp: 0.3, ataque: 0.001, decai: 0.014, forma: 'tri' });
+    return normalizar(b, 0.6);
+  },
 };
 
 await mkdir(OUT, { recursive: true });

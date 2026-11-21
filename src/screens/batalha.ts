@@ -12,6 +12,7 @@ import { botao, esperar, h } from '../core/ui';
 import { carregarFolha, SpriteBatalha } from '../batalha/sprite';
 import { INIMIGOS, batalhaPorId, type AtaqueDados, type DadosBatalha, type DadosInimigo } from '../batalha/inimigos';
 import { avaliar, mostrarRolagem } from '../narrativa/rolagem';
+import { criarDado } from '../narrativa/dado';
 import { abrirMenuPausa } from './pausa';
 import { dica as dicaTutorial } from '../core/tutorial';
 
@@ -179,6 +180,25 @@ export function telaBatalha(params?: unknown): Tela {
     setTimeout(() => n.remove(), 1400);
   }
 
+  /**
+   * O d20 animado sobre quem rola (Fase 5): o dado do jogador; o do adversário em cinza. Versão curta,
+   * sem esperar toque (um toque na arena pula a animação). Some sozinho logo depois.
+   */
+  async function dadoNaArena(valor: number, quem: SpriteBatalha, cinza = false) {
+    if (saiu) return;
+    const d = criarDado({ tamanho: 78, cinza, classe: 'batalha-dado' });
+    const r = quem.el.getBoundingClientRect();
+    const a = arena.getBoundingClientRect();
+    d.el.style.left = `${r.left - a.left + r.width / 2}px`;
+    d.el.style.top = `${Math.max(46, r.top - a.top + r.height * 0.05)}px`;
+    efeitos.append(d.el);
+    const pular = () => d.pular();
+    arena.addEventListener('pointerdown', pular);
+    await d.rolar(valor, { curto: true });
+    arena.removeEventListener('pointerdown', pular);
+    window.setTimeout(() => { d.el.classList.add('saindo'); window.setTimeout(() => d.el.remove(), 300); }, 650);
+  }
+
   /** Ícone que espatifa sobre o alvo (abóbora quebrada). */
   function iconeQuebrando(alvo: SpriteBatalha, icone: string) {
     const r = alvo.el.getBoundingClientRect();
@@ -209,11 +229,15 @@ export function telaBatalha(params?: unknown): Tela {
     const bH = bonusPericia(p, 'iniciativa').total;
     rolagens.push({ id: 'heroi', nome: p.nome, valor: dH + bH, bonus: bH });
     registrar(fmt(T.logIniciativa, p.genero, { nome: p.nome, d: dH, b: sinal(bH), t: dH + bH }));
+    const dados: Promise<void>[] = [dadoNaArena(dH, heroi)];
     for (const i of inimigos) {
       const d = rolarD20();
       rolagens.push({ id: i.uid, nome: i.nome, valor: d + i.dados.iniciativa, bonus: i.dados.iniciativa });
       registrar(fmt(T.logIniciativa, p.genero, { nome: i.nome, d, b: sinal(i.dados.iniciativa), t: d + i.dados.iniciativa }));
+      dados.push(dadoNaArena(d, i.sprite, true));
     }
+    // Os dados de todos rolam juntos.
+    await Promise.all(dados);
     // Empate: maior bônus age antes; persistindo, o herói.
     ordem = rolagens.sort((a, b) => b.valor - a.valor || b.bonus - a.bonus || (a.id === 'heroi' ? -1 : b.id === 'heroi' ? 1 : 0))
       .map(({ id, nome, valor }) => ({ id, nome, valor }));
@@ -371,6 +395,7 @@ export function telaBatalha(params?: unknown): Tela {
     const acerto = d !== 1 && (d === 20 || r.total >= defAlvo);
     const critico = d === 20;
     msg(prefixo || fmt(T.bicuda, p.genero, { nome: p.nome }));
+    await dadoNaArena(d, heroi);
     let dano = 0;
     let rolagemDano = '';
     if (acerto) {
@@ -452,14 +477,24 @@ export function telaBatalha(params?: unknown): Tela {
 
   /** As duas rolagens lado a lado (teste oposto). */
   async function mostrarOposto(dH: number, tH: number, dA: number, tA: number, nomeAlvo: string, venceu: boolean, veredito: string) {
+    // Os dois dados do teste oposto: o do jogador e o do adversário (em cinza).
+    const dadoH = criarDado({ tamanho: 72, classe: 'oposta-dado' });
+    const dadoA = criarDado({ tamanho: 72, cinza: true, classe: 'oposta-dado' });
+    const totalH = h('p', { class: 'oposta-total', hidden: true }, `= ${tH}`);
+    const totalA = h('p', { class: 'oposta-total', hidden: true }, `= ${tA}`);
+    const vered = h('p', { class: 'oposta-veredito', hidden: true }, veredito);
     const caixa = h('div', { class: `rolagem-oposta ${venceu ? 'sucesso' : 'falha'}`, role: 'status' },
-      h('div', { class: 'oposta-lado' }, h('p', { class: 'oposta-quem' }, p.nome), h('p', { class: 'oposta-d20' }, String(dH)), h('p', { class: 'oposta-total' }, `= ${tH}`)),
+      h('div', { class: 'oposta-lado' }, h('p', { class: 'oposta-quem' }, p.nome), dadoH.el, h('p', { class: 'oposta-d20', hidden: true }, String(dH)), totalH),
       h('p', { class: 'oposta-x' }, '×'),
-      h('div', { class: 'oposta-lado' }, h('p', { class: 'oposta-quem' }, nomeAlvo), h('p', { class: 'oposta-d20' }, String(dA)), h('p', { class: 'oposta-total' }, `= ${tA}`)),
-      h('p', { class: 'oposta-veredito' }, veredito));
+      h('div', { class: 'oposta-lado' }, h('p', { class: 'oposta-quem' }, nomeAlvo), dadoA.el, h('p', { class: 'oposta-d20', hidden: true }, String(dA)), totalA),
+      vered);
     arena.append(caixa);
-    audio.sfx('dice-roll', { ganho: 0.6 });
-    await esperar(1900);
+    const pular = () => { dadoH.pular(); dadoA.pular(); };
+    caixa.addEventListener('pointerdown', pular);
+    await Promise.all([dadoH.rolar(dH, { curto: true }), dadoA.rolar(dA, { curto: true, silencioso: true })]);
+    caixa.removeEventListener('pointerdown', pular);
+    totalH.hidden = totalA.hidden = vered.hidden = false;
+    await esperar(1500);
     caixa.remove();
   }
 
@@ -565,6 +600,7 @@ export function telaBatalha(params?: unknown): Tela {
     }
     msg(comNome(atq.mensagem, i));
     const d = rolarD20();
+    await dadoNaArena(d, i.sprite, true);
     const total = d + (atq.bonus ?? 0);
     const acerto = d !== 1 && (d === 20 || total >= defesa);
     const critico = d === 20;
@@ -593,6 +629,7 @@ export function telaBatalha(params?: unknown): Tela {
     if (acerto && atq.derruba) {
       const b = bonusPericia(p, atq.derruba.pericia as IdPericia);
       const dF = rolarD20();
+      await dadoNaArena(dF, heroi);
       const r = avaliar(dF, b.partes, atq.derruba.cd);
       registrar(`${T.fortitude}: ${r.conta} · CD ${atq.derruba.cd} · ${r.sucesso ? T.sucesso : T.falha}`);
       if (!r.sucesso) {
