@@ -73,6 +73,21 @@ for (const grupo of ['Alfars', 'Baldurs']) {
     console.log(`  ${grupo}/${arq} → panteao/${id}.webp`);
   }
 }
+// Conferência: as 20 imagens com o id embaixo (tests/screenshots/panteao-conferencia.png).
+const CEL = 210, ROT = 26, COLS = 5;
+const camadas = [];
+for (const [i, id] of ESPERADOS.filter((x) => feitos.includes(x)).entries()) {
+  const img = await sharp(path.join(DESTINO, `${id}.webp`)).resize({ width: CEL - 16, height: CEL - 16, fit: 'inside' }).png().toBuffer();
+  const meta = await sharp(img).metadata();
+  const cx = (i % COLS) * CEL, cy = Math.floor(i / COLS) * (CEL + ROT);
+  camadas.push({ input: img, left: cx + Math.round((CEL - meta.width) / 2), top: cy + CEL - meta.height - 4 });
+  camadas.push({ input: Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${CEL}" height="${ROT}"><text x="${CEL / 2}" y="18" font-size="16" font-family="Arial" text-anchor="middle" fill="#fff">${id}</text></svg>`), left: cx, top: cy + CEL });
+}
+const CONF = path.join(ROOT, 'tests', 'screenshots', 'panteao-conferencia.png');
+mkdirSync(path.dirname(CONF), { recursive: true });
+await sharp({ create: { width: COLS * CEL, height: Math.ceil(feitos.length / COLS) * (CEL + ROT), channels: 4, background: '#3a2a1a' } }).composite(camadas).png().toFile(CONF);
+console.log('Conferência:', path.relative(ROOT, CONF));
+
 const faltam = ESPERADOS.filter((id) => !feitos.includes(id));
 const sobram = feitos.filter((id) => !ESPERADOS.includes(id));
 if (faltam.length) console.warn(`Faltam: ${faltam.join(', ')}`);
