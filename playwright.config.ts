@@ -25,6 +25,9 @@ export default defineConfig({
       name: 'paisagem-844x390',
       use: { ...devices['Pixel 7'], viewport: { width: 844, height: 390 }, screen: { width: 844, height: 390 } },
     },
+    // Fase 5: o celular deitado maior (Pixel 7 na horizontal) e um Android pequeno em pé.
+    { name: 'paisagem-915x412', use: { ...devices['Pixel 7 landscape'], viewport: { width: 915, height: 412 }, screen: { width: 915, height: 412 } } },
+    { name: 'galaxy-s5-360x640', use: { ...devices['Galaxy S5'] } },
   ],
   webServer: EXTERNO ? undefined : {
     command: `npm run build && npx vite preview --port ${PORTA} --strictPort`,

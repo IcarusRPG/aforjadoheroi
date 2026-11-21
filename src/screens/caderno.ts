@@ -137,7 +137,8 @@ export function abrirCaderno(o: { aba?: AbaCaderno; pagina?: string } = {}): Pro
       h('div', { class: 'caderno-base' }, anterior, indicador, proxima));
     const fundo = h('div', { class: 'caderno-fundo' }, livro);
 
-    const porVez = () => (window.innerWidth >= LARGURA_DUAS_PAGINAS ? 2 : 1);
+    // Duas páginas no desktop e no celular deitado; uma (com deslize) no celular em pé.
+    const porVez = () => (window.innerWidth >= LARGURA_DUAS_PAGINAS || matchMedia('(orientation: landscape) and (max-height: 500px)').matches ? 2 : 1);
 
     function montarFolhas() {
       const l = liberados();

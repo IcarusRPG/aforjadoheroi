@@ -15,6 +15,8 @@ import './styles/saves.css';
 import './styles/fase4d.css';
 import './styles/fase4f.css';
 import './styles/caderno.css';
+import './styles/fase5.css';
+import './styles/paisagem.css';
 
 import { instalarProtecoes } from './core/carregar';
 import { definirConstrutorLocal, iniciarEstado } from './core/estado';
