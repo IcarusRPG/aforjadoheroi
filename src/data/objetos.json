@@ -1,0 +1,472 @@
+{
+ "casa-heroi": {
+  "largura": 366,
+  "altura": 332,
+  "pe": [-148, -100, 138, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "fumaca",
+    "x": -0.26,
+    "y": -0.95
+   },
+   {
+    "tipo": "lanterna",
+    "x": 0.43,
+    "y": -0.4,
+    "raio": 26
+   }
+  ]
+ },
+ "casa-hulda": {
+  "largura": 357,
+  "altura": 368,
+  "pe": [-135, -110, 136, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "fumaca",
+    "x": -0.23,
+    "y": -0.8
+   },
+   {
+    "tipo": "lanterna",
+    "x": 0.12,
+    "y": -0.3,
+    "raio": 26
+   }
+  ]
+ },
+ "casa-aylin": {
+  "largura": 240,
+  "altura": 219,
+  "pe": [-96, -66, 100, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "fumaca",
+    "x": -0.17,
+    "y": -0.96
+   },
+   {
+    "tipo": "lanterna",
+    "x": 0.33,
+    "y": -0.52,
+    "raio": 26
+   }
+  ]
+ },
+ "casa-simples": {
+  "largura": 352,
+  "altura": 326,
+  "pe": [-126, -98, 117, 0],
+  "linhaY": 0
+ },
+ "padaria": {
+  "largura": 498,
+  "altura": 456,
+  "pe": [-206, -137, 213, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "fumaca",
+    "x": 0.18,
+    "y": -0.82
+   },
+   {
+    "tipo": "fogo",
+    "x": 0.32,
+    "y": -0.3,
+    "raio": 46
+   },
+   {
+    "tipo": "lanterna",
+    "x": 0.05,
+    "y": -0.4,
+    "raio": 26
+   }
+  ]
+ },
+ "forja": {
+  "largura": 522,
+  "altura": 459,
+  "pe": [-225, -139, 224, -1],
+  "linhaY": -1,
+  "animacao": [
+   {
+    "tipo": "fumaca",
+    "x": -0.23,
+    "y": -0.82
+   },
+   {
+    "tipo": "fogo",
+    "x": 0,
+    "y": -0.36,
+    "raio": 60
+   },
+   {
+    "tipo": "lanterna",
+    "x": 0.45,
+    "y": -0.38,
+    "raio": 26
+   }
+  ]
+ },
+ "curandeira": {
+  "largura": 488,
+  "altura": 427,
+  "pe": [-198, -128, 196, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "fumaca",
+    "x": -0.26,
+    "y": -0.95
+   }
+  ]
+ },
+ "galpao-chiqueiro": {
+  "largura": 190,
+  "altura": 140,
+  "pe": [-82, -42, 80, 0],
+  "linhaY": 0
+ },
+ "barraca-vermelha": {
+  "largura": 181,
+  "altura": 155,
+  "pe": [-74, -53, 67, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "lanterna",
+    "x": 0.4,
+    "y": -0.62,
+    "raio": 20
+   }
+  ]
+ },
+ "barraca-azul": {
+  "largura": 185,
+  "altura": 157,
+  "pe": [-75, -53, 73, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "lanterna",
+    "x": 0.4,
+    "y": -0.62,
+    "raio": 20
+   }
+  ]
+ },
+ "barraca-roxa": {
+  "largura": 184,
+  "altura": 157,
+  "pe": [-64, -53, 64, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "lanterna",
+    "x": 0.4,
+    "y": -0.62,
+    "raio": 20
+   }
+  ]
+ },
+ "barraca-bege": {
+  "largura": 189,
+  "altura": 153,
+  "pe": [-68, -52, 68, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "lanterna",
+    "x": 0.4,
+    "y": -0.62,
+    "raio": 20
+   }
+  ]
+ },
+ "carvalho": {
+  "largura": 222,
+  "altura": 213,
+  "pe": [-7, -15, 8, 0],
+  "linhaY": 0,
+  "copa": true,
+  "animacao": [
+   {
+    "tipo": "balanco"
+   }
+  ]
+ },
+ "arvore-media": {
+  "largura": 156,
+  "altura": 170,
+  "pe": [-5, -12, 3, 0],
+  "linhaY": 0,
+  "copa": true,
+  "animacao": [
+   {
+    "tipo": "balanco"
+   }
+  ]
+ },
+ "arvore-rosa": {
+  "largura": 166,
+  "altura": 164,
+  "pe": [-11, -11, -2, 0],
+  "linhaY": 0,
+  "copa": true,
+  "animacao": [
+   {
+    "tipo": "balanco"
+   }
+  ]
+ },
+ "pinheiro": {
+  "largura": 142,
+  "altura": 201,
+  "pe": [-4, -14, 7, 0],
+  "linhaY": 0,
+  "copa": true,
+  "animacao": [
+   {
+    "tipo": "balanco"
+   }
+  ]
+ },
+ "arbusto-grande": {
+  "largura": 151,
+  "altura": 118,
+  "pe": [-52, -38, 52, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "balanco"
+   }
+  ]
+ },
+ "arbusto-flor": {
+  "largura": 115,
+  "altura": 92,
+  "pe": [-41, -29, 43, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "balanco"
+   }
+  ]
+ },
+ "poco": {
+  "largura": 112,
+  "altura": 129,
+  "pe": [-33, -39, 42, 0],
+  "linhaY": 0
+ },
+ "poste-lampiao": {
+  "largura": 61,
+  "altura": 127,
+  "pe": [-20, -10, -13, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "lanterna",
+    "x": 0.25,
+    "y": -0.45,
+    "raio": 26
+   }
+  ]
+ },
+ "pilar-lanterna": {
+  "largura": 62,
+  "altura": 127,
+  "pe": [-8, -10, 8, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "lanterna",
+    "x": 0,
+    "y": -0.88,
+    "raio": 26
+   }
+  ]
+ },
+ "estandarte": {
+  "largura": 61,
+  "altura": 119,
+  "pe": [-19, -10, -13, 0],
+  "linhaY": 0
+ },
+ "banco": {
+  "largura": 115,
+  "altura": 62,
+  "pe": [-45, -19, 34, 0],
+  "linhaY": 0
+ },
+ "barris": {
+  "largura": 100,
+  "altura": 94,
+  "pe": [-24, -28, 40, 0],
+  "linhaY": 0
+ },
+ "caixotes": {
+  "largura": 121,
+  "altura": 114,
+  "pe": [-51, -34, 42, 0],
+  "linhaY": 0
+ },
+ "espantalho": {
+  "largura": 106,
+  "altura": 141,
+  "pe": [-3, -12, 0, -1],
+  "linhaY": -1
+ },
+ "placa": {
+  "largura": 80,
+  "altura": 126,
+  "pe": [-3, -10, 5, 0],
+  "linhaY": 0
+ },
+ "cerca-h": {
+  "largura": 142,
+  "altura": 61,
+  "pe": [-68, -13, 67, 0],
+  "linhaY": 0
+ },
+ "cerca-v": {
+  "largura": 64,
+  "altura": 121,
+  "pe": [-31, -27, -7, 0],
+  "linhaY": 0
+ },
+ "cerca-canto": {
+  "largura": 123,
+  "altura": 79,
+  "pe": [-19, -17, 16, 0],
+  "linhaY": 0
+ },
+ "portao": {
+  "largura": 119,
+  "altura": 93,
+  "pe": [-56, -20, 55, 0],
+  "linhaY": 0
+ },
+ "varal": {
+  "largura": 157,
+  "altura": 107,
+  "pe": [-75, -24, 74, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "varal"
+   }
+  ]
+ },
+ "lenha": {
+  "largura": 123,
+  "altura": 86,
+  "pe": [-11, -26, 39, 0],
+  "linhaY": 0
+ },
+ "canteiro-rosa": {
+  "largura": 136,
+  "altura": 98,
+  "pe": [-53, -59, 51, 0],
+  "linhaY": 0
+ },
+ "canteiro-branco": {
+  "largura": 128,
+  "altura": 70,
+  "pe": [-53, -42, 51, 0],
+  "linhaY": 0
+ },
+ "pedra": {
+  "largura": 96,
+  "altura": 52,
+  "pe": [-37, -16, 33, 0],
+  "linhaY": 0
+ },
+ "abobora-grande": {
+  "largura": 60,
+  "altura": 39,
+  "pe": [-23, -23, 14, 0],
+  "linhaY": 0
+ },
+ "aboboras-pequenas": {
+  "largura": 62,
+  "altura": 38,
+  "pe": [-26, -23, 19, 0],
+  "linhaY": 0
+ },
+ "repolho": {
+  "largura": 44,
+  "altura": 30,
+  "pe": [-17, -18, 15, 0],
+  "linhaY": 0
+ },
+ "verduras": {
+  "largura": 70,
+  "altura": 33,
+  "pe": [-31, -20, 30, 0],
+  "linhaY": 0
+ },
+ "cocho": {
+  "largura": 99,
+  "altura": 58,
+  "pe": [-8, -17, 38, 0],
+  "linhaY": 0
+ },
+ "feno": {
+  "largura": 107,
+  "altura": 67,
+  "pe": [-38, -20, 36, 0],
+  "linhaY": 0
+ },
+ "banco-lago": {
+  "largura": 115,
+  "altura": 72,
+  "pe": [-34, -22, 42, 0],
+  "linhaY": 0
+ },
+ "lanterna-baixa": {
+  "largura": 45,
+  "altura": 83,
+  "pe": [-7, -7, 6, 0],
+  "linhaY": 0,
+  "animacao": [
+   {
+    "tipo": "lanterna",
+    "x": 0,
+    "y": -0.8,
+    "raio": 20
+   }
+  ]
+ },
+ "degraus": {
+  "largura": 100,
+  "altura": 71,
+  "pe": [-46, -43, 31, 0],
+  "linhaY": 0,
+  "semColisao": true
+ },
+ "templo-fachada": {
+  "largura": 281,
+  "altura": 273,
+  "pe": [-102, -97, 103, -1],
+  "linhaY": -1,
+  "animacao": [
+   {
+    "tipo": "fogo",
+    "x": -0.2,
+    "y": -0.38,
+    "raio": 22
+   },
+   {
+    "tipo": "fogo",
+    "x": 0.2,
+    "y": -0.38,
+    "raio": 22
+   }
+  ]
+ }
+}
