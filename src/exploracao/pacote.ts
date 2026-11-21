@@ -8,3 +8,5 @@ export { default as Phaser } from 'phaser';
 export { criarMotor } from './motor';
 export { EfeitosSonho } from './efeitosSonho';
 export { ClimaSonho } from './climaSonho';
+export { abrirEditor } from './editor';
+export { Cenario } from './cenario';

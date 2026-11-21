@@ -4,7 +4,7 @@ Gerado por `node scripts/comprimir-imagens.mjs`.
 
 | Tipo | Arquivo | Tamanho | Antes | Depois | Formato |
 | --- | --- | --- | ---: | ---: | --- |
-| mapa | fullmun | 1672×941 | 4.494 KB | 825 KB | 2 blocos de 1024 px (q90) |
+| mapa | fullmun | 2400×1351 | 8.932 KB | 986 KB | 6 blocos de 1024 px (q90) |
 | mapa | templo-biblioteca | 1536×1024 | 3.734 KB | 401 KB | WebP q90 |
 | mapa | templo-salao | 1430×1100 | 3.387 KB | 343 KB | WebP q90 |
 | fundo de batalha | chiqueiro | 1672×941 | 3.910 KB | 416 KB | WebP q85 |
@@ -37,4 +37,4 @@ Gerado por `node scripts/comprimir-imagens.mjs`.
 | busto | npc-selene |  | 126 KB | 126 KB | já em WebP q85 (sem mudança) |
 | busto | npc-tobias |  | 93 KB | 93 KB | já em WebP q85 (sem mudança) |
 | busto | npc-vo-hulda |  | 109 KB | 109 KB | já em WebP q85 (sem mudança) |
-| **total** | | | **28.399 KB** | **7.456 KB** | |
+| **total** | | | **32.837 KB** | **7.617 KB** | |

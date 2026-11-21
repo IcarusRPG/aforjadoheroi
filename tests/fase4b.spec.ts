@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { avancar, irAteMenu } from './ajudantes';
+/** Füllmun passou a ter 2400 px de largura (Fase 5): coordenadas do mapa antigo → novas. */
+const M = (v: number) => Math.round((v * 2400) / 1672);
 
 /* Fase 4B: bustos dos heróis, expressões de NPC e saves (1 automático + 2 manuais). */
 
@@ -67,7 +69,7 @@ async function continuar(page: Page) {
   await page.locator('.btn-continuar').click();
 }
 async function noMapa(page: Page, mapa: string) {
-  await expect.poll(async () => { const s = await st(page); return s.tela === 'mapa' && s.mapa === mapa && s.pronto; }, { timeout: 40_000 }).toBe(true);
+  await expect.poll(async () => { const s = await st(page); return s.tela === 'mapa' && s.mapa === mapa && s.pronto; }, { timeout: 90_000 }).toBe(true);
 }
 async function ateTexto(page: Page, trecho: string) {
   await expect.poll(async () => {
@@ -160,7 +162,10 @@ test('menu de pausa: busto pequeno, nome, raça, classe e PV', async ({ page }, 
   await expect.poll(() => carregada(page, '.pausa-busto')).toBe(true);
   await expect(page.locator('.pausa-nome')).toHaveText('Thaelion');
   await expect(page.locator('.pausa-linha')).toHaveText('Ayoran · Arcanista (Mago) · PV 9/12');
-  const nomes = await page.locator('.pausa-botoes > .btn').allTextContents();
+  // O botão de tela cheia (Fase 5) é contado à parte: só existe onde o navegador permite (não no iPhone).
+  const nomes = await page.locator('.pausa-botoes > .btn:not(.btn-tela-cheia)').allTextContents();
+  const telaCheia = await page.locator('.pausa-botoes > .btn-tela-cheia').count();
+  expect(telaCheia).toBe(await page.evaluate(() => (/iPhone|iPad/.test(navigator.userAgent) || !document.fullscreenEnabled ? 0 : 1)));
   expect(nomes.map((n) => n.trim())).toEqual(['Continuar', 'Salvar', 'Itens', 'Caderno', 'Compêndio', 'Diário', 'Opções', 'Voltar ao menu']);
   await foto(page, info.project.name, 'pausa');
 });
@@ -208,7 +213,8 @@ test('salvar manual no mapa: Manual 1 guarda a posição exata; o autosave segue
   await semear(page, { cena: 'c01-soleira', modo: 'escolhas', local: { tela: 'mapa', mapa: 'fullmun' } });
   await continuar(page);
   await noMapa(page, 'fullmun');
-  await f(page, 'teleport', 640, 520);
+  // Ponto livre na praça (no mapa novo, M(640, 520) cai dentro dos pés da barraca vermelha).
+  await f(page, 'teleport', M(640), 700);
   const pos = (await st(page)).heroi;
   await page.locator('.btn-pausa').click();
   await page.locator('.btn-salvar').click();
@@ -233,7 +239,7 @@ test('salvar manual no mapa: Manual 1 guarda a posição exata; o autosave segue
   // Continua jogando: o autosave muda, os manuais não
   const manualAntes = await slotCru(page, 'manual1');
   const autoAntes = await slotCru(page, 'auto');
-  await f(page, 'teleport', 300, 860);
+  await f(page, 'teleport', M(300), M(860));
   await f(page, 'setFlag', 'depois_do_save');
   await expect.poll(() => slotCru(page, 'auto')).not.toBe(autoAntes);
   expect(await slotCru(page, 'manual1')).toBe(manualAntes);

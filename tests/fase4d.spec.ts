@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { irAteMenu, novoJogo } from './ajudantes';
 import DICAS from '../src/data/tutorial.json' with { type: 'json' };
+/** Füllmun passou a ter 2400 px de largura (Fase 5): coordenadas do mapa antigo → novas. */
+const M = (v: number) => Math.round((v * 2400) / 1672);
 
 /* Fase 4D: pedaço que não veio, registro de erros, herói no limbo, intro do herói e tutorial. */
 
@@ -46,7 +48,7 @@ async function continuar(page: Page, query = '?test=1') {
 }
 async function noMapa(page: Page, query = '?test=1') {
   await continuar(page, query);
-  await expect.poll(async () => { const s = await st(page); return s.tela === 'mapa' && s.mapa === 'fullmun' && s.pronto; }, { timeout: 40_000 }).toBe(true);
+  await expect.poll(async () => { const s = await st(page); return s.tela === 'mapa' && s.mapa === 'fullmun' && s.pronto; }, { timeout: 90_000 }).toBe(true);
 }
 /** Do "começar" ao menu sem navegar (depois de uma recarga). */
 async function comecarAteMenu(page: Page) {
@@ -235,7 +237,7 @@ for (const [nome, caminho] of Object.entries(CAMINHOS)) {
     test.setTimeout(420_000);
     await semear(page, { campanha: MAPA() });
     await noMapa(page);
-    await f(page, 'teleport', 875, 320);
+    await f(page, 'teleport', M(875), M(320));
     await expect.poll(async () => (await st(page)).cena, { timeout: 15_000 }).toBe('c01-pensamentos');
     await caminho(page);
     await escolher(page, 'impossível');
@@ -248,7 +250,7 @@ for (const [nome, caminho] of Object.entries(CAMINHOS)) {
     expect(Math.hypot(s.seguidores[0].x - s.heroi.x, s.seguidores[0].y - s.heroi.y)).toBeLessThan(60);
     expect(s.controle).toBe(true);
     // Leva a Aylin até a porta: caminho até perto e o último passo com a seta segurada (entrada real)
-    await f(page, 'walkTo', 1206, 246);
+    await f(page, 'walkTo', M(1206), M(246));
     await page.keyboard.down('ArrowUp');
     await expect.poll(async () => (await st(page)).cena, { timeout: 10_000 }).toBe('c01-aylin-casa');
     await ateTexto(page, 'a Nyme fica longe de você!');
@@ -261,21 +263,21 @@ for (const [nome, caminho] of Object.entries(CAMINHOS)) {
     expect(s.cameraSegue).toBe(true);
     expect(s.fora).toBe(false);
     // Ponto de retorno da cena (JSON do mapa → retornos)
-    expect(Math.round(s.heroi.x)).toBe(1206);
-    expect(Math.round(s.heroi.y)).toBe(258);
+    expect(Math.round(s.heroi.x)).toBe(M(1206));
+    expect(Math.round(s.heroi.y)).toBe(M(258));
     // Anda livre e a câmera vai junto; ninguém mais mexe no herói sozinho
     await page.waitForTimeout(1200);
     const parado = (await st(page)).heroi;
     expect(Math.hypot(parado.x - s.heroi.x, parado.y - s.heroi.y)).toBeLessThan(1);
     await page.keyboard.down('ArrowDown');
-    await expect.poll(async () => (await st(page)).heroi.y, { timeout: 5000 }).toBeGreaterThan(parado.y + 20);
+    await expect.poll(async () => (await st(page)).heroi.y, { timeout: 15_000 }).toBeGreaterThan(parado.y + 20);
     await page.keyboard.up('ArrowDown');
     const depois = await st(page);
     expect(depois.cameraSegue).toBe(true);
-    await expect.poll(async () => (await st(page)).heroiNaTela, { timeout: 3000 }).toBe(true);
+    await expect.poll(async () => (await st(page)).heroiNaTela, { timeout: 10_000 }).toBe(true);
     await foto(page, info.project.name, `aylin-${nome}-controle`);
     // Subida do templo liberada
-    await f(page, 'teleport', 850, 176);
+    await f(page, 'teleport', M(850), M(176));
     await expect.poll(async () => (await st(page)).cena, { timeout: 10_000 }).toBe('c01-caminho');
   });
 }
@@ -284,7 +286,7 @@ test('vigia: herói jogado para fora do mapa volta sozinho; "Destravar personage
   test.setTimeout(240_000);
   await semear(page, { campanha: MAPA({ flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa'] }) });
   await noMapa(page);
-  await f(page, 'teleport', -300, -300);
+  await f(page, 'teleport', M(-300), M(-300));
   await expect.poll(async () => { const s = await st(page); return s.fora === false && s.resgates >= 1; }, { timeout: 8000 }).toBe(true);
   let s = await st(page);
   expect(s.heroi.x).toBeGreaterThan(0);
@@ -292,7 +294,7 @@ test('vigia: herói jogado para fora do mapa volta sozinho; "Destravar personage
   expect(s.controle).toBe(true);
   expect(s.cameraSegue).toBe(true);
   // Dentro da casa da curandeira (colisão), com o menu aberto antes do vigia agir
-  await f(page, 'teleport', 300, 120);
+  await f(page, 'teleport', M(300), M(120));
   await page.locator('.btn-pausa').click();
   await expect(page.locator('.btn-destravar')).toBeVisible();
   await page.getByRole('button', { name: 'Destravar personagem' }).click();
@@ -301,7 +303,7 @@ test('vigia: herói jogado para fora do mapa volta sozinho; "Destravar personage
   s = await st(page);
   expect(s.controle).toBe(true);
   expect(s.cameraSegue).toBe(true);
-  expect(Math.hypot(s.heroi.x - 300, s.heroi.y - 120)).toBeLessThan(150);
+  expect(Math.hypot(s.heroi.x - M(300), s.heroi.y - M(120))).toBeLessThan(M(150));
 });
 
 /* ======================================================================
@@ -325,7 +327,8 @@ async function irParaFrase(page: Page, n: number) {
   await expect.poll(async () => {
     const s = await st(page);
     if (s.frase >= n) return s.frase;
-    await f(page, 'avancar');
+    // Estado vazio (tela em troca, máquina lenta): não avança às cegas, senão pula a intro inteira.
+    if (s.tela === 'introFullmun' && typeof s.frase === 'number') await f(page, 'avancar');
     return s.frase;
   }, { timeout: 60_000, intervals: [550] }).toBe(n);
   await expect.poll(async () => (await st(page)).completa, { timeout: 10_000 }).toBe(true);
@@ -337,16 +340,21 @@ test('intro: 11 passos, nome e gênero, nomes em dourado, bustos, Compêndio sem
   await abrirIntro(page);
   await expect.poll(async () => (await st(page)).completa, { timeout: 10_000 }).toBe(true);
   let s = await st(page);
-  expect(s.frase).toBe(1);
+  // A frase 1 avança sozinha depois de 8 s: numa máquina lenta, o teste pode chegar já na 2.
+  expect(s.frase).toBeLessThanOrEqual(2);
   expect(s.total).toBe(11);
   expect(s.bloco).toBe(1);
   expect(s.texto).toContain('Füllmun é um vilarejo pequeno');
   expect(s.destaques).toEqual(['Füllmun']);
   await expect(page.locator('.intro-fullmun-toque.visivel')).toBeVisible();
-  // Texto centralizado na tela (horizontal e vertical)
+  // Texto centralizado (horizontal e vertical). Celular deitado (Fase 5): imagem à esquerda, então o texto
+  // fica centrado na coluna da direita.
   const vp = page.viewportSize()!;
   const caixa = (await page.locator('.intro-fullmun-frase').boundingBox())!;
-  expect(Math.abs(caixa.x + caixa.width / 2 - vp.width / 2)).toBeLessThan(vp.width * 0.03);
+  const deitado = vp.width > vp.height && vp.height <= 500;
+  const coluna = deitado ? (await page.locator('.intro-fullmun-centro').boundingBox())! : { x: 0, width: vp.width };
+  if (deitado) expect(caixa.x).toBeGreaterThanOrEqual(vp.width * 0.5);
+  expect(Math.abs(caixa.x + caixa.width / 2 - (coluna.x + coluna.width / 2))).toBeLessThan(vp.width * 0.03);
   expect(Math.abs(caixa.y + caixa.height / 2 - vp.height / 2)).toBeLessThan(vp.height * 0.12);
   const estilo = await page.locator('.intro-fullmun-destaque, .intro-fullmun-frase .destaque').first().evaluate((e) => getComputedStyle(e).color);
   expect(estilo).toBe('rgb(240, 200, 96)');

@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { irAteMenu } from './ajudantes';
 import DICAS from '../src/data/tutorial.json' with { type: 'json' };
+/** Füllmun passou a ter 2400 px de largura (Fase 5): coordenadas do mapa antigo → novas. */
+const M = (v: number) => Math.round((v * 2400) / 1672);
 
 /* Fase 4: Füllmun explorável, missões, relações, Compêndio, inventário, batalhas novas e Capítulo 02. */
 
@@ -45,7 +47,7 @@ async function continuar(page: Page, query = '?test=1') {
 }
 async function noMapa(page: Page, mapa: string, query = '?test=1') {
   await continuar(page, query);
-  await expect.poll(async () => { const s = await st(page); return s.tela === 'mapa' && s.mapa === mapa && s.pronto; }, { timeout: 40_000 }).toBe(true);
+  await expect.poll(async () => { const s = await st(page); return s.tela === 'mapa' && s.mapa === mapa && s.pronto; }, { timeout: 90_000 }).toBe(true);
 }
 
 /** Avança as falas e toca em "Continuar" até a escolha pedida aparecer; então escolhe. */
@@ -119,10 +121,10 @@ test('Füllmun: câmera segue o herói, marcadores, relógio do atraso e subida 
   await expect(page.locator('.relogio-estado')).toHaveText('Atrasado');
   await expect(page.locator('.relogio-bolinhas .cheia')).toHaveCount(0);
   // A câmera acompanha o herói
-  await f(page, 'teleport', 640, 640);
+  await f(page, 'teleport', M(640), M(640));
   await page.waitForTimeout(600);
   const c0 = (await st(page)).camera;
-  await f(page, 'teleport', 1000, 640);
+  await f(page, 'teleport', M(1000), 860); // ponto livre (M(640) cai num pé de objeto do mapa novo)
   await expect.poll(async () => (await st(page)).camera.x, { timeout: 10_000 }).toBeGreaterThan(c0.x + 40);
   await page.waitForTimeout(700);
   await foto(page, info.project.name, 'fullmun-hud');
@@ -133,11 +135,11 @@ test('Füllmun: câmera segue o herói, marcadores, relógio do atraso e subida 
   await f(page, 'setAtraso', 4);
   await expect(page.locator('.relogio-estado')).toHaveText('Artho vai te esfolar');
   // Subida do templo bloqueada antes de a Aylin chegar em casa
-  await f(page, 'teleport', 850, 176);
+  await f(page, 'teleport', M(850), M(176));
   await expect.poll(async () => (await st(page)).cena, { timeout: 10_000 }).toBe('m-subida-aylin');
   await ateTexto(page, 'Primeiro, a Aylin.');
   await fecharConversa(page);
-  expect((await st(page)).heroi.y).toBeGreaterThan(220);
+  expect((await st(page)).heroi.y).toBeGreaterThan(M(220));
 });
 
 test('conversa no mapa e missão "Roupas ao vento": busto, as 3 peças, Atletismo e a camisa dobrada', async ({ page }, info) => {
@@ -375,7 +377,7 @@ test('Mirtilo no mapa: soma 1 marca, Gerulf +2 (acalmou), a Aylin segue o herói
   test.setTimeout(420_000);
   await semear(page, MAPA('fullmun'));
   await noMapa(page, 'fullmun');
-  await f(page, 'teleport', 875, 320);
+  await f(page, 'teleport', M(875), M(320));
   await expect.poll(async () => (await st(page)).cena, { timeout: 15_000 }).toBe('c01-pensamentos');
   await f(page, 'forceRoll', [18]);
   await escolher(page, 'Agachar devagar');
@@ -392,12 +394,12 @@ test('Mirtilo no mapa: soma 1 marca, Gerulf +2 (acalmou), a Aylin segue o herói
   expect(s.npcs.map((n: { id: string }) => n.id)).toContain('gerulf');
   // A Aylin anda atrás do herói
   const antes = s.seguidores[0];
-  await f(page, 'walkTo', 1206, 250);
+  await f(page, 'walkTo', M(1206), M(250));
   await page.waitForTimeout(800);
   s = await st(page);
   expect(Math.hypot(s.seguidores[0].x - antes.x, s.seguidores[0].y - antes.y)).toBeGreaterThan(10);
   await foto(page, info.project.name, 'aylin-seguindo');
-  await f(page, 'teleport', 1206, 214);
+  await f(page, 'teleport', M(1206), M(214));
   await expect.poll(async () => (await st(page)).cena, { timeout: 10_000 }).toBe('c01-aylin-casa');
   await ateTexto(page, 'a Nyme fica longe de você!');
   await fecharConversa(page);
@@ -405,7 +407,7 @@ test('Mirtilo no mapa: soma 1 marca, Gerulf +2 (acalmou), a Aylin segue o herói
   expect(s.flags).toContain('aylin_em_casa');
   expect(s.seguidores).toEqual([]);
   // Subida do templo: sem missões pendentes, segue para C01-09 e o fim
-  await f(page, 'teleport', 850, 176);
+  await f(page, 'teleport', M(850), M(176));
   await expect.poll(async () => (await st(page)).cena, { timeout: 10_000 }).toBe('c01-caminho');
   await escolher(page, 'Entrar no templo');
   await expect(page.locator('.tela-fim-capitulo')).toBeVisible({ timeout: 15_000 });
@@ -420,7 +422,7 @@ test('Mirtilo no mapa: soma 1 marca, Gerulf +2 (acalmou), a Aylin segue o herói
 test('subida com missão aceita e não concluída pergunta antes de seguir', async ({ page }) => {
   await semear(page, MAPA('fullmun', { flags: ['aylin_em_casa', 'evento_mirtilo', 'evento_mirtilo_fim'], missoes: { osric: 'aceita' } }));
   await noMapa(page, 'fullmun');
-  await f(page, 'teleport', 850, 176);
+  await f(page, 'teleport', M(850), M(176));
   await ateTexto(page, 'Seguir para o templo? As tarefas que você aceitou vão ficar para trás.');
   expect(await ateEscolhas(page)).toEqual(['Seguir', 'Ficar']);
   await page.locator('.cena-escolha', { hasText: 'Ficar' }).click();

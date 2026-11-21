@@ -20,7 +20,7 @@ export type Etapa = 'intro' | 'sonho' | 'cap01' | 'cap02';
 const ORDEM: Etapa[] = ['intro', 'sonho', 'cap01', 'cap02'];
 
 const KB = 1024;
-type MapaJson = { id: string; chao?: { imagem?: string; blocos?: { imagem: string }[] }; imagem?: string; npcs?: { id: string }[]; seguidores?: { id: string }[]; objetos?: { item: string; semIcone?: boolean }[] };
+type MapaJson = { id: string; chao?: { imagem?: string; blocos?: { imagem: string }[] }; imagem?: string; npcs?: { id: string }[]; seguidores?: { id: string }[]; objetos?: { item?: string; semIcone?: boolean }[]; itens?: { item: string; semIcone?: boolean }[]; objetosAtlas?: string };
 const MAPAS = import.meta.glob<MapaJson>('../data/mapas/*.json', { eager: true, import: 'default' });
 const mapaJson = (id: string) => Object.values(MAPAS).find((m) => m.id === id);
 type InimigoJson = { id: string; sprite: string };
@@ -48,7 +48,10 @@ export function itensDoMapa(id: string): ItemPreload[] {
   const blocos = m.chao?.blocos?.map((b) => b.imagem) ?? [m.chao?.imagem ?? m.imagem].filter((x): x is string => !!x);
   for (const b of blocos) itens.push({ caminho: b, estimativa: 450 * KB });
   for (const n of new Set([...(m.npcs ?? []).map((x) => x.id), ...(m.seguidores ?? []).map((x) => x.id)])) itens.push({ caminho: ASSETS.chibi(n), estimativa: 8 * KB });
-  for (const o of new Set((m.objetos ?? []).filter((x) => !x.semIcone).map((x) => x.item))) itens.push({ caminho: ASSETS.item(o), estimativa: 15 * KB });
+  // Itens de interação (no formato novo ficam em `itens`; `objetos` são os sprites do cenário).
+  const deInteracao = m.itens ?? (m.objetos ?? []).filter((x): x is { item: string; semIcone?: boolean } => !!x.item);
+  for (const o of new Set(deInteracao.filter((x) => !x.semIcone).map((x) => x.item))) itens.push({ caminho: ASSETS.item(o), estimativa: 15 * KB });
+  if (m.objetosAtlas) itens.push({ caminho: `${m.objetosAtlas}.webp`, estimativa: 2400 * KB }, { caminho: `${m.objetosAtlas}.json`, estimativa: 4 * KB });
   return itens;
 }
 

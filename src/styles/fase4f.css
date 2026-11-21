@@ -80,3 +80,31 @@ body > .carregando-etapa { position: fixed; }
 .tela-sonho:not(.pronto) > .joystick,
 .tela-sonho:not(.pronto) > .btn-interagir,
 .tela-sonho:not(.pronto) > .btn-pausa { visibility: hidden; }
+
+/* ===================== Fase 5: editor de mapa (?editor=1) ===================== */
+.editor-mapa {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 8;
+  width: min(300px, 46vw);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid rgba(214, 169, 74, 0.6);
+  border-radius: 10px;
+  background: rgba(14, 10, 6, 0.9);
+  color: #f3eee5;
+  font-size: 13px;
+}
+.editor-titulo { margin: 0 0 6px; font-family: var(--fonte-titulo); color: var(--ouro-claro); }
+.editor-sel { margin: 8px 0 4px; color: var(--ouro-claro); }
+.editor-campo { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+.editor-xy, .editor-objeto { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+.editor-objeto[hidden] { display: none; }
+.editor-num { width: 72px; min-height: 32px; background: #241a10; color: #fff; border: 1px solid #6a5030; border-radius: 4px; }
+.editor-botoes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.editor-botoes .btn { min-height: 36px; padding: 0 10px; font-size: 13px; }
+.editor-novo { min-height: 36px; background: #241a10; color: #fff; border: 1px solid #6a5030; }
+.editor-aviso { margin: 6px 0 0; color: #9fe39f; min-height: 1em; }
+.tela-mapa.com-editor .mapa-hud { right: auto; left: max(8px, env(safe-area-inset-left)); }

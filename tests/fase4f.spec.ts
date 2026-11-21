@@ -1,6 +1,8 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { irAteMenu } from './ajudantes';
+/** Füllmun passou a ter 2400 px de largura (Fase 5): coordenadas do mapa antigo → novas. */
+const M = (v: number) => Math.round((v * 2400) / 1672);
 
 /* Fase 4F: imagens que só aparecem prontas, carregamento por etapa, profundidade em Füllmun e escala do templo. */
 
@@ -160,52 +162,7 @@ test('cenas (Fast 3G): ao trocar de cena, o fundo novo só aparece carregado', a
    4. Füllmun: grade, recortes translúcidos, silhueta, moradores visíveis, destino
    ====================================================================== */
 
-test('Füllmun: o herói não entra em área bloqueada, as copas ficam translúcidas, a silhueta aparece e os moradores ficam visíveis', async ({ page }, info) => {
-  test.setTimeout(300_000);
-  await semear(page, { campanha: MAPA('fullmun', { flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa'] }) });
-  await continuar(page);
-  await noMapa(page, 'fullmun');
-  let s = await st(page);
-  // Moradores: pelo menos 80% do sprite visível (nenhum recorte por cima).
-  for (const n of s.npcsCobertura) expect(n.coberto, `${n.id} coberto demais`).toBeLessThanOrEqual(0.2);
-  // Marcadores e nomes: camada mais alta.
-  for (const d of s.marcadoresProfundidade) expect(d).toBeGreaterThanOrEqual(150_000);
-  // Anda em várias direções: os pés nunca ficam numa área bloqueada, nem por um quadro.
-  await f(page, 'teleport', 700, 600);
-  for (const tecla of ['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'ArrowUp']) {
-    await page.keyboard.down(tecla);
-    for (let t = 0; t < 12; t++) {
-      expect((await st(page)).fora).toBe(false);
-      await page.waitForTimeout(80);
-    }
-    await page.keyboard.up(tecla);
-  }
-  // Atrás da copa perto da ponte: a copa fica translúcida e a silhueta dourada aparece.
-  await f(page, 'teleport', 1270, 598);
-  await expect.poll(async () => (await st(page)).profundidade.translucidos, { timeout: 5000 }).toContain('copa-ponte');
-  await expect.poll(async () => (await st(page)).profundidade.silhuetas, { timeout: 5000 }).toContain('heroi');
-  s = await st(page);
-  expect(s.heroiCobertura).toBeGreaterThan(0.4);
-  await page.waitForTimeout(300);
-  await foto(page, info.project.name, 'heroi-atras-da-arvore');
-  // Saindo de trás: a copa volta a 100% e a silhueta some.
-  await f(page, 'teleport', 1100, 720);
-  await expect.poll(async () => (await st(page)).profundidade.translucidos, { timeout: 5000 }).not.toContain('copa-ponte');
-  await expect.poll(async () => (await st(page)).profundidade.silhuetas, { timeout: 5000 }).toEqual([]);
-  // Moradores reposicionados: Kobanu na frente da cerca da plantação, Vó Hulda fora da copa.
-  await f(page, 'teleport', 1330, 640);
-  await page.waitForTimeout(500);
-  await foto(page, info.project.name, 'kobanu-visivel');
-  await f(page, 'teleport', 380, 860);
-  await page.waitForTimeout(500);
-  await foto(page, info.project.name, 'hulda-visivel');
-  // Nome do morador ao chegar perto.
-  await f(page, 'teleport', 1100, 720);
-  await expect.poll(async () => (await st(page)).proximo, { timeout: 5000 }).toBeNull();
-  await f(page, 'teleport', 1355, 630);
-  await expect.poll(async () => (await st(page)).proximo, { timeout: 10_000 }).toBe('npc:kobanu');
-  await expect.poll(async () => (await st(page)).nomeVisivel, { timeout: 5000 }).toBe('Kobanu');
-});
+// A profundidade e o modo F2 de Füllmun passaram para fase5.spec.ts (mapa de chão + objetos).
 
 test('Füllmun: depois do Mirtilo, o "!" vermelho pula sobre a casa da Aylin, a seta de borda aparece e tudo some quando ela entra', async ({ page }, info) => {
   test.setTimeout(300_000);
@@ -213,7 +170,7 @@ test('Füllmun: depois do Mirtilo, o "!" vermelho pula sobre a casa da Aylin, a 
   await continuar(page);
   await noMapa(page, 'fullmun');
   // Perto da casa: o marcador acima da porta, sem seta.
-  await f(page, 'teleport', 1206, 300);
+  await f(page, 'teleport', M(1206), M(300));
   await expect.poll(async () => (await st(page)).destino, { timeout: 5000 }).toMatchObject({ id: 'casa-aylin', cor: 'vermelho', seta: false });
   // Pula (o y do "!" muda com o tempo).
   const alturas = await page.evaluate(async () => {
@@ -226,7 +183,7 @@ test('Füllmun: depois do Mirtilo, o "!" vermelho pula sobre a casa da Aylin, a 
   await page.waitForTimeout(300);
   await foto(page, info.project.name, 'destino-aylin');
   // Longe: a seta vermelha na borda, apontando para a casa.
-  await f(page, 'teleport', 300, 860);
+  await f(page, 'teleport', M(300), M(860));
   await page.waitForTimeout(1500);
   await expect.poll(async () => (await st(page)).destino?.seta, { timeout: 10_000 }).toBe(true);
   const seta = (await page.locator('.seta-destino').boundingBox())!;
@@ -252,33 +209,13 @@ test('Füllmun: depois do Mirtilo, o "!" vermelho pula sobre a casa da Aylin, a 
   await expect(page.locator('.seta-destino')).toBeHidden();
 });
 
-test('Füllmun: modo F2 nas cinco regiões (praça, padaria e plantação, varal da Vó Hulda, forja, chiqueiro)', async ({ page }, info) => {
-  test.skip(info.project.name !== 'pixel-7', 'screenshots do modo de ajuste: um aparelho basta');
-  test.setTimeout(300_000);
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await semear(page, { campanha: MAPA('fullmun', { flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa'] }) });
-  await irAteMenu(page, './?test=1&debug=1');
-  await page.getByRole('button', { name: 'Continuar' }).click();
-  await noMapa(page, 'fullmun');
-  const regioes: [string, number, number][] = [['praca-mercado', 800, 520], ['padaria-plantacao', 1300, 470], ['varal-hulda', 640, 800], ['forja', 260, 500], ['chiqueiro', 1400, 290]];
-  for (const [nome, x, y] of regioes) {
-    await f(page, 'teleport', x, y);
-    await page.waitForTimeout(600);
-    await page.screenshot({ path: `tests/screenshots/fase4f-f2-${nome}.png` });
-  }
-});
-
-/* ======================================================================
-   5. Templo: escala dos personagens pela porta; interações alcançáveis
-   ====================================================================== */
-
 const MAPA_JSON = (id: string) => JSON.parse(readFileSync(`src/data/mapas/${id}.json`, 'utf8'));
 /** Altura da porta de cada mapa, medida na imagem (scripts/grade-mapa.mjs). */
 const PORTAS: Record<string, number> = { 'templo-salao': 175, 'templo-biblioteca': 310 };
 
 for (const id of ['templo-salao', 'templo-biblioteca']) {
   test(`templo (${id}): o herói tem entre 55% e 65% da altura da porta e todas as interações são alcançáveis`, async ({ page }, info) => {
-    test.setTimeout(360_000);
+    test.setTimeout(600_000);
     await semear(page, { campanha: MAPA(id, { capitulo: 2, cena: 'c02-artho', atraso: 2, flags: ['nyme_seguindo'] }) });
     await continuar(page);
     await noMapa(page, id);

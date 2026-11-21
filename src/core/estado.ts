@@ -49,6 +49,17 @@ export interface Config {
   dicasVistas?: string[];
   /** A tela de ajuda de Füllmun já apareceu sozinha uma vez. */
   ajudaFullmunVista?: boolean;
+  /**
+   * Animações reduzidas (Fase 5): o dado aparece com um fade, sem giro; o mapa fica sem fumaça, fogo,
+   * lanternas, varal, copas e água; sem tremores. Sem valor salvo, segue o prefers-reduced-motion.
+   */
+  animacoesReduzidas?: boolean;
+  /** Dado escolhido (src/data/dados.json). Padrão: "azul". */
+  dado?: string;
+  /** Em tela cheia, trava a tela na horizontal nos mapas e batalhas. */
+  travarHorizontal?: boolean;
+  /** A dica "Adicionar à Tela de Início" (iPhone) já apareceu no menu inicial. */
+  dicaIphoneVista?: boolean;
 }
 
 /** Progresso do sonho dos deuses (primeira cena de exploração). */
@@ -110,6 +121,8 @@ export interface LocalJogo {
   x?: number;
   y?: number;
   direcao?: string;
+  /** Versão das coordenadas do mapa salvo (Füllmun 2: o mapa de chão + objetos, 2400 px de largura). */
+  versaoMapa?: number;
 }
 
 /** Quantos parágrafos de cada ficha o jogador já viu, e o que ainda não abriu. */
@@ -176,6 +189,11 @@ function migrar(c: Campanha, versao: number | undefined): Campanha {
     compendio: { ...base.compendio, ...(c.compendio ?? {}) },
     local: c.local ?? base.local,
   };
+  // Fase 5: Füllmun ficou 2400/1672 maior (chão + objetos); a posição salva no mapa antigo acompanha.
+  if (m.local?.mapa === 'fullmun' && m.local.x !== undefined && (m.local.versaoMapa ?? 1) < 2) {
+    const k = 2400 / 1672;
+    m.local = { ...m.local, x: Math.round(m.local.x * k), y: Math.round((m.local.y ?? 0) * k), versaoMapa: 2 };
+  }
   if ((versao ?? 1) < 4) {
     if (m.capitulo >= 2) {
       Object.assign(m, { capitulo: 2, cena: null, modo: 'falas', atraso: 2, inventario: {}, reais: 0, relacoes: { ...RELACOES_INICIAIS }, local: { tela: 'capitulo' } });
@@ -231,6 +249,7 @@ function metaDe(jogo: Pick<EstadoJogo, 'personagem' | 'sonho' | 'campanha' | 'te
     tempoDeJogo: jogo.tempoDeJogo,
     salvoEm: agora().toISOString(),
     tipo,
+    dado: estado.config.dado ?? 'azul',
   };
 }
 
@@ -336,11 +355,20 @@ if (typeof window !== 'undefined') {
   });
 }
 
-/** A câmera pode tremer? (Opções → "Tremores de tela"; o som do tremor toca de qualquer jeito.) */
+const sistemaPedeMenosMovimento = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Animações reduzidas? (Opções; sem valor salvo, o que o sistema pede.) */
+export function animacoesReduzidas(): boolean {
+  const salvo = estado.config.animacoesReduzidas;
+  return typeof salvo === 'boolean' ? salvo : sistemaPedeMenosMovimento();
+}
+
+/** A câmera pode tremer? (Opções → "Tremores de tela"; desligados com animações reduzidas. O som toca de qualquer jeito.) */
 export function tremoresLigados(): boolean {
+  if (animacoesReduzidas()) return false;
   const salvo = estado.config.tremores;
   if (typeof salvo === 'boolean') return salvo;
-  return !(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  return !sistemaPedeMenosMovimento();
 }
 
 export function atualizarConfig(parcial: Partial<Config>): void {

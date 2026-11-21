@@ -8,6 +8,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dentroDoPoligono, escalarPes, pesLivres } from '../src/exploracao/geometria.ts';
+import { montarMapa } from '../src/exploracao/montagem.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PASTA = path.join(ROOT, 'src', 'data', 'mapas');
@@ -46,7 +47,9 @@ function grade(mapa) {
   return { cols, lins, livre, alc, alcancavel };
 }
 
-const mapas = readdirSync(PASTA).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(readFileSync(path.join(PASTA, f), 'utf8')));
+const TIPOS = JSON.parse(readFileSync(path.join(ROOT, 'src', 'data', 'objetos.json'), 'utf8'));
+// Mapas de chão + objetos são montados como no jogo (colisões pelos pés dos objetos).
+const mapas = readdirSync(PASTA).filter((f) => f.endsWith('.json')).map((f) => montarMapa(JSON.parse(readFileSync(path.join(PASTA, f), 'utf8')), TIPOS));
 
 for (const mapa of mapas) {
   test(`${mapa.id}: todo ponto andável é alcançável (nenhum ilhado)`, () => {
@@ -62,6 +65,12 @@ for (const mapa of mapas) {
     const k = mapa.escalaPersonagens ?? 1;
     const alcance = Math.sqrt(k);
     for (const [id, r] of Object.entries(mapa.retornos ?? {})) assert.ok(pesLivres(mapa.colisoes, r.x, r.y), `retorno ${id} bloqueado`);
+    // Saindo de um retorno, o herói consegue dar uns passos na direção em que fica virado (nada colado na porta).
+    const DIR = { baixo: [0, 1], cima: [0, -1], esquerda: [-1, 0], direita: [1, 0] };
+    for (const [id, r] of Object.entries(mapa.retornos ?? {})) {
+      const [dx, dy] = DIR[r.direcao] ?? [0, 1];
+      for (let d = 10; d <= 50; d += 10) assert.ok(pesLivres(mapa.colisoes, r.x + dx * d, r.y + dy * d), `saída do retorno ${id} bloqueada a ${d} px`);
+    }
     for (const [id, p] of Object.entries(mapa.pontos ?? {})) assert.ok(g.alcancavel(p.x, p.y, 40 * k), `ponto ${id} fora de alcance`);
     for (const n of mapa.npcs ?? []) assert.ok(g.alcancavel(n.x, n.y + 8 * k, 58 * alcance - 4), `morador ${n.id} fora de alcance`);
     for (const o of mapa.objetos ?? []) {

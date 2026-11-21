@@ -5,7 +5,7 @@ import { ASSETS, SFX_CAPITULO, SFX_FASE4, SFX_SONHO, existeAsset, src, urlAsset 
 import { audio } from '../core/audio';
 import { ehErroDeModulo, importar, mostrarTelaDeErro } from '../core/carregar';
 import { registrarErro } from '../core/erros';
-import { atualizarCampanha, getEstado, marcarFlag } from '../core/estado';
+import { animacoesReduzidas, atualizarCampanha, getEstado, marcarFlag } from '../core/estado';
 import { estadoProgresso, registrarGanchos } from '../core/ganchos';
 import {
   aoMudarAtraso, contador, definirMissao, nomeAtraso, pvAtual, somarAtraso, somarContador, verificarCompendio,
@@ -22,9 +22,13 @@ import { abrirMenuPausa } from './pausa';
 import { abrirAjudaFullmun } from './tutorial';
 import { definirPausador, dica as dicaTutorial } from '../core/tutorial';
 import { mostrarCarregando } from '../core/carregando';
+import { aplicarTravaHorizontal } from '../core/telaCheia';
 import { verificarCaderno } from '../core/caderno';
 import { etapaDoCapitulo, garantirEtapa, itensDoMapa } from '../core/etapas';
 import NPCS from '../data/npcs.json';
+import OBJETOS from '../data/objetos.json';
+import { montarMapa, type ObjetoMontado, type TipoObjeto } from '../exploracao/montagem';
+const TIPOS_OBJETOS = OBJETOS as unknown as Record<string, TipoObjeto>;
 
 /**
  * Exploração de um mapa da história (Füllmun, salão do templo, biblioteca): o motor do sonho com
@@ -82,16 +86,23 @@ export interface DadosMapaJogo extends DadosMapa {
    * pula sobre o ponto e, quando ele sai da tela, uma seta na borda apontando para ele.
    */
   destinos?: Destino[];
+  /** Mapas de chão + objetos (Fase 5): o atlas dos objetos (sem extensão), o mapa antigo (fantasma do editor). */
+  objetosAtlas?: string;
+  fantasma?: string;
+  colisoesExtras?: DadosMapa['colisoes'];
+  /** Versão das coordenadas (Füllmun 2 = mapa de 2400 px); vai junto da posição salva. */
+  versao?: number;
 }
 export interface Destino { id: string; x: number; y: number; cor?: 'vermelho' | 'dourado'; requer?: Condicao }
 const CORES_DESTINO = { vermelho: '#e0262c', dourado: '#ffd25a' } as const;
 type Regra = { requer?: Condicao; cena?: string; tipo?: string | null };
 const CONV = CONVERSAS as Record<string, { conversas: Regra[]; marcadores?: Regra[] }>;
 const MAPAS = import.meta.glob<DadosMapaJogo>('../data/mapas/*.json', { eager: true, import: 'default' });
-export const mapaPorId = (id: string): DadosMapaJogo => {
+/** O mapa pronto para o jogo (mapas de chão + objetos são montados: colisões pelos pés, itens, gatilhos). */
+export const mapaPorId = (id: string): DadosMapaJogo & { cenario: ObjetoMontado[] } => {
   const m = Object.values(MAPAS).find((x) => x.id === id);
   if (!m) throw new Error(`Mapa desconhecido: ${id}`);
-  return m;
+  return montarMapa(m as unknown as Record<string, unknown>, TIPOS_OBJETOS) as unknown as DadosMapaJogo & { cenario: ObjetoMontado[] };
 };
 
 export interface ParamsMapa { mapa?: string; x?: number; y?: number; cena?: string }
@@ -143,7 +154,7 @@ export function telaMapa(params?: unknown): Tela {
   function salvarPosicao() {
     if (!motor) return;
     const { x, y, direcao } = motor.posicao();
-    atualizarCampanha({ local: { tela: 'mapa', mapa: idMapa, x: Math.round(x), y: Math.round(y), direcao } });
+    atualizarCampanha({ local: { tela: 'mapa', mapa: idMapa, x: Math.round(x), y: Math.round(y), direcao, versaoMapa: base.versao ?? 1 } });
   }
 
   const coletado = (id: string) => getEstado().campanha.coletados.includes(`${idMapa}:${id}`);
@@ -407,9 +418,13 @@ export function telaMapa(params?: unknown): Tela {
     const kx = Math.abs(Math.cos(ang)) > 1e-6 ? (cx - margem) / Math.abs(Math.cos(ang)) : Infinity;
     const ky = Math.abs(Math.sin(ang)) > 1e-6 ? (cy - margem) / Math.abs(Math.sin(ang)) : Infinity;
     const k = Math.min(kx, ky);
-    setaDestino.style.left = `${cx + Math.cos(ang) * k}px`;
-    setaDestino.style.top = `${cy + Math.sin(ang) * k}px`;
-    setaDestino.style.setProperty('--ang', `${(ang * 180) / Math.PI}deg`);
+    const pos = `${Math.round(cx + Math.cos(ang) * k)},${Math.round(cy + Math.sin(ang) * k)},${Math.round((ang * 180) / Math.PI)}`;
+    if (setaDestino.dataset.pos === pos) return;
+    setaDestino.dataset.pos = pos;
+    const [px, py, pa] = pos.split(',');
+    setaDestino.style.left = `${px}px`;
+    setaDestino.style.top = `${py}px`;
+    setaDestino.style.setProperty('--ang', `${pa}deg`);
   }
 
   /* ------------------------------------------------------------ palco (conversas por cima do mapa) */
@@ -699,6 +714,8 @@ export function telaMapa(params?: unknown): Tela {
 
   /** Tela de carregamento do mapa: só sai quando o Phaser já tem o chão e os personagens. */
   let telaCarregando: ReturnType<typeof mostrarCarregando> | null = null;
+  let editor: { estado: () => unknown; exportar: () => string; destruir: () => void } | null = null;
+  const aoMudarAnimacoes = () => motor?.definirAnimacoes(!animacoesReduzidas());
 
   async function montar() {
     telaCarregando = mostrarCarregando(el, textos.loading.mapa);
@@ -709,7 +726,7 @@ export function telaMapa(params?: unknown): Tela {
     const raca = p.raca, genero = p.genero;
     const ids = new Set([...(mapa.npcs ?? []).map((n) => n.id), ...(mapa.seguidores ?? []).map((s) => s.id)]);
     const itens = new Set((mapa.objetos ?? []).filter((o) => !o.semIcone).map((o) => o.item));
-    const [{ criarMotor, Phaser: phaserMod }, temSprite] = await Promise.all([
+    const [{ criarMotor, abrirEditor, Cenario, Phaser: phaserMod }, temSprite] = await Promise.all([
       importar(() => import('../exploracao/pacote')), existeAsset(ASSETS.spriteChibi(raca, genero), 'image'),
     ]);
     if (saiu) return;
@@ -718,9 +735,22 @@ export function telaMapa(params?: unknown): Tela {
     const inicio = prm.x !== undefined
       ? { x: prm.x, y: prm.y ?? 0, direcao: 'cima' as Direcao }
       : salvo.mapa === idMapa && salvo.x !== undefined ? { x: salvo.x, y: salvo.y ?? 0, direcao: (salvo.direcao ?? 'baixo') as Direcao } : undefined;
+    // Objetos do cenário (Füllmun): atlas já em memória pela etapa; animações conforme as Opções.
+    // No editor, cada objeto fica como sprite próprio (sem a textura dos rasteiros).
+    Cenario.semAssar = new URLSearchParams(location.search).has('editor');
+    let cenario: Parameters<typeof criarMotor>[0]['cenario'];
+    if (base.objetosAtlas) {
+      const info = await (await fetch(src(`${base.objetosAtlas}.json`))).json() as { imagem: string; quadros: Record<string, { x: number; y: number; w: number; h: number }> };
+      cenario = {
+        atlasUrl: src(info.imagem), quadros: info.quadros, objetos: base.cenario, animacoes: !animacoesReduzidas(),
+        agua: (base.colisoesExtras ?? []).filter((c) => c.id === 'rio').map((c) => c.pontos),
+      };
+    }
+    if (saiu) return;
     const m = await criarMotor({
       container: el,
       mapa,
+      cenario,
       blocos: blocosDoChao(base).map((b) => ({ ...b, url: src(b.imagem) })),
       heroi: { raca, genero, spriteUrl: temSprite ? urlAsset(ASSETS.spriteChibi(raca, genero)) : null },
       entrada: () => controles.vetor(),
@@ -749,6 +779,21 @@ export function telaMapa(params?: unknown): Tela {
     el.classList.add('pronto');
     telaCarregando?.fechar();
     telaCarregando = null;
+    // Opções → Animações reduzidas: o mapa liga ou desliga as animações na hora.
+    window.addEventListener('fdg:animacoes', aoMudarAnimacoes);
+    aplicarTravaHorizontal(true);
+    // Editor de mapa: em desenvolvimento ou com ?editor=1 (nada é salvo no servidor).
+    if (m.cenario && (new URLSearchParams(location.search).has('editor'))) {
+      const bruto = structuredClone(Object.values(MAPAS).find((x) => x.id === idMapa)) as unknown as Record<string, unknown>;
+      editor = abrirEditor({
+        raiz: el, cena: m.cena, cenario: m.cenario, bruto, tipos: TIPOS_OBJETOS,
+        definirColisoes: (c) => { mapa.colisoes = c; },
+        moradores: new Map([...sprites].map(([id, r]) => [id, r.s])),
+        itens: objetosSprites,
+        fantasmaUrl: base.fantasma ? src(base.fantasma) : undefined,
+      });
+      el.classList.add('com-editor');
+    }
     tocarMusicaDaCena(mapa.musica, 1500);
     if (idMapa === 'fullmun') audio.volumeRelativo(1);
     salvarPosicao();
@@ -788,6 +833,7 @@ export function telaMapa(params?: unknown): Tela {
         else void irPara('mapa', { mapa: mid, x, y });
       },
       walkTo: async (x: number, y: number) => (motor ? motor.caminharAte(x, y) : false),
+      editorExportar: () => editor?.exportar() ?? null,
       interact: () => interagir(),
       interactWith: (alvo: string) => {
         const i = mapa.interacoes.find((x) => x.id === alvo);
@@ -808,6 +854,7 @@ export function telaMapa(params?: unknown): Tela {
         pronto: motor !== null,
         heroi: motor?.posicao() ?? null,
         camera: motor ? { x: Math.round(motor.cena.cameras.main.scrollX), y: Math.round(motor.cena.cameras.main.scrollY) } : null,
+        cameraInfo: motor ? { x: motor.cena.cameras.main.worldView.x, y: motor.cena.cameras.main.worldView.y, zoom: motor.cena.cameras.main.zoom } : null,
         pv: pvAtual(),
         proximo: motor?.proximo() ?? null,
         npcs: npcsVisiveis().map((n) => ({ id: n.id, marcador: marcadorDe(n.id) })),
@@ -828,6 +875,8 @@ export function telaMapa(params?: unknown): Tela {
         heroiNaTela: motor ? motor.cena.cameras.main.worldView.contains(motor.heroi.x, motor.heroi.y) : null,
         ajudaAberta,
         escala,
+        editor: editor?.estado() ?? null,
+        cenario: motor?.cenario ? motor.cenario.sprites.length : 0,
         carregando: !!el.querySelector('.carregando-etapa'),
         profundidade: motor?.estadoProfundidade() ?? null,
         npcsCobertura: motor ? [...sprites.values()].filter((r) => r.s.visible).map((r) => ({ id: r.npc.id, x: r.npc.x, y: r.npc.y, coberto: Math.round(motor!.cobertura(r.s) * 100) / 100 })) : [],
@@ -858,6 +907,9 @@ export function telaMapa(params?: unknown): Tela {
       desfazerPausador();
       palco?.destruir();
       controles.destruir();
+      window.removeEventListener('fdg:animacoes', aoMudarAnimacoes);
+      aplicarTravaHorizontal(false);
+      editor?.destruir();
       motor?.destruir();
       motor = null;
       document.querySelectorAll('.modal-fundo, .compendio-fundo').forEach((m) => m.remove());

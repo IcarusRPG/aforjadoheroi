@@ -59,7 +59,8 @@ for (const arq of readdirSync(path.join(FONTE, 'mapas')).filter((f) => f.endsWit
   const chaoTxt = chao.blocos
     ? `"chao": {\n  "blocos": [\n${chao.blocos.map(linhaBloco).join(',\n')}\n  ]\n }`
     : `"chao": { "imagem": "${chao.imagem}" }`;
-  const novoTexto = texto.replace(/"imagem": "img\/mapas\/[^"]+"|"chao": \{\n {2}"blocos"[\s\S]*?\n \}|"chao": \{ "imagem": "[^"]+" \}/, chaoTxt);
+  // O bloco "chao" inteiro (com blocos ou imagem) ou, no formato antigo, a linha "imagem".
+  const novoTexto = texto.replace(/"chao": \{\r?\n {2}"blocos"[\s\S]*?\r?\n \}|"chao": \{ "imagem": "[^"]+" \}|"imagem": "img\/mapas\/[^"]+"/, chaoTxt);
   if (novoTexto === texto && !texto.includes(chaoTxt)) throw new Error(`${id}.json: não achei "imagem" nem "chao"`);
   writeFileSync(jsonPath, novoTexto);
   linhas.push(['mapa', id, `${W}×${H}`, antes, depois, chao.blocos ? `${chao.blocos.length} blocos de ${BLOCO} px (q90)` : 'WebP q90']);
@@ -82,7 +83,7 @@ const medir = (pasta, tipo, filtro = () => true) => {
     linhas.push([tipo, arq.replace(/\.webp$/, ''), '', statSync(p).size, statSync(p).size, 'já em WebP q85 (sem mudança)']);
   }
 };
-medir('img/mapas', 'mapa', (f) => !linhas.some((l) => l[0] === 'mapa' && `${l[1]}.webp` === f));
+medir('img/mapas', 'mapa', (f) => !/-objetos|-antigo/.test(f) && !linhas.some((l) => l[0] === 'mapa' && `${l[1]}.webp` === f));
 medir('img/cenas', 'cena');
 medir('img/retratos', 'busto');
 

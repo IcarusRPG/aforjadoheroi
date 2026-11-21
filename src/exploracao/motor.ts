@@ -4,6 +4,8 @@ import { h } from '../core/ui';
 import { COLUNAS, QUADRO, desenharFolhaChibi } from './chibi';
 import { PES, dentroDoPoligono, encontrarCaminho, escalarPes, pesLivres, pontoLivreMaisProximo } from './geometria';
 import { caixaDoContorno, mascaraRecorte } from './recorte';
+import { Cenario } from './cenario';
+import type { ObjetoMontado } from './montagem';
 import { DIRECOES, type DadosMapa, type Direcao } from './tipos';
 
 /**
@@ -26,6 +28,11 @@ export interface OpcoesMotor {
   debugInicial: boolean;
   /** Quantas alturas de tela o mapa ocupa (o zoom se ajusta a isso). */
   alturasDeTela?: number;
+  /**
+   * Objetos do cenário (mapas de chão + objetos): o atlas, os quadros e as instâncias montadas. Ficam
+   * ordenados junto com os personagens pela linha de profundidade.
+   */
+  cenario?: { atlasUrl: string; quadros: Record<string, { x: number; y: number; w: number; h: number }>; objetos: ObjetoMontado[]; animacoes: boolean; agua?: [number, number][][] };
   /** Imagens a mais para carregar junto do mapa (folhas de moradores, ícones de itens). */
   extras?: { chave: string; url: string; tipo: 'folha' | 'imagem' }[];
   /** Começa aqui em vez do `inicio` do mapa (posição salva, saída de outro mapa). */
@@ -79,6 +86,10 @@ export interface Motor {
   estadoProfundidade(): { translucidos: string[]; silhuetas: string[]; blocos: number; blocosCarregados: number };
   /** Escala dos personagens neste mapa. */
   readonly escala: number;
+  /** Objetos do cenário (para o editor e os testes); null em mapas de ilustração única. */
+  readonly cenario: Cenario | null;
+  /** Liga ou desliga as animações do cenário (Animações reduzidas). */
+  definirAnimacoes(sim: boolean): void;
   posicao(): { x: number; y: number; direcao: Direcao };
   proximo(): string | null;
   /** Multiplica o zoom base (1 = normal), suavemente. */
@@ -108,7 +119,7 @@ const CHAVE_FOLHA = 'heroi';
 export function criarMotor(o: OpcoesMotor): Promise<Motor> {
   return new Promise((resolver) => {
     const { mapa } = o;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, Number((window as any).__dprMax ?? 2));
     let fatorZoom = 1;
     let bloqueado = false;
     let direcao: Direcao = mapa.inicio.direcao;
@@ -218,6 +229,7 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
         // Só os blocos do chão que a câmera vê no começo (com folga); os outros vêm logo depois.
         const vista = vistaInicial();
         for (const [k, b] of o.blocos.entries()) if (intersecta(b, vista)) this.load.image(`chao-${k}`, b.url);
+        if (o.cenario) this.load.image('cenario-atlas', o.cenario.atlasUrl);
         if (o.heroi.spriteUrl) this.load.spritesheet(CHAVE_FOLHA, o.heroi.spriteUrl, { frameWidth: QUADRO, frameHeight: QUADRO });
         for (const e of o.extras ?? []) {
           if (e.tipo === 'folha') this.load.spritesheet(e.chave, e.url, { frameWidth: QUADRO, frameHeight: QUADRO });
@@ -227,6 +239,9 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
 
       create() {
         cenaAtual = this;
+        if (o.cenario && this.textures.exists('cenario-atlas')) {
+          cenario = new Cenario(this, { chaveAtlas: 'cenario-atlas', quadros: o.cenario.quadros, objetos: o.cenario.objetos, animacoes: o.cenario.animacoes, agua: o.cenario.agua });
+        }
         for (const k of o.blocos.keys()) if (this.textures.exists(`chao-${k}`)) aoBlocoCarregado(this, k);
         const faltam = [...o.blocos.entries()].filter(([k]) => !this.textures.exists(`chao-${k}`));
         if (faltam.length) {
@@ -370,12 +385,14 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
           },
           cobertura: (sprite) => cobertura(sprite),
           estadoProfundidade: () => ({
-            translucidos: recortes.filter((r) => r.translucido).map((r) => r.id),
+            translucidos: [...recortes.filter((r) => r.translucido).map((r) => r.id), ...(cenario?.sprites.filter((c) => c.translucido).map((c) => c.o.id) ?? [])],
             silhuetas: [...atores.entries()].filter(([, a]) => a.contorno?.visible).map(([id]) => id),
             blocos: o.blocos.length,
             blocosCarregados: blocosProntos.size,
           }),
           escala,
+          get cenario() { return cenario; },
+          definirAnimacoes: (sim) => cenario?.definirAnimacoes(sim),
           posicao: () => ({ x: heroi.x, y: heroi.y, direcao }),
           proximo: () => proximo,
           zoomPara(fator, ms) {
@@ -437,6 +454,7 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
     /* ------------------------------------------------------------ chão em blocos */
 
     let cenaAtual: Phaser.Scene | null = null;
+    let cenario: Cenario | null = null;
     const blocosProntos = new Set<number>();
     type Caixa = { x: number; y: number; largura: number; altura: number };
     const intersecta = (a: Caixa, b: Caixa) => a.x < b.x + b.largura && b.x < a.x + a.largura && a.y < b.y + b.altura && b.y < a.y + a.altura;
@@ -529,7 +547,8 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
     /** Fração do sprite coberta pelos recortes que estão na frente dele (pela máscara, não pela opacidade). */
     function cobertura(sprite: Phaser.GameObjects.Sprite): number {
       const frente = recortes.filter((r) => r.base > sprite.y && mascaras.has(r.id));
-      if (!frente.length) return 0;
+      const objetosFrente = cenario ? cenario.naFrente(sprite.y, sprite.getBounds()) : [];
+      if (!frente.length && !objetosFrente.length) return 0;
       const pts = pontosOpacos(sprite);
       if (!pts.length) return 0;
       const sx = sprite.scaleX, sy = sprite.scaleY;
@@ -537,11 +556,14 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
       let cobertos = 0;
       for (const [px, py] of pts) {
         const x = Math.round(x0 + (px + 0.5) * sx), y = Math.round(y0 + (py + 0.5) * sy);
+        let coberto = false;
         for (const r of frente) {
           const k = mascaras.get(r.id)!;
           const lx = x - k.x0, ly = y - k.y0;
-          if (lx >= 0 && ly >= 0 && lx < k.w && ly < k.m.length / k.w && k.m[ly * k.w + lx]) { cobertos++; break; }
+          if (lx >= 0 && ly >= 0 && lx < k.w && ly < k.m.length / k.w && k.m[ly * k.w + lx]) { coberto = true; break; }
         }
+        if (!coberto) for (const c of objetosFrente) if (cenario!.opaco(c, x, y)) { coberto = true; break; }
+        if (coberto) cobertos++;
       }
       return cobertos / pts.length;
     }
@@ -582,6 +604,8 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
     /** A cada quadro: recorte translúcido quando alguém está atrás; silhueta quando o ator está > 40% coberto. */
     function atualizarProfundidade() {
       if (!cenaAtual) return;
+      cenario?.recortarVista();
+      cenario?.atualizarCopas([...atores.values()].map((a) => a.sprite));
       const vista = cenaAtual.cameras.main.worldView;
       for (const r of recortes) {
         let atras = false;
