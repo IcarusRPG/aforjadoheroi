@@ -5,6 +5,7 @@ import { ASSETS, SFX_CAPITULO, SFX_FASE4, SFX_SONHO, existeAsset, src, urlAsset 
 import { audio } from '../core/audio';
 import { ehErroDeModulo, importar, mostrarTelaDeErro } from '../core/carregar';
 import { registrarErro } from '../core/erros';
+import { anelNoChao, criarBalao, destacarItem, texturasMarcas, type Balao, type Destaque, type TipoBalao } from '../exploracao/marcas';
 import { animacoesReduzidas, atualizarCampanha, getEstado, marcarFlag } from '../core/estado';
 import { estadoProgresso, registrarGanchos } from '../core/ganchos';
 import {
@@ -60,6 +61,10 @@ interface ObjetoMapa {
   /** Ponto de interação sem ícone no chão (alçapão, altar). */
   semIcone?: boolean;
   marcador?: { requer?: Condicao; tipo: string }[];
+  /** Item sobre um objeto (telhado, cerca): fica numa camada acima dele (ex.: "padaria"). */
+  sobre?: string;
+  /** Anel de luz no chão quando o objeto tem marcador (o alçapão): centro e largura em px do mapa. */
+  anel?: { x: number; y: number; largura: number };
 }
 interface GatilhoCena { id: string; pontos: [number, number][]; requer?: Condicao; cena: string; empurra?: { x: number; y: number } }
 export interface DadosMapaJogo extends DadosMapa {
@@ -94,7 +99,6 @@ export interface DadosMapaJogo extends DadosMapa {
   versao?: number;
 }
 export interface Destino { id: string; x: number; y: number; cor?: 'vermelho' | 'dourado'; requer?: Condicao }
-const CORES_DESTINO = { vermelho: '#e0262c', dourado: '#ffd25a' } as const;
 type Regra = { requer?: Condicao; cena?: string; tipo?: string | null };
 const CONV = CONVERSAS as Record<string, { conversas: Regra[]; marcadores?: Regra[] }>;
 const MAPAS = import.meta.glob<DadosMapaJogo>('../data/mapas/*.json', { eager: true, import: 'default' });
@@ -126,7 +130,10 @@ export function telaMapa(params?: unknown): Tela {
   const palcoEl = h('div', { class: 'mapa-palco' });
   const hud = h('div', { class: 'mapa-hud', 'aria-live': 'polite' });
   const dica = h('p', { class: 'mapa-dica', hidden: true });
-  const el = h('div', { class: `tela-mapa mapa-${idMapa}` }, palcoEl, hud, dica, setaDestino);
+  /** Indicadores na borda da tela para quem tem ! ou ? (ou o alçapão) fora da área visível; no máximo 3. */
+  const indicadores = [0, 1, 2].map(() => h('div', { class: 'indicador-borda', hidden: true, 'aria-hidden': 'true' },
+    h('span', { class: 'indicador-borda-ponta' }), h('span', { class: 'indicador-borda-balao' })));
+  const el = h('div', { class: `tela-mapa mapa-${idMapa}` }, palcoEl, hud, dica, setaDestino, ...indicadores);
 
   let saiu = false;
   let motor: Motor | null = null;
@@ -134,9 +141,12 @@ export function telaMapa(params?: unknown): Tela {
   let fecharPausa: (() => void) | null = null;
   let ocupado = false;
   let phaser: typeof import('phaser') | null = null;
-  const sprites = new Map<string, { s: import('phaser').GameObjects.Sprite; marcador: import('phaser').GameObjects.Text; npc: NpcMapa }>();
-  const objetosSprites = new Map<string, import('phaser').GameObjects.Image>();
-  const objetosMarcadores = new Map<string, import('phaser').GameObjects.Text>();
+  const sprites = new Map<string, { s: import('phaser').GameObjects.Sprite; marcador: Balao | null; npc: NpcMapa }>();
+  const objetosSprites = new Map<string, Destaque>();
+  const objetosMarcadores = new Map<string, { balao: Balao; anel: { destruir(): void } | null }>();
+  /** Altura de um balão de missão em px do mapa: 45% do herói, nunca menos de 28 px na tela. */
+  const alturaBalao = (fator = 1) => Math.max(0.45 * 45 * escala, 28 / Math.max(0.05, motor?.pxTela() ?? 1)) * fator;
+  const alturaHeroi = 45 * escala;
   const seguidores = new Map<string, { s: import('phaser').GameObjects.Sprite; dir: Direcao }>();
   const rastro: { x: number; y: number }[] = [];
   const gatilhosDentro = new Set<string>();
@@ -181,25 +191,33 @@ export function telaMapa(params?: unknown): Tela {
       if (reg) {
         reg.s.setVisible(vis);
         const m = vis ? marcadorDe(n.id) : null;
-        reg.marcador.setText(m ?? '').setVisible(!!m);
+        if (m && !reg.marcador) reg.marcador = criarBalao(motor.cena, n.x, n.y - 50 * escala, m as TipoBalao, alturaBalao(), { reduzidas: animacoesReduzidas() });
+        reg.marcador?.definirTipo(m as TipoBalao | null);
       }
       if (vis) inter.push({ id: `npc:${n.id}`, x: n.x, y: n.y + 8 * escala, raio: 58 * alcance });
     }
-    for (const [id, img] of objetosSprites) if (!objetosVisiveis().some((o) => o.id === id)) { img.destroy(); objetosSprites.delete(id); }
+    for (const [id, d] of objetosSprites) if (!objetosVisiveis().some((o) => o.id === id)) { d.destruir(); objetosSprites.delete(id); }
     for (const o of objetosVisiveis()) {
       inter.push({ id: `obj:${o.id}`, x: o.interacao?.x ?? o.x, y: o.interacao?.y ?? o.y, raio: 52 * alcance });
       if (!o.semIcone && !objetosSprites.has(o.id)) objetosSprites.set(o.id, criarObjeto(o));
-      const marca = o.marcador?.find((r) => atende(r.requer))?.tipo ?? null;
-      let txt = objetosMarcadores.get(o.id);
-      if (marca && !txt) {
-        txt = motor.cena.add.text(o.x, o.y - 44, marca, { fontFamily: 'Cinzel, serif', fontSize: '24px', color: '#ffd25a', stroke: '#2a1a10', strokeThickness: 4 })
-          .setOrigin(0.5, 1).setDepth(150_000);
-        motor.cena.tweens.add({ targets: txt, y: o.y - 50, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        objetosMarcadores.set(o.id, txt);
+      // Livro já lido: perde o brilho e escurece.
+      if (o.acao === 'ler' && o.livro && getEstado().campanha.usadas.includes(`ef:livro-${o.livro}`)) objetosSprites.get(o.id)?.escurecer();
+      // Marcador de objeto (o alçapão): balão 1,5× maior, pulando, e um anel de luz no chão.
+      const marca = (o.marcador?.find((r) => atende(r.requer))?.tipo ?? null) as TipoBalao | null;
+      let m = objetosMarcadores.get(o.id);
+      if (marca && !m) {
+        texturasMarcas(motor.cena);
+        const a = o.anel;
+        const balao = a
+          ? criarBalao(motor.cena, a.x, a.y - a.largura * 0.22, marca, alturaBalao(1.5), { reduzidas: animacoesReduzidas() })
+          : criarBalao(motor.cena, o.x, o.y - 36 * escala, marca, alturaBalao(1.5), { reduzidas: animacoesReduzidas() });
+        const anel = a ? anelNoChao(motor.cena, a.x, a.y, a.largura, animacoesReduzidas()) : null;
+        m = { balao, anel };
+        objetosMarcadores.set(o.id, m);
       }
-      txt?.setText(marca ?? '').setVisible(!!marca);
+      if (m && !marca) { m.balao.destruir(); m.anel?.destruir(); objetosMarcadores.delete(o.id); }
     }
-    for (const [id, txt] of objetosMarcadores) if (!objetosVisiveis().some((o) => o.id === id)) txt.setVisible(false);
+    for (const [id, m] of objetosMarcadores) if (!objetosVisiveis().some((o) => o.id === id)) { m.balao.destruir(); m.anel?.destruir(); objetosMarcadores.delete(id); }
     mapa.interacoes = inter;
     mapa.gatilhos = (mapa.gatilhosCena ?? []).filter((g) => atende(g.requer)).map((g) => ({ id: g.id, pontos: g.pontos }));
     for (const s of mapa.seguidores ?? []) {
@@ -215,6 +233,17 @@ export function telaMapa(params?: unknown): Tela {
   }
 
   /* ------------------------------------------------------------ HUD */
+
+  /** Missão de coleta aceita (Roupas, Repolhos): rótulo, quantos itens já estão na bolsa e o total. */
+  function coletaAtual(): { rotulo: string; n: number; total: number; icone: string } | null {
+    const c = getEstado().campanha;
+    for (const [id, m] of Object.entries(MISSOES as Record<string, { coleta?: { rotulo: string; itens: string[]; total: number; icone: string } }>)) {
+      if (!m.coleta || c.missoes[id] !== 'aceita') continue;
+      const n = m.coleta.itens.reduce((t, it) => t + (c.inventario[it] ?? 0), 0);
+      return { rotulo: m.coleta.rotulo, n: Math.min(n, m.coleta.total), total: m.coleta.total, icone: m.coleta.icone };
+    }
+    return null;
+  }
 
   function desenharHud(animar = false) {
     if (mapa.hud === 'relogio') {
@@ -233,6 +262,12 @@ export function telaMapa(params?: unknown): Tela {
         h('span', { class: 'relogio-estado' }, nomeAtraso(marcas)),
       );
       hud.dataset.marcas = String(marcas);
+      const coleta = coletaAtual();
+      if (coleta) {
+        hud.append(h('span', { class: 'hud-coleta' },
+          h('img', { class: 'hud-coleta-icone', src: src(ASSETS.item(coleta.icone)), alt: '' }),
+          `${coleta.rotulo} ${coleta.n}/${coleta.total}`));
+      }
     } else if (mapa.hud) {
       const cfg = mapa.hud;
       const total = typeof cfg.total === 'number' ? cfg.total : (cfg.total ?? []).find((t) => atende(t.requer))?.n ?? 0;
@@ -261,29 +296,47 @@ export function telaMapa(params?: unknown): Tela {
     const s = cena.add.sprite(n.x, n.y, chave, quadro(n.direcao ?? 'baixo')).setOrigin(0.5, 46 / 48).setDepth(n.y).setScale(escala);
     // Respiração leve por código.
     cena.tweens.add({ targets: s, scaleY: escala * 1.03, duration: 1400 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    // Marcadores (! … ?) e nome: sempre na camada mais alta, acima de qualquer recorte.
-    const topo = n.y - 60 * escala;
-    const marcador = cena.add.text(n.x, topo, '', { fontFamily: 'Cinzel, serif', fontSize: '22px', color: '#ffd25a', stroke: '#2a1a10', strokeThickness: 4 })
-      .setOrigin(0.5, 1).setDepth(150_000);
-    cena.tweens.add({ targets: marcador, y: topo - 6, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // Marcadores (! … ?): balão criado na primeira vez que o morador tem um (atualizar), na camada mais alta.
+    texturasMarcas(cena);
     s.setData('id', n.id);
-    sprites.set(n.id, { s, marcador, npc: n });
+    sprites.set(n.id, { s, marcador: null, npc: n });
     motor!.registrarAtor(`npc:${n.id}`, s);
   }
 
   /** Nos mapas com escala, os pixels dos personagens ficam nítidos (sem borrar ao ampliar). */
   function nitido(chave: string) {
-    if (escala !== 1 && phaser && motor?.cena.textures.exists(chave)) motor.cena.textures.get(chave).setFilter(phaser.Textures.FilterMode.NEAREST);
+    if (phaser && motor?.cena.textures.exists(chave)) motor.cena.textures.get(chave).setFilter(phaser.Textures.FilterMode.NEAREST);
   }
 
-  function criarObjeto(o: ObjetoMapa) {
+  /**
+   * Item no mapa. Manchas e poeira (esfregar/polir) ficam no chão, como antes. Itens de missão e livros:
+   * - tamanho pela altura do herói (itens com 64%, livros com 35%);
+   * - nunca atrás de um objeto: a profundidade sobe até ficar na frente de tudo o que cobriria o item
+   *   (e de `sobre`, se houver: a camisa no telhado da padaria);
+   * - contorno claro, flutuação, brilho, faíscas e, com missão aceita, a seta dourada.
+   */
+  function criarObjeto(o: ObjetoMapa): Destaque {
     const cena = motor!.cena;
-    const img = cena.add.image(o.x, o.y, `item-${o.item}`).setDepth(o.acao ? -60_000 : o.y);
-    // Os ícones de poeira e mancha acompanham o tamanho dos personagens.
-    const lado = (o.acao === 'esfregar' && o.item === 'mancha' ? 40 : 30) * escala;
-    img.setDisplaySize(lado, lado * (img.height / img.width));
-    if (!o.acao) cena.tweens.add({ targets: img, alpha: 0.65, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    return img;
+    const img = cena.add.image(o.x, o.y, `item-${o.item}`);
+    if (o.acao === 'esfregar' || o.acao === 'polir') {
+      const lado = (o.item === 'mancha' ? 40 : 30) * escala;
+      img.setDisplaySize(lado, lado * (img.height / img.width)).setDepth(-60_000);
+      return { img, escurecer() {}, destruir() { img.destroy(); } };
+    }
+    texturasMarcas(cena);
+    const alvo = (o.acao === 'ler' ? 0.35 : 0.64) * alturaHeroi;
+    const largura = Math.min(alvo * (img.width / img.height), alturaHeroi * 1.2);
+    img.setDisplaySize(largura, largura * (img.height / img.width));
+    let prof = o.y;
+    if (o.sobre) {
+      const alvoSobre = motor!.cenario?.sprites.filter((s) => s.o.id === o.sobre).sort((a, b) => Math.hypot(a.o.x - o.x, a.o.y - o.y) - Math.hypot(b.o.x - o.x, b.o.y - o.y))[0];
+      if (alvoSobre) prof = Math.max(prof, alvoSobre.o.profundidade + 1);
+    }
+    prof = motor!.frenteDe(img.getBounds(), prof);
+    img.setDepth(prof);
+    // No editor, o item fica sozinho (sem contorno, brilho e faíscas) para ser arrastado.
+    if (new URLSearchParams(location.search).has('editor')) return { img, escurecer() {}, destruir() { img.destroy(); } };
+    return destacarItem(cena, img, { pxTela: motor!.pxTela(), reduzidas: animacoesReduzidas(), seta: !!o.requer?.missao });
   }
 
   function criarSeguidor(id: string) {
@@ -376,29 +429,20 @@ export function telaMapa(params?: unknown): Tela {
 
   /* ------------------------------------------------------------ destino (casa da Aylin) */
 
-  let destino: { d: Destino; marca: import('phaser').GameObjects.Text; sombra: import('phaser').GameObjects.Ellipse } | null = null;
+  let destino: { d: Destino; balao: Balao } | null = null;
 
   /** O destino que vale agora (o primeiro cuja condição é atendida), com o "!" que pula sobre ele. */
   function atualizarDestino() {
     if (!motor) return;
     const d = (mapa.destinos ?? []).find((x) => atende(x.requer)) ?? null;
     if (destino && destino.d.id === d?.id) return;
-    if (destino) { destino.marca.destroy(); destino.sombra.destroy(); destino = null; }
+    if (destino) { destino.balao.destruir(); destino = null; }
     setaDestino.hidden = true;
     if (!d) return;
-    const cena = motor.cena;
-    const cor = CORES_DESTINO[d.cor ?? 'vermelho'];
-    // 1,5× o "!" dourado das missões, com contorno escuro; sempre acima de recortes e telhados.
-    const marca = cena.add.text(d.x, d.y, '!', { fontFamily: 'Cinzel, serif', fontStyle: 'bold', fontSize: '34px', color: cor, stroke: '#2a0a0a', strokeThickness: 6 })
-      .setOrigin(0.5, 1).setDepth(150_001);
-    const sombra = cena.add.ellipse(d.x, d.y + 4, 22, 7, 0x000000, 0.35).setDepth(150_000);
-    // Pula 8 px num ciclo de ~0,8 s; achata um pouco ao tocar o ponto mais baixo; a sombra encolhe no alto.
-    cena.tweens.add({
-      targets: marca, y: d.y - 8, duration: 400, ease: 'Sine.easeOut', yoyo: true, repeat: -1,
-      onRepeat: () => { cena.tweens.add({ targets: marca, scaleX: 1.14, scaleY: 0.84, duration: 70, yoyo: true, ease: 'Quad.easeOut' }); },
-    });
-    cena.tweens.add({ targets: sombra, scaleX: 0.7, scaleY: 0.7, alpha: 0.2, duration: 400, ease: 'Sine.easeOut', yoyo: true, repeat: -1 });
-    destino = { d, marca, sombra };
+    texturasMarcas(motor.cena);
+    // O "!" de destino: balão vermelho 1,5× maior que o das missões; pula e achata (Fase 4F), acima de tudo.
+    const balao = criarBalao(motor.cena, d.x, d.y, d.cor === 'dourado' ? '!' : '!vermelho', alturaBalao(1.5), { reduzidas: animacoesReduzidas(), profundidade: 150_010 });
+    destino = { d, balao };
   }
 
   /** Seta na borda da tela quando o destino está fora da área visível (move-se pela borda com o herói). */
@@ -409,22 +453,61 @@ export function telaMapa(params?: unknown): Tela {
     const dentro = x > v.x + 8 && x < v.right - 8 && y - 30 > v.y && y < v.bottom - 8;
     setaDestino.hidden = dentro || ocupado;
     if (dentro || ocupado) return;
+    posicionarNaBorda(setaDestino, x, y - 20, 34);
+  }
+
+  /** Põe o elemento na borda da tela (com margem), na direção do ponto (x, y) do mapa, girando a ponta. */
+  function posicionarNaBorda(alvo: HTMLElement, x: number, y: number, margem: number) {
+    const v = motor!.cena.cameras.main.worldView;
     const w = el.clientWidth, hh = el.clientHeight;
-    const sx = ((x - v.x) / v.width) * w, sy = ((y - 20 - v.y) / v.height) * hh;
+    const sx = ((x - v.x) / v.width) * w, sy = ((y - v.y) / v.height) * hh;
     const cx = w / 2, cy = hh / 2;
     const ang = Math.atan2(sy - cy, sx - cx);
-    // Ponto da borda (com margem) na direção do destino.
-    const margem = 34;
     const kx = Math.abs(Math.cos(ang)) > 1e-6 ? (cx - margem) / Math.abs(Math.cos(ang)) : Infinity;
     const ky = Math.abs(Math.sin(ang)) > 1e-6 ? (cy - margem) / Math.abs(Math.sin(ang)) : Infinity;
     const k = Math.min(kx, ky);
     const pos = `${Math.round(cx + Math.cos(ang) * k)},${Math.round(cy + Math.sin(ang) * k)},${Math.round((ang * 180) / Math.PI)}`;
-    if (setaDestino.dataset.pos === pos) return;
-    setaDestino.dataset.pos = pos;
+    if (alvo.dataset.pos === pos) return;
+    alvo.dataset.pos = pos;
     const [px, py, pa] = pos.split(',');
-    setaDestino.style.left = `${px}px`;
-    setaDestino.style.top = `${py}px`;
-    setaDestino.style.setProperty('--ang', `${pa}deg`);
+    alvo.style.left = `${px}px`;
+    alvo.style.top = `${py}px`;
+    alvo.style.setProperty('--ang', `${pa}deg`);
+  }
+
+  /**
+   * Indicadores de borda: moradores com ! ou ? e objetos marcados (o alçapão) fora da área visível. Os três
+   * mais perto do herói, cada um com o balão em miniatura e uma ponta apontando para ele.
+   */
+  let indicadoresAtuais: { id: string; tipo: string }[] = [];
+  function atualizarIndicadores() {
+    if (!motor) return;
+    const v = motor.cena.cameras.main.worldView;
+    const heroi = motor.posicao();
+    const alvos: { id: string; tipo: string; x: number; y: number }[] = [];
+    if (!ocupado) {
+      for (const [id, r] of sprites) {
+        const t = r.marcador?.corpo.visible ? r.marcador.tipo : null;
+        if (t === '!' || t === '?') alvos.push({ id: `npc:${id}`, tipo: t, x: r.npc.x, y: r.npc.y - 30 * escala });
+      }
+      for (const [id, m] of objetosMarcadores) {
+        const o = (mapa.objetos ?? []).find((x) => x.id === id);
+        if (o && m.balao.corpo.visible) alvos.push({ id: `obj:${id}`, tipo: m.balao.tipo, x: o.anel?.x ?? o.x, y: o.anel?.y ?? o.y - 20 * escala });
+      }
+    }
+    const fora = alvos
+      .filter((a) => !(a.x > v.x + 8 && a.x < v.right - 8 && a.y > v.y + 8 && a.y < v.bottom - 8))
+      .sort((a, b) => Math.hypot(a.x - heroi.x, a.y - heroi.y) - Math.hypot(b.x - heroi.x, b.y - heroi.y))
+      .slice(0, 3);
+    indicadores.forEach((ind, i) => {
+      const a = fora[i];
+      ind.hidden = !a;
+      if (!a) return;
+      ind.dataset.tipo = a.tipo === '?' ? 'interr' : 'excl';
+      (ind.lastElementChild as HTMLElement).textContent = a.tipo === '?' ? '?' : '!';
+      posicionarNaBorda(ind, a.x, a.y, 30);
+    });
+    indicadoresAtuais = fora.map((a) => ({ id: a.id, tipo: a.tipo }));
   }
 
   /* ------------------------------------------------------------ palco (conversas por cima do mapa) */
@@ -770,7 +853,7 @@ export function telaMapa(params?: unknown): Tela {
       aoEntrarGatilho,
       aoSairGatilho: (id) => gatilhosDentro.delete(id),
       aoPasso: () => audio.sfx('step-marble', { taxa: 0.8 + Math.random() * 0.2, ganho: 0.3 }),
-      aoAtualizar: () => { atualizarSeguidores(); atualizarSetaDestino(); },
+      aoAtualizar: () => { atualizarSeguidores(); atualizarSetaDestino(); atualizarIndicadores(); },
     });
     if (saiu) return m.destruir();
     motor = m;
@@ -789,7 +872,7 @@ export function telaMapa(params?: unknown): Tela {
         raiz: el, cena: m.cena, cenario: m.cenario, bruto, tipos: TIPOS_OBJETOS,
         definirColisoes: (c) => { mapa.colisoes = c; },
         moradores: new Map([...sprites].map(([id, r]) => [id, r.s])),
-        itens: objetosSprites,
+        itens: new Map([...objetosSprites].map(([id, d]) => [id, d.img])),
         fantasmaUrl: base.fantasma ? src(base.fantasma) : undefined,
       });
       el.classList.add('com-editor');
@@ -842,6 +925,8 @@ export function telaMapa(params?: unknown): Tela {
         window.setTimeout(() => interagir(alvo), 60);
         return true;
       },
+      /** Remonta marcadores, itens e interações depois de mudar o save por fora (testes). */
+      refresh: () => atualizar(),
       completeMissao: (id: string) => {
         definirMissao(id, 'concluida');
         somarAtraso((MISSOES as Record<string, { atraso: number }>)[id]?.atraso ?? 0);
@@ -854,7 +939,7 @@ export function telaMapa(params?: unknown): Tela {
         pronto: motor !== null,
         heroi: motor?.posicao() ?? null,
         camera: motor ? { x: Math.round(motor.cena.cameras.main.scrollX), y: Math.round(motor.cena.cameras.main.scrollY) } : null,
-        cameraInfo: motor ? { x: motor.cena.cameras.main.worldView.x, y: motor.cena.cameras.main.worldView.y, zoom: motor.cena.cameras.main.zoom } : null,
+        cameraInfo: motor ? { x: motor.cena.cameras.main.worldView.x, y: motor.cena.cameras.main.worldView.y, w: motor.cena.cameras.main.worldView.width, h: motor.cena.cameras.main.worldView.height, zoom: motor.cena.cameras.main.zoom } : null,
         pv: pvAtual(),
         proximo: motor?.proximo() ?? null,
         npcs: npcsVisiveis().map((n) => ({ id: n.id, marcador: marcadorDe(n.id) })),
@@ -882,10 +967,21 @@ export function telaMapa(params?: unknown): Tela {
         npcsCobertura: motor ? [...sprites.values()].filter((r) => r.s.visible).map((r) => ({ id: r.npc.id, x: r.npc.x, y: r.npc.y, coberto: Math.round(motor!.cobertura(r.s) * 100) / 100 })) : [],
         heroiCobertura: motor ? Math.round(motor.cobertura(motor.heroi) * 100) / 100 : null,
         heroiAltura: motor ? Math.round(motor.heroi.displayHeight) : null,
-        destinoMarcaY: destino?.marca.y ?? null,
+        destinoMarcaY: destino?.balao.corpo.y ?? null,
         destino: destino ? { id: destino.d.id, x: destino.d.x, y: destino.d.y, cor: destino.d.cor ?? 'vermelho', seta: !setaDestino.hidden } : null,
         nomeVisivel: rotuloNome?.text ?? null,
-        marcadoresProfundidade: [...sprites.values()].filter((r) => r.marcador.visible).map((r) => r.marcador.depth),
+        marcadoresProfundidade: [...sprites.values()].filter((r) => r.marcador?.corpo.visible).map((r) => r.marcador!.corpo.depth),
+        baloes: motor ? [
+          ...[...sprites.values()].filter((r) => r.marcador?.corpo.visible).map((r) => ({ id: `npc:${r.npc.id}`, tipo: r.marcador!.tipo, alturaTela: Math.round(r.marcador!.corpo.displayHeight * motor!.pxTela() * 10) / 10, alturaRel: Math.round((r.marcador!.corpo.displayHeight / alturaHeroi) * 100) / 100 })),
+          ...[...objetosMarcadores.entries()].map(([id, m]) => ({ id: `obj:${id}`, tipo: m.balao.tipo, alturaTela: Math.round(m.balao.corpo.displayHeight * motor!.pxTela() * 10) / 10, alturaRel: Math.round((m.balao.corpo.displayHeight / alturaHeroi) * 100) / 100, anel: !!m.anel })),
+        ] : [],
+        indicadores: indicadoresAtuais,
+        itens: motor ? [...objetosSprites.entries()].map(([id, d]) => {
+          const b = d.img.getBounds();
+          return { id, profundidade: d.img.depth, alturaRel: Math.round((d.img.displayHeight / alturaHeroi) * 100) / 100, visivel: Math.round((1 - motor!.coberturaCaixa(b, d.img.depth)) * 100) / 100, escuro: d.img.isTinted, x: Math.round(d.img.x), y: Math.round(d.img.y) };
+        }) : [],
+        coleta: coletaAtual(),
+        nitidez: motor?.nitidez() ?? null,
       }),
     });
   }

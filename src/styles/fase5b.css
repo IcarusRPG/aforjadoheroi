@@ -1,0 +1,136 @@
+/*
+ * ===================== Fase 5B: marcadores, HUD de coleta, botão MENU, teclado =====================
+ */
+
+/* ---------- HUD: contador da missão de coleta, logo abaixo do relógio ---------- */
+.hud-coleta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  padding-top: 3px;
+  border-top: 1px solid rgba(214, 169, 74, 0.35);
+  font-family: var(--fonte-titulo);
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--ouro-claro);
+  white-space: nowrap;
+}
+.hud-coleta-icone { width: 18px; height: 18px; object-fit: contain; image-rendering: pixelated; }
+
+/* ---------- Indicadores de borda (! e ? fora da tela) e a seta do destino no mesmo estilo de balão ---------- */
+.indicador-borda,
+.seta-destino {
+  position: absolute;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+.seta-destino { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
+.indicador-borda[hidden], .seta-destino[hidden] { display: none; }
+.tela-mapa:not(.pronto) > .indicador-borda { visibility: hidden; }
+.tela-mapa.com-palco > .indicador-borda { display: none; }
+/* A ponta: um triângulo do lado de fora do balão, girado para o alvo. */
+.indicador-borda-ponta,
+.seta-destino-ponta {
+  position: absolute;
+  inset: 0;
+  background: none;
+  border-radius: 0;
+  clip-path: none;
+  transform: rotate(var(--ang, 0deg));
+  transform-origin: 50% 50%;
+}
+.indicador-borda-ponta::after,
+.seta-destino-ponta::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -9px;
+  width: 0;
+  height: 0;
+  margin-top: -7px;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 10px solid #d6a94a;
+}
+.seta-destino-ponta::after { border-left-color: #e0473a; right: -11px; border-top-width: 9px; border-bottom-width: 9px; margin-top: -9px; border-left-width: 12px; }
+.indicador-borda-balao,
+.seta-destino-exclamacao {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #d6a94a;
+  border-radius: 12px;
+  background: rgba(22, 15, 9, 0.94);
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 900;
+  font-size: 20px;
+  line-height: 1;
+  color: #ffd25a;
+  text-shadow: none;
+}
+.indicador-borda[data-tipo='interr'] .indicador-borda-balao { border-color: #ffcc33; color: #ffe680; box-shadow: 0 0 10px rgba(255, 204, 51, 0.55); }
+.seta-destino-exclamacao { border-color: #e0473a; color: #ff6a55; font-size: 24px; border-radius: 14px; }
+
+/* ---------- Teclado (PC): dica discreta na caixa de texto e a escolha destacada ---------- */
+.dica-tecla {
+  display: none;
+  position: absolute;
+  right: 34px;
+  bottom: 7px;
+  font-family: var(--fonte-texto, Inter, system-ui, sans-serif);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ouro-claro, #f2d48a);
+  opacity: 0.55;
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .dica-tecla { display: block; }
+}
+.cena-escolha.destacada {
+  outline: 2px solid #ffd25a;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 210, 90, 0.18), 0 0 14px rgba(255, 210, 90, 0.35);
+}
+
+/* ---------- Botão MENU: pílula escura, borda dourada, texto serifado em dourado ---------- */
+.btn-pausa.btn-menu {
+  position: absolute;
+  z-index: 7;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: auto;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 16px 0 13px;
+  border: 1.5px solid #d6a94a;
+  border-radius: 22px;
+  background: rgba(20, 14, 8, 0.84);
+  color: #ffd25a;
+  font-family: var(--fonte-titulo);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-pausa.btn-menu:hover { background: rgba(40, 28, 14, 0.9); border-color: #f2d48a; }
+.btn-menu-icone { font-size: 16px; letter-spacing: 0; transform: translateY(-1px); }
+/* Batalha: os retratos do topo começam à esquerda do MENU. */
+.tela-batalha .batalha-topo { right: calc(max(8px, env(safe-area-inset-right)) + 124px); }
