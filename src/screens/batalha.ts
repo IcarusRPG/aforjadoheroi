@@ -8,7 +8,7 @@ import { bonusPericia, defesaDe, pvAntesDaForjaDe, type IdPericia } from '../cor
 import { ITENS_DEF, curarCom, darItem, encontrarCriatura, mudarRelacao, qtdItem, somarContador } from '../core/progresso';
 import { irPara, type Tela } from '../core/telas';
 import { fmt, textos } from '../core/textos';
-import { botao, esperar, h } from '../core/ui';
+import { botao, botaoMenu, esperar, h } from '../core/ui';
 import { carregarFolha, SpriteBatalha } from '../batalha/sprite';
 import { INIMIGOS, batalhaPorId, type AtaqueDados, type DadosBatalha, type DadosInimigo } from '../batalha/inimigos';
 import { avaliar, mostrarRolagem } from '../narrativa/rolagem';
@@ -90,7 +90,7 @@ export function telaBatalha(params?: unknown): Tela {
   const escuro = h('div', { class: 'batalha-escuro' });
   arena.append(ladoInimigo, ladoHeroi, efeitos, h('div', { class: 'batalha-topo' }, mensagem, faixaTurnos), escuro);
   // Pausa: Opções e Voltar ao menu; o Salvar aparece desabilitado durante a batalha.
-  const btnPausa = h('button', { type: 'button', class: 'btn-pausa batalha-btn-pausa', 'aria-label': textos.cenas.pausa }, h('span', { 'aria-hidden': 'true' }, 'II'));
+  const btnPausa = botaoMenu('batalha-btn-pausa');
   let pausaAberta = false;
   btnPausa.addEventListener('click', () => {
     if (pausaAberta) return;

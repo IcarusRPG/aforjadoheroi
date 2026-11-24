@@ -7,7 +7,7 @@ import { estadoProgresso, registrarGanchos } from '../core/ganchos';
 import { pvAntesDaForjaDe } from '../core/pericias';
 import { irPara, type Tela } from '../core/telas';
 import { textos } from '../core/textos';
-import { esperar, h } from '../core/ui';
+import { botaoMenu, esperar, h } from '../core/ui';
 import { CAPITULOS, cenaPorId, type Capitulo } from '../narrativa/capitulo';
 import { aplicarEfeitos, criarPalco, tocarMusicaDaCena } from '../narrativa/palco';
 import { abrirMenuPausa } from './pausa';
@@ -48,7 +48,7 @@ export function telaCapitulo(params?: unknown): Tela {
   const cartao = h('div', { class: 'cena-cartao-titulo', hidden: true },
     h('p', { class: 'cartao-capitulo' }, `${T.capitulo} ${String(cap.numero).padStart(2, '0')}`),
     h('h1', { class: 'cartao-titulo' }, cap.titulo));
-  const btnPausa = h('button', { type: 'button', class: 'btn-pausa cena-btn-pausa', 'aria-label': T.pausa }, h('span', { 'aria-hidden': 'true' }, 'II'));
+  const btnPausa = botaoMenu('cena-btn-pausa');
   const el = h('div', { class: 'tela-capitulo' }, palco.el, btnPausa, cartao);
 
   const abrirPausa = () => {
@@ -59,10 +59,7 @@ export function telaCapitulo(params?: unknown): Tela {
   const teclado = (e: KeyboardEvent) => {
     if (fecharPausa || document.querySelector('.modal-fundo, .rolagem-fundo, .compendio-fundo')) return;
     if (e.key === 'Escape') { e.preventDefault(); return abrirPausa(); }
-    if ((e.key === ' ' || e.key === 'Enter') && !(document.activeElement instanceof HTMLButtonElement)) {
-      e.preventDefault();
-      palco.tocar();
-    }
+    // Espaço e Enter: o próprio palco (avança, completa e escolhe; ver narrativa/palco.ts).
   };
   window.addEventListener('keydown', teclado);
 

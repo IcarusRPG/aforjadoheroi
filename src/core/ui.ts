@@ -31,6 +31,16 @@ export interface OpcoesBotao {
   desabilitado?: boolean;
 }
 
+/**
+ * Botão MENU (Fase 5B): pílula com ☰ e "MENU", sempre no canto superior direito das telas de jogo
+ * (mapas, sonho, cenas, batalha). Abre o painel "Menu" (o antigo "Pausa"); Esc também abre e fecha.
+ */
+export function botaoMenu(classe = ''): HTMLButtonElement {
+  return h('button', { type: 'button', class: `btn-pausa btn-menu ${classe}`.trim(), 'aria-label': 'Menu' },
+    h('span', { class: 'btn-menu-icone', 'aria-hidden': 'true' }, '☰'),
+    h('span', { class: 'btn-menu-texto' }, 'MENU')) as HTMLButtonElement;
+}
+
 export function botao(texto: string, aoClicar: () => void, opcoes: OpcoesBotao = {}): HTMLButtonElement {
   const b = h('button', { type: 'button', class: `btn ${opcoes.classe ?? ''}`.trim(), disabled: opcoes.desabilitado }, texto);
   b.addEventListener('click', () => {

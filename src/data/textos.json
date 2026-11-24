@@ -207,7 +207,7 @@
     "carregando": "Você adormece…",
     "contador": "Vozes ouvidas: {n} / {total}",
     "interagir": "Interagir",
-    "pausa": "Pausa",
+    "pausa": "Menu",
     "continuar": "Continuar",
     "opcoes": "Opções",
     "voltarMenu": "Voltar ao menu",
@@ -259,7 +259,7 @@
     "escolhas": "Escolhas",
     "continuar": "Continuar",
     "seuBonus": "seu bônus",
-    "pausa": "Pausa",
+    "pausa": "Menu",
     "fechar": "Fechar",
     "rolagem": {
       "critico": "CRÍTICO!",

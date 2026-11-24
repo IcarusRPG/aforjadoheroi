@@ -1,4 +1,4 @@
-import { h } from '../core/ui';
+import { botaoMenu, h } from '../core/ui';
 
 /**
  * Entrada da exploração, em HTML por cima do canvas:
@@ -40,8 +40,7 @@ export class Controles {
     this.botaoInteragir = h('button', { type: 'button', class: 'btn-interagir', 'aria-label': o.rotuloInteragir, hidden: true },
       h('span', { class: 'btn-interagir-icone', 'aria-hidden': 'true' }, '✦'),
       o.toque ? null : h('span', { class: 'btn-interagir-tecla', 'aria-hidden': 'true' }, 'E'));
-    this.botaoPausa = h('button', { type: 'button', class: 'btn-pausa', 'aria-label': o.rotuloPausa },
-      h('span', { 'aria-hidden': 'true' }, 'II'));
+    this.botaoPausa = botaoMenu();
     o.raiz.append(this.joystick, this.botaoInteragir, this.botaoPausa);
 
     this.ouvir(window, 'keydown', (e: KeyboardEvent) => this.teclaDesce(e));
@@ -80,9 +79,9 @@ export class Controles {
     if (e.repeat) return;
     if (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter') {
       // Enter num botão focado (pausa, Opções) não deve virar interação.
+      if (e.code === 'Enter' && document.activeElement instanceof HTMLButtonElement) return;
       // A mesma tecla que avançou ou fechou um diálogo não interage (nem reabre a conversa logo depois).
       if (e.defaultPrevented || performance.now() - this.religadoEm < 150) { e.preventDefault(); return; }
-      if (e.code === 'Enter' && document.activeElement instanceof HTMLButtonElement) return;
       e.preventDefault();
       if (this.habilitado) this.o.aoInteragir();
     } else if (e.code === 'Escape') {
@@ -137,12 +136,12 @@ export class Controles {
     this.botaoInteragir.hidden = !sim;
   }
 
+  /** Durante cenas sem controle (clímax), tudo fica desligado. */
   /** Quando o controle voltou (fim de um diálogo): as teclas de interação esperam 150 ms. */
   private religadoEm = -Infinity;
 
-  /** Durante cenas sem controle (clímax), tudo fica desligado. */
-    if (sim && !this.habilitado) this.religadoEm = performance.now();
   habilitar(sim: boolean) {
+    if (sim && !this.habilitado) this.religadoEm = performance.now();
     this.habilitado = sim;
     // Ao desligar e ao religar, zera tudo: nenhuma tecla ou dedo de antes da conversa continua andando.
     this.apertadas.clear();

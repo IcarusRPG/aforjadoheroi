@@ -95,7 +95,7 @@
     overflow-y: auto;
   }
   .tela-batalha .batalha-comandos { grid-template-columns: 1fr 1fr; }
-  .tela-batalha .batalha-topo { right: 52px; gap: 3px; }
+  .tela-batalha .batalha-topo { right: 124px; gap: 3px; }
   .tela-batalha .batalha-mensagem { min-height: 0; padding: 0.25rem 0.7rem; font-size: 0.88rem; }
   .tela-batalha .batalha-caixa-log { top: 46px; bottom: auto; max-height: 40dvh; right: calc(min(300px, 36vw) + 12px); }
   .tela-batalha .ficha-defesa { display: none; }
