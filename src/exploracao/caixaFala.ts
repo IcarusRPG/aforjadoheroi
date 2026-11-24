@@ -32,13 +32,23 @@ export class CaixaFala {
     this.titulo = h('div', { class: 'fala-titulo' });
     this.texto = h('p', { class: 'fala-texto' });
     this.seta = h('span', { class: 'fala-seta', 'aria-hidden': 'true' }, '▾');
-    this.el = h('div', { class: 'caixa-fala', role: 'dialog', 'aria-live': 'polite', hidden: true }, this.titulo, this.texto, this.seta);
+    this.el = h('div', { class: 'caixa-fala', role: 'dialog', 'aria-live': 'polite', hidden: true }, this.titulo, this.texto, this.seta,
+      h('span', { class: 'dica-tecla', 'aria-hidden': 'true' }, 'Espaço ▸'));
+    window.addEventListener('keydown', this.tecla, true);
     this.el.addEventListener('pointerup', (e) => {
       e.stopPropagation();
       this.avancar();
     });
     raiz.append(this.el);
   }
+
+  /** Espaço e Enter completam o texto e, depois, fecham a fala (na captura: o mapa não interage junto). */
+  private tecla = (e: KeyboardEvent) => {
+    if (!this.fala || (e.key !== ' ' && e.key !== 'Enter') || document.querySelector('.modal-fundo, .dica-tutorial')) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    this.avancar();
+  };
 
   get aberta(): boolean {
     return this.fala !== null;
@@ -93,6 +103,7 @@ export class CaixaFala {
   }
 
   destruir() {
+    window.removeEventListener('keydown', this.tecla, true);
     clearInterval(this.timer);
     this.fala = null;
     this.el.remove();

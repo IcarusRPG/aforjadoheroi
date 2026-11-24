@@ -80,6 +80,8 @@ export class Controles {
     if (e.repeat) return;
     if (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter') {
       // Enter num botão focado (pausa, Opções) não deve virar interação.
+      // A mesma tecla que avançou ou fechou um diálogo não interage (nem reabre a conversa logo depois).
+      if (e.defaultPrevented || performance.now() - this.religadoEm < 150) { e.preventDefault(); return; }
       if (e.code === 'Enter' && document.activeElement instanceof HTMLButtonElement) return;
       e.preventDefault();
       if (this.habilitado) this.o.aoInteragir();
@@ -135,7 +137,11 @@ export class Controles {
     this.botaoInteragir.hidden = !sim;
   }
 
+  /** Quando o controle voltou (fim de um diálogo): as teclas de interação esperam 150 ms. */
+  private religadoEm = -Infinity;
+
   /** Durante cenas sem controle (clímax), tudo fica desligado. */
+    if (sim && !this.habilitado) this.religadoEm = performance.now();
   habilitar(sim: boolean) {
     this.habilitado = sim;
     // Ao desligar e ao religar, zera tudo: nenhuma tecla ou dedo de antes da conversa continua andando.

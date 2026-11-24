@@ -109,7 +109,9 @@ export function criarPalco(o: OpcoesPalco): Palco {
   const nome = h('p', { class: 'cena-nome', hidden: true });
   const texto = h('p', { class: 'cena-texto' });
   const seta = h('span', { class: 'cena-seta', 'aria-hidden': 'true' }, '▾');
-  const caixa = h('div', { class: 'cena-caixa', role: 'button', tabindex: '0', 'aria-label': T.avancar }, nome, texto, seta);
+  // No PC, a dica discreta da tecla (some no toque: ver fase5b.css).
+  const dicaTecla = h('span', { class: 'dica-tecla', 'aria-hidden': 'true' }, 'Espaço ▸');
+  const caixa = h('div', { class: 'cena-caixa', role: 'button', tabindex: '0', 'aria-label': T.avancar }, nome, texto, seta, dicaTecla);
   const escolhas = h('div', { class: 'cena-escolhas', role: 'group', 'aria-label': T.escolhas });
   const painel = h('div', { class: 'cena-painel' }, bustos, caixa, escolhas);
   const ameaca = h('aside', { class: 'cena-ameaca', hidden: true, 'aria-live': 'polite' });
@@ -299,6 +301,57 @@ export function criarPalco(o: OpcoesPalco): Palco {
   }
   caixa.addEventListener('click', tocar);
 
+  /**
+   * Teclado (PC), na fase de captura, antes de qualquer outro ouvinte:
+   * - Espaço e Enter: completam o texto que está aparecendo; depois, avançam;
+   * - com escolhas: setas (ou W/S) movem o destaque, Enter confirma, 1–4 escolhem direto; Espaço não
+   *   escolhe nada (só o botão "Continuar", que não é uma escolha);
+   * - a tecla tratada aqui tem preventDefault: a página não rola e o mapa não interage com a mesma tecla.
+   */
+  const ABERTOS = '.modal-fundo, .rolagem-fundo, .compendio-fundo, .caderno-fundo, .livro, .dica-tutorial, .tutorial-fundo, .saves-fundo';
+  function teclado(e: KeyboardEvent) {
+    if (destruido || !el.isConnected || document.querySelector(ABERTOS)) return;
+    const k = e.key;
+    const teclaAvanco = k === ' ' || k === 'Enter';
+    const bots = [...escolhas.querySelectorAll<HTMLButtonElement>('.cena-escolha')].filter((b) => !b.disabled);
+    if (teclaAvanco && e.repeat) { e.preventDefault(); return; }
+    if (bots.length && !digitando) {
+      const atual = bots.findIndex((b) => b.classList.contains('destacada'));
+      const destacar = (i: number) => {
+        bots.forEach((b, j) => b.classList.toggle('destacada', j === i));
+        bots[i]?.scrollIntoView({ block: 'nearest' });
+      };
+      if (k === 'ArrowDown' || k === 'ArrowUp' || k === 's' || k === 'S' || k === 'w' || k === 'W') {
+        e.preventDefault();
+        const passo = k === 'ArrowDown' || k === 's' || k === 'S' ? 1 : -1;
+        destacar(atual < 0 ? (passo > 0 ? 0 : bots.length - 1) : (atual + passo + bots.length) % bots.length);
+        audio.sfx('ui-click', { ganho: 0.25 });
+        return;
+      }
+      if (/^[1-4]$/.test(k)) {
+        const b = bots[Number(k) - 1];
+        if (b) { e.preventDefault(); destacar(Number(k) - 1); b.click(); }
+        return;
+      }
+      if (k === 'Enter') {
+        e.preventDefault();
+        if (atual >= 0) bots[atual].click();
+        else destacar(0);
+        return;
+      }
+      if (k === ' ') {
+        e.preventDefault();
+        if (bots.length === 1 && bots[0].classList.contains('cena-seguir')) bots[0].click();
+        return;
+      }
+    }
+    if (teclaAvanco) {
+      e.preventDefault();
+      tocar();
+    }
+  }
+  window.addEventListener('keydown', teclado, true);
+
   function mostrarAmeaca(id: string) {
     const a = DADOS_AMEACAS[id];
     if (!a) return;
@@ -342,7 +395,8 @@ export function criarPalco(o: OpcoesPalco): Palco {
     painel.classList.add('com-escolhas');
     el.classList.add('com-escolhas');
     escolhas.classList.add('visivel');
-    (escolhas.querySelector('button') as HTMLButtonElement | null)?.focus({ preventScroll: true });
+    // Sem foco automático: Espaço ou Enter de quem acabou de ler não escolhem nada sem querer (teclado acima).
+    if (document.activeElement instanceof HTMLElement && el.contains(document.activeElement)) document.activeElement.blur();
     requestAnimationFrame(() => escolhas.scrollIntoView({ block: 'end', behavior: 'smooth' }));
     void dica('escolha');
   }
@@ -501,6 +555,7 @@ export function criarPalco(o: OpcoesPalco): Palco {
     fundo: () => fundoAtual,
     destruir() {
       destruido = true;
+      window.removeEventListener('keydown', teclado, true);
       limparInicioCena();
       pararFala();
       pararLoop?.();

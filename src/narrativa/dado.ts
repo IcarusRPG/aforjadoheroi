@@ -108,6 +108,14 @@ export function criarDado(o: { tamanho?: number; cinza?: boolean; dado?: DefDado
     el.classList.add('rolando');
     let pulou = false;
     const pulo = new Promise<void>((ok) => { pularAgora = () => { pulou = true; ok(); }; });
+    // Espaço e Enter também pulam (PC). Na captura, para a tecla não avançar a cena junto.
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key !== ' ' && e.key !== 'Enter') return;
+      e.preventDefault();
+      e.stopPropagation();
+      pularAgora?.();
+    };
+    window.addEventListener('keydown', tecla, true);
     const k = op.curto ? 0.6 : 1;
     if (!op.silencioso) audio.sfx('dice-roll', { ganho: 0.8 });
     const encenar = async () => {
@@ -143,6 +151,7 @@ export function criarDado(o: { tamanho?: number; cinza?: boolean; dado?: DefDado
       }
     };
     await Promise.race([encenar(), pulo]);
+    window.removeEventListener('keydown', tecla, true);
     pularAgora = null;
     finalizar(valor);
   }
