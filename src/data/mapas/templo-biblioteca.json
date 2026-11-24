@@ -225,8 +225,9 @@
   {
    "id": "livro-solem",
    "item": "livro",
-   "x": 548,
-   "y": 640,
+   "x": 630,
+   "y": 668,
+   "interacao": {"x": 560, "y": 690},
    "acao": "ler",
    "livro": "solem",
    "fica": true
@@ -234,8 +235,9 @@
   {
    "id": "livro-alfars",
    "item": "livro",
-   "x": 1060,
-   "y": 640,
+   "x": 985,
+   "y": 668,
+   "interacao": {"x": 1058, "y": 690},
    "acao": "ler",
    "livro": "baldurs-povos",
    "fica": true
@@ -243,8 +245,9 @@
   {
    "id": "livro-guerra",
    "item": "livro",
-   "x": 470,
-   "y": 820,
+   "x": 395,
+   "y": 712,
+   "interacao": {"x": 462, "y": 765},
    "acao": "ler",
    "livro": "primeira-guerra",
    "fica": true
@@ -257,6 +260,7 @@
    "semIcone": true,
    "fica": true,
    "cena": "t-alcapao",
+   "anel": {"x": 835, "y": 400, "largura": 250},
    "marcador": [
     {
      "requer": {
