@@ -1,6 +1,6 @@
 {
-  "hulda": { "nome": "Roupas ao vento", "npc": "vo-hulda", "atraso": 1 },
-  "osric": { "nome": "Hortaliças em fuga", "npc": "osric", "atraso": 1 },
+  "hulda": { "nome": "Roupas ao vento", "npc": "vo-hulda", "atraso": 1, "coleta": { "rotulo": "Roupas", "itens": ["lencol", "lenco", "camisa"], "total": 3, "icone": "camisa" } },
+  "osric": { "nome": "Hortaliças em fuga", "npc": "osric", "atraso": 1, "coleta": { "rotulo": "Repolhos", "itens": ["repolho"], "total": 5, "icone": "repolho" } },
   "kobanu": { "nome": "Ratazanas nas abóboras", "npc": "kobanu", "atraso": 1 },
   "tobias": { "nome": "Pão para o templo", "npc": "tobias", "atraso": 0 }
 }
