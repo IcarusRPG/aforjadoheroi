@@ -49,6 +49,17 @@ export interface OpcoesMotor {
 
 export interface Motor {
   cena: Phaser.Scene;
+  /** Pixels de tela (CSS) por pixel do mapa, com o zoom atual da câmera. */
+  pxTela(): number;
+  /**
+   * Profundidade mínima para que nada do cenário (objetos, recortes) cubra a caixa `b` de quem tem a
+   * profundidade `prof`: devolve `prof` se nada opaco fica na frente, senão a do objeto mais à frente + 1.
+   */
+  frenteDe(b: Phaser.Geom.Rectangle, prof: number): number;
+  /** Fração (0–1) da caixa `b` coberta por cenário opaco desenhado na frente da profundidade `prof`. */
+  coberturaCaixa(b: Phaser.Geom.Rectangle, prof: number): number;
+  /** Pixels de tela por pixel do chibi (inteiro) e o filtro das texturas de personagem. */
+  nitidez(): { escalaTela: number; filtros: Record<string, number> };
   heroi: Phaser.GameObjects.Sprite;
   /** Bloqueia o controle do jogador (diálogos, clímax). */
   bloquear(sim: boolean): void;
@@ -127,6 +138,8 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
     const dentroDe = new Set<string>();
     let debugLigado = o.debugInicial;
     let movendoPorScript = false;
+    /** Encerra a caminhada por script em andamento (pararMovimento mata o tween, que então nunca completaria). */
+    let interromperCaminho: (() => void) | null = null;
     let destruido = false;
     const escala = mapa.escalaPersonagens ?? 1;
     escalarPes(escala);
@@ -140,6 +153,18 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
       const hgt = o.container.clientHeight || window.innerHeight;
       const alvo = Math.max(((o.alturasDeTela ?? 1.75) * hgt) / mapa.altura, w / mapa.largura);
       return Phaser.Math.Clamp(alvo, 0.7, 3);
+    };
+    /**
+     * Zoom da câmera (já com o dpr) ajustado para que cada pixel do chibi vire um número inteiro de pixels
+     * na tela (escala do personagem × zoom = inteiro): nítido, sem pixels de tamanhos diferentes. A câmera
+     * nunca mostra além do mapa (o inteiro sobe se for preciso cobrir a tela).
+     */
+    const zoomCamera = (fator = fatorZoom) => {
+      const z = zoomBase() * dpr * fator;
+      const w = (o.container.clientWidth || window.innerWidth) * dpr, hh = (o.container.clientHeight || window.innerHeight) * dpr;
+      const cobrir = Math.max(w / mapa.largura, hh / mapa.altura);
+      const k = Math.max(1, Math.round(escala * z), Math.ceil(escala * cobrir - 1e-6));
+      return k / escala;
     };
 
     let heroi!: Phaser.GameObjects.Sprite;
@@ -271,7 +296,7 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
         heroi = this.add.sprite(o.inicio?.x ?? mapa.inicio.x, o.inicio?.y ?? mapa.inicio.y, CHAVE_FOLHA, DIRECOES.indexOf(direcao) * COLUNAS);
         heroi.setOrigin(0.5, 46 / QUADRO).setDepth(heroi.y).setScale(escala);
         // Fora da escala 1, os pixels do personagem ficam nítidos (sem borrar ao ampliar).
-        if (escala !== 1) this.textures.get(CHAVE_FOLHA).setFilter(Phaser.Textures.FilterMode.NEAREST);
+        this.textures.get(CHAVE_FOLHA).setFilter(Phaser.Textures.FilterMode.NEAREST);
         prepararSilhueta(this, CHAVE_FOLHA);
         atores.set('heroi', { sprite: heroi, silhueta: true });
         heroi.on(Phaser.Animations.Events.ANIMATION_UPDATE, (_a: unknown, quadro: Phaser.Animations.AnimationFrame) => {
@@ -280,7 +305,7 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
 
         const cam = this.cameras.main;
         cam.setBounds(0, 0, mapa.largura, mapa.altura);
-        cam.setZoom(zoomBase() * dpr);
+        cam.setZoom(zoomCamera());
         cam.startFollow(heroi, false, 0.12, 0.12);
         cam.centerOn(heroi.x, heroi.y);
 
@@ -329,9 +354,11 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
             const caminho = encontrarCaminho(mapa.colisoes, mapa.largura, mapa.altura, { x: heroi.x, y: heroi.y }, { x, y });
             if (!caminho) return false;
             movendoPorScript = true;
+            let interrompido = false;
             for (const p of caminho) {
-              if (destruido) return false;
+              if (destruido || interrompido) return false;
               await new Promise<void>((ok) => {
+                interromperCaminho = () => { interrompido = true; interromperCaminho = null; ok(); };
                 const dx = p.x - heroi.x;
                 const dy = p.y - heroi.y;
                 const dist = Math.hypot(dx, dy);
@@ -342,12 +369,15 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
                 this.tweens.add({ targets: heroi, x: p.x, y: p.y, duration: (dist / velocidade) * 1000, ease: 'Linear', onComplete: () => ok() });
               });
             }
+            interromperCaminho = null;
+            if (interrompido) return false;
             movendoPorScript = false;
             animar(false);
             return true;
           },
           pararMovimento: () => {
             this.tweens.killTweensOf(heroi);
+            interromperCaminho?.();
             movendoPorScript = false;
             animar(false);
           },
@@ -391,13 +421,21 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
             blocosCarregados: blocosProntos.size,
           }),
           escala,
+          pxTela: () => cam.zoom / dpr,
+          frenteDe: (b, prof) => frenteDe(b, prof),
+          coberturaCaixa: (b, prof) => coberturaCaixa(b, prof),
+          /** Pixels de tela por pixel do chibi e o filtro das texturas de personagem (testes de nitidez). */
+          nitidez: () => ({
+            escalaTela: escala * cam.zoom,
+            filtros: Object.fromEntries(this.textures.getTextureKeys().filter((k) => k === CHAVE_FOLHA || k.startsWith('npc-')).map((k) => [k, this.textures.get(k).source[0].scaleMode])),
+          }),
           get cenario() { return cenario; },
           definirAnimacoes: (sim) => cenario?.definirAnimacoes(sim),
           posicao: () => ({ x: heroi.x, y: heroi.y, direcao }),
           proximo: () => proximo,
           zoomPara(fator, ms) {
             fatorZoom = fator;
-            cam.zoomTo(zoomBase() * dpr * fator, ms, 'Sine.easeInOut');
+            cam.zoomTo(zoomCamera(fator), ms, 'Sine.easeInOut');
           },
           tremer(ms, intensidade) {
             cam.shake(ms, intensidade);
@@ -568,6 +606,41 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
       return cobertos / pts.length;
     }
 
+    /** O que do cenário (recortes com máscara e objetos) fica na frente de `prof` e cruza a caixa `b`. */
+    function cenarioNaFrente(b: Phaser.Geom.Rectangle, prof: number) {
+      const rs = recortes.filter((r) => r.base > prof && mascaras.has(r.id) && Phaser.Geom.Intersects.RectangleToRectangle(b, r.img.getBounds()));
+      const os = cenario ? cenario.naFrente(prof, b, true) : [];
+      return { rs, os };
+    }
+    function opacoRecorte(id: string, x: number, y: number) {
+      const k = mascaras.get(id)!;
+      const lx = Math.round(x) - k.x0, ly = Math.round(y) - k.y0;
+      return lx >= 0 && ly >= 0 && lx < k.w && ly < k.m.length / k.w && !!k.m[ly * k.w + lx];
+    }
+    /** Pontos de amostra (grade ~12×12) dentro da caixa. */
+    function amostras(b: Phaser.Geom.Rectangle): [number, number][] {
+      const passo = Math.max(1, Math.min(b.width, b.height) / 12);
+      const pts: [number, number][] = [];
+      for (let y = b.top + passo / 2; y < b.bottom; y += passo) for (let x = b.left + passo / 2; x < b.right; x += passo) pts.push([x, y]);
+      return pts;
+    }
+    function frenteDe(b: Phaser.Geom.Rectangle, prof: number): number {
+      const { rs, os } = cenarioNaFrente(b, prof);
+      let p = prof;
+      const pts = amostras(b);
+      for (const r of rs) if (r.base >= p && pts.some(([x, y]) => opacoRecorte(r.id, x, y))) p = r.base + 1;
+      for (const s of os) if (s.o.profundidade >= p && pts.some(([x, y]) => cenario!.opaco(s, x, y))) p = s.o.profundidade + 1;
+      return p;
+    }
+    function coberturaCaixa(b: Phaser.Geom.Rectangle, prof: number): number {
+      const { rs, os } = cenarioNaFrente(b, prof);
+      const pts = amostras(b);
+      if (!pts.length || (!rs.length && !os.length)) return 0;
+      let n = 0;
+      for (const [x, y] of pts) if (rs.some((r) => opacoRecorte(r.id, x, y)) || os.some((s) => cenario!.opaco(s, x, y))) n++;
+      return n / pts.length;
+    }
+
     /** Folha só com o contorno (dourado claro) de cada quadro: a silhueta que fica por cima de tudo. */
     function prepararSilhueta(cena: Phaser.Scene, chave: string) {
       const destino = `contorno-${chave}`;
@@ -598,7 +671,7 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
         const f = tex.get(nome);
         nova.add(nome, 0, f.cutX, f.cutY, f.cutWidth, f.cutHeight);
       }
-      if (escala !== 1) nova.setFilter(Phaser.Textures.FilterMode.NEAREST);
+      nova.setFilter(Phaser.Textures.FilterMode.NEAREST);
     }
 
     /** A cada quadro: recorte translúcido quando alguém está atrás; silhueta quando o ator está > 40% coberto. */
@@ -649,7 +722,8 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
       scale: { mode: Phaser.Scale.NONE, zoom: 1 / dpr },
       audio: { noAudio: true },
       input: { keyboard: false, gamepad: false },
-      render: { antialias: true, powerPreference: 'high-performance' },
+      // Cenário suave (antialias); personagens com filtro nearest por textura e posições em pixel inteiro.
+      render: { antialias: true, roundPixels: true, powerPreference: 'high-performance' },
       scene: CenaExploracao,
     });
 
@@ -659,7 +733,7 @@ export function criarMotor(o: OpcoesMotor): Promise<Motor> {
       jogo.scale.resize(Math.round(largura() * dpr), Math.round(altura() * dpr));
       jogo.scale.setZoom(1 / dpr);
       const cam = jogo.scene.getScene('exploracao')?.cameras?.main;
-      if (cam) cam.setZoom(zoomBase() * dpr * fatorZoom);
+      if (cam) cam.setZoom(zoomCamera());
     });
     observador.observe(o.container);
 

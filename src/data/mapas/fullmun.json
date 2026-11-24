@@ -15,6 +15,7 @@
  "altura": 1351,
  "inicio": {"x": 431, "y": 1252, "direcao": "cima"},
  "alturasDeTela": 2.0,
+  "escalaPersonagens": 1.28,
  "versao": 2,
  "musica": "fullmun",
  "hud": "relogio",
@@ -213,6 +214,11 @@
    "pontos": [[1130, 1255], [1185, 1255], [1185, 1290], [1130, 1290]]
   },
   {
+   "id": "fresta-quintal-pedras",
+   "tipo": "bloqueado",
+   "pontos": [[1096, 1232], [1130, 1232], [1130, 1266], [1096, 1266]]
+  },
+  {
    "id": "caminho-horta",
    "tipo": "andavel",
    "pontos": [[528, 419], [606, 419], [594, 356], [500, 319], [390, 296], [385, 322], [485, 347], [543, 382]]
@@ -267,6 +273,7 @@
    "x": 1636,
    "y": 554,
    "interacao": {"x": 1629, "y": 703},
+   "sobre": "padaria",
    "requer": {
     "missao": {"hulda": "aceita"}
    },

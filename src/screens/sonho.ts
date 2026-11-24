@@ -366,6 +366,7 @@ export function telaSonho(): Tela {
       state: () => ({
         pronto: motor !== null,
         heroi: motor?.posicao() ?? null,
+        nitidez: motor?.nitidez() ?? null,
         proximo: motor?.proximo() ?? null,
         ouvidas: [...getEstado().sonho.ouvidas],
         concluido: getEstado().sonho.concluido,

@@ -170,7 +170,7 @@ test('Füllmun: depois do Mirtilo, o "!" vermelho pula sobre a casa da Aylin, a 
   await continuar(page);
   await noMapa(page, 'fullmun');
   // Perto da casa: o marcador acima da porta, sem seta.
-  await f(page, 'teleport', M(1206), M(300));
+  await f(page, 'teleport', M(1206), 380);
   await expect.poll(async () => (await st(page)).destino, { timeout: 5000 }).toMatchObject({ id: 'casa-aylin', cor: 'vermelho', seta: false });
   // Pula (o y do "!" muda com o tempo).
   const alturas = await page.evaluate(async () => {

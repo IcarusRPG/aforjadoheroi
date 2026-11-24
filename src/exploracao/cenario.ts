@@ -134,8 +134,8 @@ export class Cenario {
   }
 
   /** Objetos desenhados na frente de quem tem os pés em `y` (e que cruzam a caixa `b`). */
-  naFrente(y: number, b: Phaser.Geom.Rectangle): SpriteCenario[] {
-    return this.sprites.filter((s) => s.o.profundidade > y && (s.img.visible || !!s.partes) && Phaser.Geom.Intersects.RectangleToRectangle(b, s.img.getBounds()));
+  naFrente(y: number, b: Phaser.Geom.Rectangle, mesmoForaDaVista = false): SpriteCenario[] {
+    return this.sprites.filter((s) => s.o.profundidade > y && (mesmoForaDaVista || s.img.visible || !!s.partes) && Phaser.Geom.Intersects.RectangleToRectangle(b, s.img.getBounds()));
   }
 
   /** Copas a 60% enquanto alguém (herói, seguidor, morador perto) está atrás delas. */
