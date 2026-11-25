@@ -231,7 +231,7 @@ test('salvar manual no mapa: Manual 1 guarda a posição exata; o autosave segue
   await expect(card(page, 'auto')).toContainText('AUTOMÁTICO');
   await expect(card(page, 'auto')).toContainText('Salvo pelo jogo');
   const m1 = (await saves(page)).find((s) => s.slot === 'manual1')!;
-  expect(m1).toMatchObject({ estado: 'ok', tipo: 'manual', nomeHeroi: 'Thaelion', capitulo: 1, local: 'Füllmun — Praça do mercado', versaoSave: 5 });
+  expect(m1).toMatchObject({ estado: 'ok', tipo: 'manual', nomeHeroi: 'Thaelion', capitulo: 1, local: 'Füllmun — Praça do mercado', versaoSave: 6 });
   await page.waitForTimeout(600);
   await foto(page, info.project.name, 'tela-salvar');
   await page.locator('.saves-fechar').click();
@@ -323,7 +323,7 @@ test('Continuar carrega sempre o save mais recente; o menu mostra Continuar e Ca
   await irAteMenu(page, './?test=1');
   await expect(page.locator('.btn-continuar')).toBeVisible();
   await expect(page.locator('.btn-carregar')).toBeVisible();
-  await expect(page.locator('.menu-continuar-info')).toHaveText('Recente · Capítulo 02 · há 3 dias');
+  await expect(page.locator('.menu-continuar-info')).toHaveText('Recente · Capítulo 01 · há 3 dias'); // o antigo Capítulo 02 é a parte do templo do 01
   const ordem = (await page.locator('.menu-botoes > .btn').allTextContents()).map((t) => t.split('Recente')[0].trim());
   expect(ordem.slice(0, 3)).toEqual(['Continuar', 'Carregar', 'Novo Jogo']);
   await page.waitForTimeout(1500);
@@ -337,7 +337,9 @@ test('Continuar carrega sempre o save mais recente; o menu mostra Continuar e Ca
   await f(page, 'setRelogio', null);
   await page.locator('.btn-continuar').click();
   await expect.poll(async () => (await st(page)).cena, { timeout: 20_000 }).toBe('c02-artho');
-  expect((await st(page)).capitulo).toBe(2);
+  // O antigo Capítulo 02 é a parte do templo do Capítulo 01 (Fase 5C).
+  expect((await st(page)).capitulo).toBe(1);
+  expect((await st(page)).parte).toBe('templo');
 });
 
 test('novo jogo: aviso, desistir mantém o automático, e só o primeiro autosave da aventura nova troca o automático', async ({ page }, info) => {
@@ -470,7 +472,7 @@ test('migração: o save único antigo vira o slot automático; os manuais come�
   await irAteMenu(page, './?test=1');
   const lista = await saves(page);
   expect(lista.map((s) => s.estado)).toEqual(['ok', 'vazio', 'vazio']);
-  expect(lista[0]).toMatchObject({ slot: 'auto', tipo: 'auto', nomeHeroi: 'Thaelion', capitulo: 1, local: 'Füllmun', versaoSave: 5 });
+  expect(lista[0]).toMatchObject({ slot: 'auto', tipo: 'auto', nomeHeroi: 'Thaelion', capitulo: 1, local: 'Füllmun', versaoSave: 6 });
   expect(await page.evaluate(() => localStorage.getItem('a-forja-do-heroi:estado'))).toBeNull();
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('fdg.opcoes')))!)).toMatchObject({ musica: 0.7, efeitos: 0.8 });
   await page.locator('.btn-continuar').click();

@@ -82,6 +82,11 @@ export interface PassoCaminho {
  */
 export interface Campanha {
   capitulo: number;
+  /**
+   * Parte do Capítulo 01 (Fase 5C): "fullmun" (quarto → vila → Mirtilo) ou "templo" (lâmina → treino →
+   * biblioteca → tragédia). Ausente nos outros capítulos e em saves antigos (= "fullmun").
+   */
+  parte?: ParteCapitulo;
   cena: string | null;
   modo: 'falas' | 'escolhas';
   flags: string[];
@@ -112,6 +117,8 @@ export interface Campanha {
   /** Onde o jogo retoma: numa cena (tela de capítulo) ou num mapa, na posição salva. */
   local: LocalJogo;
 }
+
+export type ParteCapitulo = 'fullmun' | 'templo';
 
 export type EstadoMissao = 'nao_iniciada' | 'aceita' | 'concluida' | 'recusada';
 
@@ -170,7 +177,7 @@ const padrao = (): EstadoJogo => ({
 });
 
 export const campanhaNova = (): Campanha => ({
-  capitulo: 1, cena: null, modo: 'falas', flags: [], caminho: [], usadas: [], pvAtual: null, bonusProximoTeste: 0, cenaAntesDaBatalha: null,
+  capitulo: 1, parte: 'fullmun', cena: null, modo: 'falas', flags: [], caminho: [], usadas: [], pvAtual: null, bonusProximoTeste: 0, cenaAntesDaBatalha: null,
   atraso: 0, missoes: {}, inventario: {}, reais: 0, relacoes: { ...RELACOES_INICIAIS },
   compendio: { conhecidos: [], bestiario: {}, vistos: {}, novidade: false },
   coletados: [], contadores: {}, local: { tela: 'capitulo' },
@@ -201,6 +208,15 @@ function migrar(c: Campanha, versao: number | undefined): Campanha {
       Object.assign(m, { cena: 'c01-soleira', modo: 'escolhas' });
     }
   }
+  // Fase 5C (versaoSave 6): um capítulo só, com duas partes. O antigo Capítulo 02 vira a parte "templo"
+  // do Capítulo 01, na mesma cena ("inicio" = começo da parte); o antigo "Capítulo 03 · Em breve" vira o 02.
+  if ((versao ?? 1) < 6) {
+    if (m.capitulo === 2) {
+      Object.assign(m, { capitulo: 1, parte: 'templo', cena: m.cena === 'inicio' ? null : m.cena });
+      if (!m.flags.includes('chegou_templo')) m.flags = [...m.flags, 'chegou_templo'];
+    } else if (m.capitulo >= 3) Object.assign(m, { capitulo: m.capitulo - 1, parte: undefined });
+  }
+  if (m.capitulo === 1 && !m.parte) m.parte = 'fullmun';
   return m;
 }
 

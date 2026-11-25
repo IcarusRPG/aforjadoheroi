@@ -13,10 +13,10 @@ import { irPara, type Tela } from '../core/telas';
 import { textos } from '../core/textos';
 import { botao, h } from '../core/ui';
 
-/** Tela provisória depois do Capítulo 01: "Capítulo 02 — O Templo de Sólem · Em breve". */
+/** Tela provisória depois do Capítulo 01: "Capítulo 02 — Provação Sob a Luz · Em breve". */
 export function telaEmBreve(): Tela {
   const t = textos.emBreve;
-  // O capítulo que vem a seguir (ex.: "Capítulo 03 — Provação Sob a Luz").
+  // O capítulo que vem a seguir (ex.: "Capítulo 02 — Provação Sob a Luz").
   const atual = getEstado().campanha.capitulo;
   const anterior = Object.values(CAPITULOS).find((c) => c.proximoCapitulo.numero === atual);
   const capitulo = anterior ? `${textos.cenas.capitulo} ${String(atual).padStart(2, '0')}` : t.capitulo;

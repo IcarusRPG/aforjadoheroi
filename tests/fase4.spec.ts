@@ -410,13 +410,14 @@ test('Mirtilo no mapa: soma 1 marca, Gerulf +2 (acalmou), a Aylin segue o herói
   await f(page, 'teleport', M(850), M(176));
   await expect.poll(async () => (await st(page)).cena, { timeout: 10_000 }).toBe('c01-caminho');
   await escolher(page, 'Entrar no templo');
-  await expect(page.locator('.tela-fim-capitulo')).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator('.fim-resumo')).toContainText('Você acalmou o Mirtilo.');
-  await expect(page.locator('.fim-resumo')).toContainText('Atraso: Muito atrasado');
-  await page.waitForTimeout(1500);
-  await foto(page, info.project.name, 'fim-cap01');
-  await page.locator('.tela-fim-capitulo .btn-principal').click();
-  await expect(page.locator('.cena-cartao-titulo.visivel')).toContainText('O Templo de Sólem', { timeout: 15_000 });
+  // Fase 5C: um capítulo só. Sem "Fim do Capítulo": o cartão de local leva à parte do templo.
+  await expect(page.locator('.cena-cartao-titulo.cartao-local.visivel')).toContainText('Templo de Sólem', { timeout: 15_000 });
+  await expect(page.locator('.tela-fim-capitulo')).toHaveCount(0);
+  await expect.poll(async () => (await st(page)).cena, { timeout: 20_000 }).toBe('c02-lamina');
+  s = await st(page);
+  expect(s.capitulo).toBe(1);
+  expect(s.parte).toBe('templo');
+  expect(s.flags).toContain('acalmou');
 });
 
 test('subida com missão aceita e não concluída pergunta antes de seguir', async ({ page }) => {
@@ -648,58 +649,7 @@ test('biblioteca: a escolha da pista do sonho só aparece com a flag', async ({ 
   expect(await ateEscolhas(page)).toHaveLength(2);
 });
 
-for (const comMusica of [true, false]) {
-  test(`tragédia ${comMusica ? 'com' : 'sem'} tragedia.mp3: câmera lenta dessaturada, corte com flash, tela preta, sem tremor (opção desligada)`, async ({ page }, info) => {
-    // Sem a faixa (como antes de ela existir), a cena segue só com a batida.
-    if (!comMusica) await page.route('**/music/tragedia.mp3', (r) => r.fulfill({ status: 404, body: '' }));
-    await semear(page, MAPA('templo-biblioteca', { capitulo: 2, cena: 't-alcapao-artho', flags: ['carinho_nyme', 'nyme_saiu', 'alcapao_liberado'] }), { config: { tremores: false } });
-    await noMapa(page, 'templo-biblioteca');
-    await f(page, 'goto', 'c02-gritos');
-    await ateTexto(page, 'Gritos rasgam o ar lá fora');
-    await expect.poll(async () => (await st(page)).musica.tocando, { timeout: 5000 }).toBe(false);
-    await expect(page.locator('.tela.tremendo')).toHaveCount(0);
-    await escolher(page, 'Continuar');
-    await expect.poll(async () => (await st(page)).cena, { timeout: 10_000 }).toBe('c02-tragedia');
-    await expect(page.locator('.palco-cena.visual-dessaturado')).toBeVisible();
-    if (comMusica) {
-      await expect.poll(async () => { const m = (await st(page)).musica; return m.tocando && m.faixa?.endsWith('music/tragedia.mp3'); }, { timeout: 10_000 }).toBe(true);
-    }
-    await ateTexto(page, 'No fim do salão, a Nyme já está na porta do templo');
-    if (comMusica) {
-      await page.waitForTimeout(1200);
-      await foto(page, info.project.name, 'tragedia-camera-lenta');
-    } else {
-      expect((await st(page)).musica.tocando).toBe(false);
-    }
-    await ateTexto(page, 'O mundo volta de repente.');
-    await expect(page.locator('.palco-cena.visual-normal')).toBeVisible();
-    await expect(page.locator('.tela.tremendo')).toHaveCount(0);
-    if (comMusica) expect((await st(page)).musica.faixa).toMatch(/music\/tragedia\.mp3$/);
-    await ateTexto(page, 'Eu me sinto querida e segura.');
-    await expect(page.locator('.palco-cena.visual-preto')).toBeVisible();
-    // Na tela preta a música some: "o silêncio que vem depois"
-    await expect.poll(async () => (await st(page)).musica.tocando, { timeout: 8000 }).toBe(false);
-    if (comMusica) {
-      await page.waitForTimeout(1800);
-      await foto(page, info.project.name, 'tragedia-preto');
-    }
-    await ateTexto(page, 'O silêncio que vem depois é pior do que os gritos.');
-    await escolher(page, 'Continuar');
-    await expect(page.locator('.tela-fim-capitulo')).toBeVisible({ timeout: 15_000 });
-    await expect(page.locator('.fim-rotulo')).toHaveText('Fim do Capítulo 02');
-    await expect(page.locator('.fim-resumo li').last()).toHaveText('A Nyme deu a vida pela vila.');
-    if (!comMusica) return;
-    await page.waitForTimeout(1600);
-    await foto(page, info.project.name, 'fim-cap02');
-    const salvo = await page.evaluate(() => ((a) => ({ ...(a?.jogo ?? {}), versaoSave: a?.versaoSave, config: JSON.parse(localStorage.getItem('fdg.opcoes') ?? '{}') }))(JSON.parse(localStorage.getItem('fdg.save.auto') ?? 'null')).campanha);
-    expect(salvo).toMatchObject({ capitulo: 3, cena: 'inicio' });
-    expect(salvo.relacoes).toBeTruthy();
-    await page.locator('.tela-fim-capitulo .btn-principal').click();
-    await expect(page.locator('.tela-embreve')).toContainText('Capítulo 03', { timeout: 15_000 });
-    await expect(page.locator('.tela-embreve')).toContainText('Provação Sob a Luz');
-    await foto(page, info.project.name, 'embreve-cap03');
-  });
-}
+// A tragédia da Fase 4 (gritos sintetizados, sem flechas) foi substituída pela da Fase 5C: tests/fase5c.spec.ts.
 
 test('fluxo: Continuar retoma no meio do mapa, na posição salva', async ({ page }) => {
   await semear(page, MAPA('templo-salao', { capitulo: 2, cena: 'c02-artho', atraso: 2, flags: ['nyme_seguindo'] }));
@@ -716,17 +666,19 @@ test('fluxo: Continuar retoma no meio do mapa, na posição salva', async ({ pag
   expect(s.objetos).not.toContain('mancha-1');
 });
 
-test('save antigo da Fase 3 (parado em "Capítulo 02 · Em breve") migra para o início do Capítulo 02', async ({ page }) => {
+test('save antigo da Fase 3 (parado em "Capítulo 02 · Em breve") migra para o começo do templo (Capítulo 01, parte 2)', async ({ page }) => {
   await semear(page, { capitulo: 2, cena: 'inicio', flags: ['intimidou', 'salvou_aylin'], pvAtual: 12 }, { versaoSave: null });
   await continuar(page);
-  await expect(page.locator('.cena-cartao-titulo.visivel')).toContainText('O Templo de Sólem', { timeout: 15_000 });
+  await expect(page.locator('.cena-cartao-titulo.cartao-local.visivel')).toContainText('Templo de Sólem', { timeout: 15_000 });
   await expect.poll(async () => (await st(page)).cena, { timeout: 20_000 }).toBe('c02-lamina');
   const s = await st(page);
   expect(s.atraso).toBe(2);
   expect(s.inventario).toEqual({});
   expect(s.relacoes).toMatchObject({ artho: 2, nyme: 2, aylin: 1, kobanu: 0 });
+  expect(s.capitulo).toBe(1);
+  expect(s.parte).toBe('templo');
   const salvo = await page.evaluate(() => ((a) => ({ ...(a?.jogo ?? {}), versaoSave: a?.versaoSave, config: JSON.parse(localStorage.getItem('fdg.opcoes') ?? '{}') }))(JSON.parse(localStorage.getItem('fdg.save.auto') ?? 'null')));
-  expect(salvo.versaoSave).toBe(5);
+  expect(salvo.versaoSave).toBe(6);
 });
 
 test('modo de ajuste (F2) nos três mapas novos', async ({ page }, info) => {

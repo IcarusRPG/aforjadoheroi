@@ -13,7 +13,7 @@
 export type IdSlot = 'auto' | 'manual1' | 'manual2';
 export const SLOTS: readonly IdSlot[] = ['auto', 'manual1', 'manual2'];
 /** 5 = Fase 4B (slots). A campanha dentro do save segue a migração da Fase 4. */
-export const VERSAO_SAVE = 5;
+export const VERSAO_SAVE = 6;
 const FORMATO_SAVE = 'forja-do-heroi-save';
 const FORMATO_COPIA = 'forja-do-heroi-saves';
 const CHAVE_TMP = 'fdg.save.tmp';
@@ -81,6 +81,16 @@ export function validarRegistro(x: unknown): x is RegistroSave {
   return true;
 }
 
+/**
+ * Card de um save antigo na numeração nova (Fase 5C, versaoSave 6): o antigo Capítulo 02 (Templo de
+ * Sólem) virou a segunda parte do Capítulo 01, e o "Capítulo 03 · Em breve" virou o Capítulo 02.
+ */
+export function metaAtual(r: RegistroSave): MetaSave {
+  const m = r.meta;
+  if (r.versaoSave >= 6 || !(m.capitulo >= 2)) return m;
+  return { ...m, capitulo: m.capitulo - 1 };
+}
+
 export function montarRegistro(meta: Omit<MetaSave, 'versaoSave'>, jogo: DadosJogo): RegistroSave {
   return { formato: FORMATO_SAVE, versaoSave: VERSAO_SAVE, meta: { ...meta, versaoSave: VERSAO_SAVE }, jogo };
 }
@@ -97,7 +107,7 @@ export function lerSlot(slot: IdSlot): InfoSlot {
   if (bruto === null) return { slot, estado: 'vazio' };
   try {
     const r: unknown = JSON.parse(bruto);
-    return validarRegistro(r) ? { slot, estado: 'ok', meta: r.meta, registro: r } : { slot, estado: 'danificado' };
+    return validarRegistro(r) ? { slot, estado: 'ok', meta: metaAtual(r), registro: r } : { slot, estado: 'danificado' };
   } catch {
     return { slot, estado: 'danificado' };
   }

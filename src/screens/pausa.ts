@@ -6,7 +6,7 @@ import { ITENS_DEF, comerPao, pvAtual, pvMaxAtual, qtdItem, usarItemCura } from 
 import { irPara } from '../core/telas';
 import { textos } from '../core/textos';
 import { abrirModal, botao, h } from '../core/ui';
-import { CAPITULOS, resumoDoCapitulo } from '../narrativa/capitulo';
+import { CAPITULOS, resumoDoDiario } from '../narrativa/capitulo';
 import { classePorId, nomeDaClasse } from '../core/classes';
 import { racaPorId } from '../core/regras';
 import { fmt } from '../core/textos';
@@ -78,8 +78,9 @@ export function abrirDiario(): void {
   const T = textos.cenas;
   const c = getEstado().campanha;
   const corpo = h('div', { class: 'diario' });
+  // Um resumo por capítulo, crescendo ao longo das partes (Füllmun e o templo são o mesmo Capítulo 01).
   for (const cap of Object.values(CAPITULOS).filter((x) => x.numero <= c.capitulo)) {
-    const resumo = resumoDoCapitulo(cap);
+    const resumo = resumoDoDiario(cap.numero);
     corpo.append(
       h('h3', {}, `${T.capitulo} ${String(cap.numero).padStart(2, '0')} · ${cap.titulo}`),
       resumo.length ? h('ul', { class: 'diario-resumo' }, ...resumo.map((l) => h('li', {}, l))) : h('p', { class: 'diario-vazio' }, T.diario.semResumo),

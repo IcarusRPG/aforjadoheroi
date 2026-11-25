@@ -91,6 +91,9 @@
       "Baseado no livro de Izor e no sistema Icarus RPG"
     ],
     "extras": [],
+    "de": "de",
+    "via": "via",
+    "cortesia": "atribuição por cortesia",
     "fechar": "Fechar"
   },
   "criacao": {
@@ -199,7 +202,7 @@
   },
   "emBreve": {
     "capitulo": "Capítulo 02",
-    "titulo": "O Templo de Sólem",
+    "titulo": "Provação Sob a Luz",
     "emBreve": "Em breve",
     "voltar": "Voltar ao menu"
   },

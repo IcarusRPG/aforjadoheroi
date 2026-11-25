@@ -10,7 +10,7 @@ import { avisar } from './toasts';
  * No save fica só o que já foi anunciado (`anunciados`) e se há novidade (ponto dourado no menu).
  */
 
-export interface Gatilho { inicio?: boolean; flag?: string; cena?: string; capituloMin?: number }
+export interface Gatilho { inicio?: boolean; flag?: string; cena?: string; capituloMin?: number; parte?: 'templo' }
 export interface PaginaCaderno {
   id: string;
   titulo?: string;
@@ -36,6 +36,8 @@ export function gatilhoCaderno(g: Gatilho): boolean {
   if (g.flag && !c.flags.includes(g.flag)) return false;
   if (g.cena && !c.caminho.some((p) => p.cena === g.cena) && c.cena !== g.cena) return false;
   if (g.capituloMin !== undefined && c.capitulo < g.capituloMin) return false;
+  // Parte do Capítulo 01 (ou qualquer capítulo depois dele).
+  if (g.parte && !(c.capitulo > 1 || c.parte === g.parte)) return false;
   return true;
 }
 

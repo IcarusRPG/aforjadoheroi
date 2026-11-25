@@ -4,9 +4,11 @@
   "titulo": "Amanhecer Tardio",
   "lugar": "Füllmun",
   "inicio": "c01-quarto",
+  "parte": "fullmun",
+  "proximaParte": "templo",
   "proximoCapitulo": {
     "numero": 2,
-    "titulo": "O Templo de Sólem"
+    "titulo": "Provação Sob a Luz"
   },
   "resumo": [
     {
@@ -85,6 +87,109 @@
     {
       "cesto": "faltando",
       "texto": "Você carrega o cesto de pães do Tobias (falta pão)."
+    }
+  ],
+  "resumoFim": [
+    {
+      "flag": "acalmou",
+      "prioridade": 3,
+      "texto": "Você acalmou o Mirtilo."
+    },
+    {
+      "flag": "intimidou",
+      "prioridade": 2,
+      "texto": "Você espantou o Mirtilo no grito."
+    },
+    {
+      "flag": "machucado",
+      "prioridade": 3,
+      "texto": "Você enfrentou o Mirtilo e acabou na lama, salv{o|a} pela corda de Gerulf."
+    },
+    {
+      "flag": "lutou",
+      "semFlag": "machucado",
+      "prioridade": 1,
+      "texto": "Você enfrentou o Mirtilo."
+    },
+    {
+      "flag": "salvou_aylin",
+      "prioridade": 1,
+      "texto": "A Aylin está a salvo."
+    },
+    {
+      "flag": "pista_trinco",
+      "prioridade": 2,
+      "texto": "Você notou algo estranho no trinco do chiqueiro."
+    },
+    {
+      "flag": "gentileza_osric",
+      "prioridade": 3,
+      "texto": "Você ajudou o Osric e não cobrou nada."
+    },
+    {
+      "flag": "abobora_artho",
+      "prioridade": 3,
+      "texto": "Você expulsou as ratazanas da plantação do Kobanu."
+    },
+    {
+      "flag": "missao_hulda",
+      "prioridade": 1,
+      "texto": "Você recuperou as roupas da Vó Hulda."
+    },
+    {
+      "flag": "missao_osric",
+      "semFlag": "gentileza_osric",
+      "prioridade": 1,
+      "texto": "Você catou os repolhos do Osric."
+    },
+    {
+      "missao": {
+        "kobanu": "concluida"
+      },
+      "semFlag": "abobora_artho",
+      "prioridade": 1,
+      "texto": "Você enfrentou as ratazanas, e o Kobanu terminou o serviço."
+    },
+    {
+      "flag": "venceu_treino_rasteira",
+      "prioridade": 3,
+      "texto": "Você derrubou a Nyme com uma rasteira."
+    },
+    {
+      "flag": "venceu_treino",
+      "semFlag": "venceu_treino_rasteira",
+      "prioridade": 2,
+      "texto": "Você venceu a Nyme no treino."
+    },
+    {
+      "flag": "perdeu_treino",
+      "prioridade": 1,
+      "texto": "A Nyme venceu o treino."
+    },
+    {
+      "flag": "comeu_pao",
+      "prioridade": 3,
+      "texto": "Faltou um pão no cesto."
+    },
+    {
+      "flag": "limpou_tudo",
+      "prioridade": 2,
+      "texto": "Você limpou o salão principal e a biblioteca."
+    },
+    {
+      "flag": "leu_tres_livros",
+      "prioridade": 3,
+      "texto": "Você leu os três livros da biblioteca."
+    },
+    {
+      "flag": "perguntou_alcapao",
+      "prioridade": 2,
+      "texto": "Você perguntou sobre o alçapão."
+    },
+    {
+      "flag": "nyme_caiu",
+      "final": true,
+      "texto": "A Nyme deu a vida pela vila."
     }
   ],
   "cenas": [
@@ -1819,6 +1924,5 @@
         }
       ]
     }
-  ],
-  "resumoAtraso": true
+  ]
 }

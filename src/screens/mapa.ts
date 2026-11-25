@@ -1,3 +1,4 @@
+import { terminarParte } from './fimCapitulo';
 import CONVERSAS from '../data/conversas.json';
 import LIVROS from '../data/livros.json';
 import MISSOES from '../data/missoes.json';
@@ -532,7 +533,7 @@ export function telaMapa(params?: unknown): Tela {
         salvarPosicao();
         void irPara('batalha', { batalha: d.batalha, vitoria: d.vitoria, derrota: d.derrota, retorno: 'mapa' });
       },
-      aoFim: () => void irPara('fimCapitulo', undefined, { duracao: 900 }),
+      aoFim: terminarParte,
       aoMapa: (m) => {
         // Mesmo mapa: o herói vai para o ponto antes de a conversa fechar, para quem passa a segui-lo
         // (a Aylin) já nascer ali, e não onde a conversa começou.
@@ -949,6 +950,7 @@ export function telaMapa(params?: unknown): Tela {
         cena: palco?.cenaAtual()?.id ?? null,
         escolhas: palco?.escolhasVisiveis() ?? [],
         digitando: palco?.digitando() ?? false,
+        fundo: palco?.fundo() ?? null,
         hud: hud.textContent?.trim() ?? '',
         dica: dica.hidden ? null : dica.textContent,
         balao: ultimoBalao,

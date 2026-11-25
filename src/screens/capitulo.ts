@@ -3,12 +3,13 @@ import { etapaDoCapitulo, garantirEtapa } from '../core/etapas';
 import { SFX_CAPITULO, SFX_FASE4 } from '../core/assets';
 import { audio } from '../core/audio';
 import { atualizarCampanha, getEstado, marcarFlag } from '../core/estado';
+import { terminarParte } from './fimCapitulo';
 import { estadoProgresso, registrarGanchos } from '../core/ganchos';
 import { pvAntesDaForjaDe } from '../core/pericias';
 import { irPara, type Tela } from '../core/telas';
 import { textos } from '../core/textos';
 import { botaoMenu, esperar, h } from '../core/ui';
-import { CAPITULOS, cenaPorId, type Capitulo } from '../narrativa/capitulo';
+import { type Capitulo, cenaPorId, parteAtual } from '../narrativa/capitulo';
 import { aplicarEfeitos, criarPalco, tocarMusicaDaCena } from '../narrativa/palco';
 import { abrirMenuPausa } from './pausa';
 
@@ -30,7 +31,7 @@ export function telaCapitulo(params?: unknown): Tela {
   const prm = (params ?? {}) as ParamsCapitulo;
   const estado = getEstado();
   const p = estado.personagem;
-  const cap: Capitulo = CAPITULOS[estado.campanha.capitulo] ?? CAPITULOS[1];
+  const cap: Capitulo = parteAtual(estado.campanha);
 
   let saiu = false;
   let fecharPausa: (() => void) | null = null;
@@ -41,13 +42,20 @@ export function telaCapitulo(params?: unknown): Tela {
       atualizarCampanha({ cenaAntesDaBatalha: d.cenaOrigem });
       void irPara('batalha', { batalha: d.batalha, vitoria: d.vitoria, derrota: d.derrota, retorno: 'capitulo' });
     },
-    aoFim: () => void irPara('fimCapitulo', undefined, { duracao: 900 }),
+    // Fim de uma parte (Füllmun): a próxima, com o cartão de local; fim da última: "Fim do Capítulo".
+    aoFim: terminarParte,
     aoMapa: (m) => void irPara('mapa', { mapa: m.mapa, x: m.x, y: m.y }),
     aoEntrarCena: (c, modo) => atualizarCampanha({ cena: c.id, modo, local: { tela: 'capitulo' } }),
   });
-  const cartao = h('div', { class: 'cena-cartao-titulo', hidden: true },
-    h('p', { class: 'cartao-capitulo' }, `${T.capitulo} ${String(cap.numero).padStart(2, '0')}`),
-    h('h1', { class: 'cartao-titulo' }, cap.titulo));
+  // Começo do capítulo: o cartão "Capítulo 01 — Amanhecer Tardio". Começo de uma parte seguinte: o cartão
+  // de local, menor ("Templo de Sólem · Mais tarde, naquela manhã").
+  const cartao = cap.cartaoLocal
+    ? h('div', { class: 'cena-cartao-titulo cartao-local', hidden: true },
+        h('h1', { class: 'cartao-local-titulo' }, cap.cartaoLocal.titulo),
+        cap.cartaoLocal.subtitulo ? h('p', { class: 'cartao-local-subtitulo' }, cap.cartaoLocal.subtitulo) : null)
+    : h('div', { class: 'cena-cartao-titulo', hidden: true },
+        h('p', { class: 'cartao-capitulo' }, `${T.capitulo} ${String(cap.numero).padStart(2, '0')}`),
+        h('h1', { class: 'cartao-titulo' }, cap.titulo));
   const btnPausa = botaoMenu('cena-btn-pausa');
   const el = h('div', { class: 'tela-capitulo' }, palco.el, btnPausa, cartao);
 
@@ -66,7 +74,7 @@ export function telaCapitulo(params?: unknown): Tela {
   async function cartaoDeTitulo() {
     cartao.hidden = false;
     requestAnimationFrame(() => cartao.classList.add('visivel'));
-    await esperar(3000);
+    await esperar(cap.cartaoLocal ? 2000 : 3000);
     cartao.classList.remove('visivel');
     await esperar(700);
     cartao.hidden = true;

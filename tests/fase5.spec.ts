@@ -61,7 +61,9 @@ test('Füllmun: o herói fica atrás e na frente de uma casa, de uma árvore e d
     await page.waitForTimeout(400);
     s = await st(page);
     expect(s.fora, `${id}: atrás num ponto livre`).toBe(false);
-    expect(s.heroiCobertura, `${id}: atrás, o objeto cobre o herói`).toBeGreaterThan(0.25);
+    // Os blocos do cenário perto do herói carregam sob demanda: espera o objeto entrar.
+    await expect.poll(async () => (await st(page)).heroiCobertura, { timeout: 8000, message: `${id}: atrás, o objeto cobre o herói` }).toBeGreaterThan(0.25);
+    s = await st(page);
     if (id === 'padaria') await foto(page, info, 'heroi-atras-da-casa');
     if (id === 'carvalho') expect(s.profundidade.translucidos).toContain('carvalho');
     await f(page, 'teleport', x, frente);

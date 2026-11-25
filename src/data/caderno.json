@@ -1,5 +1,5 @@
 {
-  "_sobre": "Caderno de estudos do herói (Fase 4E). Cada página, anotação e pergunta tem um gatilho: { \"inicio\": true }, { \"flag\": \"...\" }, { \"cena\": \"...\" } ou { \"capituloMin\": n }. Os textos aceitam {nome} e {a|b} (masculino|feminino); **negrito** e __sublinhado__.",
+  "_sobre": "Caderno de estudos do herói (Fase 4E). Cada página, anotação e pergunta tem um gatilho: { \"inicio\": true }, { \"flag\": \"...\" }, { \"cena\": \"...\" } ou { \"parte\": \"templo\" } (chegou ao templo). Os textos aceitam {nome} e {a|b} (masculino|feminino); **negrito** e __sublinhado__.",
   "paginas": [
     {
       "id": "abertura",
@@ -97,7 +97,7 @@
   "anotacoes": [
     { "id": "sonho", "data": "Manhã, dia do sonho", "gatilho": { "inicio": true }, "texto": "Sonhei de novo. Sete estátuas sem rosto, sete vozes. Serão os deuses que eu estudo? Não consigo dizer quem é quem." },
     { "id": "trinco", "data": "Manhã, a caminho do templo", "gatilho": { "flag": "pista_trinco" }, "texto": "O trinco do chiqueiro do Gerulf foi arrebentado, não esquecido aberto. O Mirtilo não tem força pra isso. Então quem?" },
-    { "id": "fim-cap01", "data": "Manhã, na porta do templo", "gatilho": { "capituloMin": 2 }, "texto": "Salvei a Aylin de um porco azul. {Atrasado|Atrasada} de novo, mas valeu a pena." },
+    { "id": "fim-cap01", "data": "Manhã, na porta do templo", "gatilho": { "parte": "templo" }, "texto": "Salvei a Aylin de um porco azul. {Atrasado|Atrasada} de novo, mas valeu a pena." },
     { "id": "livro-guerra", "data": "Tarde, na biblioteca do templo", "gatilho": { "flag": "leu_livro_guerra" }, "texto": "Finalmente: a guerra existiu. Devotos de Béllica, Odincia e Nocturna marcharam contra os seguidores dos Baldurs. As páginas seguintes foram arrancadas." },
     { "id": "livro-povos", "data": "Tarde, na biblioteca do templo", "gatilho": { "flag": "leu_livro_povos" }, "texto": "Cada povo tem um deus por trás. Os Nyashi, Eternus. Os Ogbari, Mentis. Os dragões, Draconara." },
     { "id": "livro-solem", "data": "Tarde, na biblioteca do templo", "gatilho": { "flag": "leu_livro_solem" }, "texto": "Depois de uma guerra antiga, Sólem fortaleceu uma barreira no Núcleo. A mesma barreira das preces do Artho?" },

@@ -1,4 +1,4 @@
-import { CAPITULOS } from '../narrativa/capitulo';
+import { CAPITULOS, parteAtual } from '../narrativa/capitulo';
 import type { EstadoJogo } from './estado';
 
 /** Nome legível do lugar onde o jogo está, para os cards de save ("Füllmun — Praça do mercado"). */
@@ -27,8 +27,9 @@ export function localDoJogo(e: Pick<EstadoJogo, 'personagem' | 'sonho' | 'campan
   if (!e.personagem?.classe) return { capitulo: 0, local: 'Criação do herói' };
   if (!e.sonho.concluido) return { capitulo: 0, local: 'O sonho dos deuses' };
   const c = e.campanha;
-  const cap = CAPITULOS[c.capitulo];
-  if (!cap) return { capitulo: c.capitulo, local: '' };
+  if (!CAPITULOS[c.capitulo]) return { capitulo: c.capitulo, local: '' };
+  // "Capítulo 01 · Füllmun — Praça" ou "Capítulo 01 · Templo de Sólem — Biblioteca".
+  const cap = parteAtual(c);
   if (c.local.tela === 'mapa' && c.local.mapa) return { capitulo: c.capitulo, local: lugarDoMapa(c.local.mapa, c.local.x, c.local.y) };
   return { capitulo: c.capitulo, local: cap.lugar ?? '' };
 }

@@ -1,6 +1,6 @@
 import CAP01 from '../data/capitulos/cap01.json';
 import CAP02 from '../data/capitulos/cap02.json';
-import { getEstado, type EstadoMissao, type Personagem } from '../core/estado';
+import { getEstado, type Campanha, type EstadoMissao, type ParteCapitulo, type Personagem } from '../core/estado';
 import type { IdPericia } from '../core/pericias';
 import { atrasoFinal, cestoIntacto, contador, estadoMissao, qtdItem, relacao } from '../core/progresso';
 
@@ -80,8 +80,20 @@ export interface Fala {
   limite?: number;
   /** Efeitos de tela e som ao mostrar a fala (alçapão, gritos, tragédia). */
   som?: string;
-  tremor?: boolean;
-  flash?: boolean;
+  /** Velocidade/tom do som (ex.: 0.95 = 5% mais grave). */
+  somTaxa?: number;
+  /** Tremor de tela; "leve" = mínimo. Sem tremor com "Tremores" desligados ou animações reduzidas. */
+  tremor?: boolean | 'leve';
+  /** Flash branco; "curto" = 80 ms. Sem flash com animações reduzidas. */
+  flash?: boolean | 'curto';
+  /** Troca de fundo seca (sem crossfade), com `fundo`. */
+  corte?: boolean;
+  /** A fala só avança depois de tantos ms (o toque antes disso completa o texto, mas a cena espera). */
+  minimo?: number;
+  /** Uma música que entra depois de um tempo, sem fade-in (ex.: "tragedia?" 1,5 s depois dos gritos). */
+  musicaDepois?: { musica: string; atraso: number };
+  /** Fade da música quando `musica` é null (ms). */
+  musicaFade?: number;
   /** Classe visual do palco: "dessaturado", "normal", "preto", "alcapao"… */
   visual?: string;
   /** Som em loop (ex.: batida do coração); null para. */
@@ -164,24 +176,52 @@ export interface Capitulo {
   id: string;
   numero: number;
   titulo: string;
+  /** Parte do capítulo que este arquivo cobre (o Capítulo 01 tem "fullmun" e "templo"). */
+  parte?: ParteCapitulo;
+  /** Ao terminar esta parte, segue para a próxima (cartão de local), sem a tela de fim de capítulo. */
+  proximaParte?: ParteCapitulo;
+  /** Cartão de local no começo da parte (no lugar do cartão de capítulo). */
+  cartaoLocal?: { titulo: string; subtitulo?: string };
+  /**
+   * Resumo da tela de fim de capítulo (no arquivo da primeira parte): no máximo 8 linhas, as de maior
+   * `prioridade` (escolhas raras), na ordem da lista; a linha `final` vem por último, sozinha.
+   */
+  resumoFim?: (Condicao & { texto: string; prioridade?: number; final?: boolean })[];
   /** Lugar do capítulo, para os cards de save ("Füllmun", "Templo de Sólem"). */
   lugar?: string;
   inicio: string;
   proximoCapitulo: { numero: number; titulo: string };
   resumo: (Condicao & { texto: string })[];
-  /** Acrescenta o estado do relógio do atraso ao resumo do fim. */
-  resumoAtraso?: boolean;
   fundoFim?: string;
   /** Música da tela de fim (null = silêncio). */
   musicaFim?: string | null;
   cenas: Cena[];
 }
 
-export const CAPITULOS: Record<number, Capitulo> = { 1: CAP01 as unknown as Capitulo, 2: CAP02 as unknown as Capitulo };
+/**
+ * Fase 5C: o Capítulo 01 tem duas partes, cada uma no seu arquivo: Füllmun (cap01.json) e o Templo de
+ * Sólem (cap02.json). `CAPITULOS` tem um registro por capítulo (o da primeira parte: número, título,
+ * próximo capítulo e o resumo do fim); `PARTES` tem as cenas de cada parte.
+ */
+export const PARTES: Record<ParteCapitulo, Capitulo> = { fullmun: CAP01 as unknown as Capitulo, templo: CAP02 as unknown as Capitulo };
+export const CAPITULOS: Record<number, Capitulo> = { 1: PARTES.fullmun };
 
-/** Procura a cena em todos os capítulos (as conversas do mapa podem ser de qualquer um). */
+/** O arquivo de cenas que vale agora (a parte do Capítulo 01, ou o capítulo). */
+export function parteAtual(c: Pick<Campanha, 'capitulo' | 'parte'> = getEstado().campanha): Capitulo {
+  if (c.capitulo === 1) return PARTES[c.parte ?? 'fullmun'];
+  return CAPITULOS[c.capitulo] ?? PARTES.fullmun;
+}
+
+/** As partes de um capítulo, em ordem. */
+export function partesDo(numero: number): Capitulo[] {
+  const r: Capitulo[] = [];
+  for (let cap: Capitulo | undefined = CAPITULOS[numero]; cap; cap = cap.proximaParte ? PARTES[cap.proximaParte] : undefined) r.push(cap);
+  return r;
+}
+
+/** Procura a cena em todas as partes (as conversas do mapa podem ser de qualquer uma). */
 export function cenaGlobal(id: string): { cap: Capitulo; cena: Cena } | null {
-  for (const cap of Object.values(CAPITULOS)) {
+  for (const cap of Object.values(PARTES)) {
     const cena = cap.cenas.find((x) => x.id === id);
     if (cena) return { cap, cena };
   }
@@ -231,7 +271,30 @@ export function interpolar(texto: string, p: Personagem | null = getEstado().per
     .replace(/\{([^{}|]*)\|([^{}|]*)\}/g, (_m, a: string, b: string) => (p?.genero === 'f' ? b : a));
 }
 
-/** Linhas do resumo do capítulo (fim de capítulo e Diário), pelas flags. */
+/** Linhas do resumo de uma parte (Diário), pelas flags. */
 export function resumoDoCapitulo(cap: Capitulo): string[] {
   return cap.resumo.filter((r) => atende(r)).map((r) => interpolar(r.texto));
+}
+
+/** O Diário: um resumo só do capítulo, crescendo ao longo das partes (sem repetir linhas). */
+export function resumoDoDiario(numero: number): string[] {
+  return [...new Set(partesDo(numero).flatMap(resumoDoCapitulo))];
+}
+
+/**
+ * Resumo da tela de fim de capítulo: até 8 linhas. As de maior prioridade (escolhas raras) entram
+ * primeiro; aparecem na ordem da lista, e a linha final (a Nyme) vem por último, sozinha.
+ */
+export function resumoDoFim(numero: number, max = 8): string[] {
+  const cap = CAPITULOS[numero];
+  if (!cap?.resumoFim) return resumoDoDiario(numero).slice(0, max);
+  const valem = cap.resumoFim.filter((r) => atende(r));
+  const finais = valem.filter((r) => r.final);
+  const outras = valem.map((r, i) => ({ r, i })).filter(({ r }) => !r.final);
+  const escolhidas = [...outras]
+    .sort((a, b) => (b.r.prioridade ?? 1) - (a.r.prioridade ?? 1) || a.i - b.i)
+    .slice(0, Math.max(0, max - finais.length))
+    .sort((a, b) => a.i - b.i)
+    .map(({ r }) => r);
+  return [...escolhidas, ...finais].map((r) => interpolar(r.texto));
 }
