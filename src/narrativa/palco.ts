@@ -7,7 +7,7 @@ import { ASSETS, existeAsset, existeAssetCache, src, type NomeSfx } from '../cor
 import { dica } from '../core/tutorial';
 import { audio } from '../core/audio';
 import { rolarD20 } from '../core/dados';
-import { atualizarCampanha, getEstado, limparInicioCena, marcarFlag, marcarInicioCena, tremoresLigados } from '../core/estado';
+import { animacoesReduzidas, atualizarCampanha, getEstado, limparInicioCena, marcarFlag, marcarInicioCena, tremoresLigados } from '../core/estado';
 import { PERICIAS, bonusPericia } from '../core/pericias';
 import {
   conhecer, darItem, definirMissao, encontrarCriatura, mudarRelacao, pvMaxAtual, somarAtraso, somarContador, somarReais, verificarCompendio,
@@ -142,7 +142,7 @@ export function criarPalco(o: OpcoesPalco): Palco {
    * cena mudar de novo antes de a imagem chegar, ela é descartada.
    */
   let pedidoFundo = 0;
-  function trocarFundo(id: string | undefined, lento = false) {
+  function trocarFundo(id: string | undefined, lento = false, corte = false) {
     el.classList.toggle('sem-fundo', !id);
     if (!id || id === fundoAtual) return;
     const primeira = !fundoAtual;
@@ -154,7 +154,10 @@ export function criarPalco(o: OpcoesPalco): Palco {
       const [visivel, outro] = fundoA.classList.contains('visivel') ? [fundoA, fundoB] : [fundoB, fundoA];
       outro.src = url;
       outro.dataset.cena = id;
-      outro.classList.toggle('lento', lento);
+      outro.classList.toggle('lento', lento && !corte);
+      // Corte seco: as duas imagens trocam sem transição (a anterior some na hora).
+      fundoA.classList.toggle('corte', corte);
+      fundoB.classList.toggle('corte', corte);
       if (primeira && !visivel.getAttribute('src')) {
         visivel.src = url;
         visivel.dataset.cena = id;
@@ -259,6 +262,7 @@ export function criarPalco(o: OpcoesPalco): Palco {
   }
 
   async function mostrarFala(f: Fala): Promise<void> {
+    const inicioFala = performance.now();
     const q = quemFala(f);
     await arrumarBustos(f);
     if (destruido) return;
@@ -287,8 +291,17 @@ export function criarPalco(o: OpcoesPalco): Palco {
         digitando = false;
         caixa.classList.add('completa');
         completar = null;
-        avancar = () => { avancar = null; ok(); };
-        if (f.auto) window.setTimeout(() => { if (avancar && cena) avancar(); }, f.auto);
+        const liberar = () => {
+          if (destruido) return;
+          avancar = () => { avancar = null; ok(); };
+          if (f.auto) window.setTimeout(() => { if (avancar && cena) avancar(); }, f.auto);
+        };
+        // Tempo mínimo (os gritos): o texto já está completo, mas a cena só segue depois dele.
+        const falta = (f.minimo ?? 0) - (performance.now() - inicioFala);
+        if (falta > 0) {
+          caixa.classList.add('esperando');
+          window.setTimeout(() => { caixa.classList.remove('esperando'); liberar(); }, falta);
+        } else liberar();
       };
       completar = terminar;
     });
@@ -454,18 +467,29 @@ export function criarPalco(o: OpcoesPalco): Palco {
     if (s.vai_para) return void entrar(s.vai_para, 'falas');
   }
 
-  function tremer() {
+  function tremer(leve = false) {
     if (!tremoresLigados()) return;
     const alvo = el.closest('.tela') as HTMLElement ?? el;
-    alvo.classList.remove('tremendo');
+    alvo.classList.remove('tremendo', 'tremendo-leve');
     void alvo.offsetWidth;
-    alvo.classList.add('tremendo');
+    alvo.classList.add(leve ? 'tremendo-leve' : 'tremendo');
   }
+
+  /** Música que entra depois de um tempo (cancelada se a cena mudar antes). */
+  let timerMusica = 0;
 
   async function efeitosDaFala(f: Fala) {
     if (f.musica !== undefined) {
+      window.clearTimeout(timerMusica);
       if (f.musica === null && f.musicaCorte) audio.pararMusica(0);
+      else if (f.musica === null && f.musicaFade !== undefined) audio.pararMusica(f.musicaFade);
       else tocarMusicaDaCena(f.musica, f.musicaCorte ? 0 : 1500);
+    }
+    if (f.musicaDepois) {
+      const { musica, atraso } = f.musicaDepois;
+      const daCena = cena;
+      window.clearTimeout(timerMusica);
+      timerMusica = window.setTimeout(() => { if (!destruido && cena === daCena) tocarMusicaDaCena(musica, 0); }, atraso);
     }
     if (f.abafar !== undefined) audio.abafar(f.abafar);
     if (f.loop !== undefined) {
@@ -473,9 +497,15 @@ export function criarPalco(o: OpcoesPalco): Palco {
       pararLoop = f.loop ? audio.sfxLoop(f.loop as NomeSfx) : null;
     }
     if (f.visual) { for (const c of [...el.classList]) if (c.startsWith('visual-')) el.classList.remove(c); el.classList.add(`visual-${f.visual}`); }
-    if (f.som) audio.sfx(f.som as NomeSfx);
-    if (f.flash) { flash.classList.remove('ativo'); void flash.offsetWidth; flash.classList.add('ativo'); }
-    if (f.tremor) tremer();
+    if (f.som) audio.sfx(f.som as NomeSfx, f.somTaxa ? { taxa: f.somTaxa } : {});
+    // Animações reduzidas: sem flash (os cortes continuam secos).
+    if (f.flash && !animacoesReduzidas()) {
+      flash.classList.remove('ativo', 'curto');
+      void flash.offsetWidth;
+      flash.classList.add('ativo');
+      if (f.flash === 'curto') flash.classList.add('curto');
+    }
+    if (f.tremor) tremer(f.tremor === 'leve');
   }
 
   async function entrar(id: string, modo: 'falas' | 'escolhas' = 'falas'): Promise<void> {
@@ -525,7 +555,7 @@ export function criarPalco(o: OpcoesPalco): Palco {
           if (f.limite && grupos[f.grupo] > f.limite) continue;
         }
         aplicarEfeitos(f.efeitos);
-        if (f.fundo) trocarFundo(f.fundo, true);
+        if (f.fundo) trocarFundo(f.fundo, !f.corte, f.corte);
         if (f.ameaca) mostrarAmeaca(f.ameaca);
         await efeitosDaFala(f);
         await mostrarFala(f);
@@ -558,6 +588,7 @@ export function criarPalco(o: OpcoesPalco): Palco {
       window.removeEventListener('keydown', teclado, true);
       limparInicioCena();
       pararFala();
+      window.clearTimeout(timerMusica);
       pararLoop?.();
       audio.abafar(false);
     },

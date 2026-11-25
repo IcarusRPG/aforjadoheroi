@@ -1,11 +1,16 @@
 {
   "id": "cap02",
-  "numero": 2,
-  "titulo": "O Templo de Sólem",
+  "numero": 1,
+  "parte": "templo",
+  "titulo": "Amanhecer Tardio",
+  "cartaoLocal": {
+    "titulo": "Templo de Sólem",
+    "subtitulo": "Mais tarde, naquela manhã"
+  },
   "lugar": "Templo de Sólem",
   "inicio": "c02-lamina",
   "proximoCapitulo": {
-    "numero": 3,
+    "numero": 2,
     "titulo": "Provação Sob a Luz"
   },
   "fundoFim": "cena-nyme-porta",
@@ -987,10 +992,15 @@
       "falas": [
         {
           "texto": "Gritos rasgam o ar lá fora, como trovões num céu sem nuvens.",
-          "som": "gritos-longe",
+          "som": "gritos-fullmun",
           "tremor": true,
           "musica": null,
-          "musicaCorte": true
+          "musicaCorte": true,
+          "musicaDepois": {
+            "musica": "tragedia?",
+            "atraso": 1500
+          },
+          "minimo": 3000
         },
         {
           "texto": "Você e Artho se olham. Nenhum dos dois diz nada. Vocês correm."
@@ -1012,8 +1022,7 @@
           "texto": "Vocês empurram a porta da biblioteca ao mesmo tempo, e o tempo parece desacelerar.",
           "velocidade": 48,
           "loop": "batida-coracao",
-          "abafar": true,
-          "musica": "tragedia?"
+          "abafar": true
         },
         {
           "texto": "No fim do salão, a Nyme já está na porta do templo, a espada firme na mão.",
@@ -1029,24 +1038,51 @@
         },
         {
           "texto": "O mundo volta de repente.",
+          "fundo": "cena-nyme-flecha1",
+          "corte": true,
           "visual": "normal",
           "loop": null,
           "abafar": false,
-          "som": "flecha",
-          "flash": true,
+          "som": "flecha-nyme",
+          "flash": "curto",
           "tremor": true
         },
         {
-          "texto": "Uma flecha. Depois outra."
+          "texto": "Uma flecha."
         },
         {
-          "texto": "A espada da Nyme cai no chão de pedra com um som metálico."
+          "texto": "Depois outra.",
+          "fundo": "cena-nyme-flecha2",
+          "corte": true,
+          "visual": "normal",
+          "som": "flecha-nyme",
+          "somTaxa": 0.95,
+          "flash": "curto",
+          "tremor": true
         },
         {
-          "texto": "Ela se vira uma última vez para vocês, os lábios entreabertos, como se quisesse dizer alguma coisa. As palavras nunca saem."
+          "texto": "A espada da Nyme escorrega dos dedos dela…",
+          "fundo": "cena-nyme-espada",
+          "corte": true,
+          "visual": "zoom-espada",
+          "abafar": true
         },
         {
-          "texto": "E então ela tomba."
+          "texto": "…e bate no chão de pedra.",
+          "som": "espada-clang",
+          "tremor": "leve"
+        },
+        {
+          "texto": "Ela se vira uma última vez para vocês, os lábios entreabertos, como se quisesse dizer alguma coisa. As palavras nunca saem.",
+          "fundo": "cena-nyme-flecha2",
+          "corte": true,
+          "visual": "dessaturado-leve"
+        },
+        {
+          "texto": "E então ela tomba.",
+          "visual": "para-preto",
+          "musica": null,
+          "musicaFade": 4000
         },
         {
           "texto": "Eu me sinto querida e segura.",
@@ -1055,7 +1091,6 @@
             "flag": "carinho_nyme"
           },
           "visual": "preto",
-          "musica": null,
           "efeitos": {
             "flag": "nyme_caiu"
           }
@@ -1063,15 +1098,15 @@
         {
           "texto": "O silêncio que vem depois é pior do que os gritos.",
           "visual": "preto",
-          "musica": null,
           "efeitos": {
             "flag": "nyme_caiu"
           },
-          "auto": 2000
+          "minimo": 2000,
+          "auto": 1
         }
       ],
       "fundo": "cena-nyme-porta",
-      "visual": "dessaturado",
+      "visual": "camera-lenta",
       "seguir": {
         "fim": true,
         "texto": "Continuar"

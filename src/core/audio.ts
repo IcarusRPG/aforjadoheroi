@@ -113,10 +113,14 @@ class GerenciadorAudio {
   /** `taxa` muda a velocidade/tom (passos com variação); `ganho` é relativo ao volume dos efeitos. */
   sfx(nome: NomeSfx, opcoes: { taxa?: number; ganho?: number } = {}): void {
     const { config } = getEstado();
-    if (config.mudo || config.efeitos <= 0) return;
     const ctx = this.ctx;
     const buffer = this.buffers.get(nome);
-    if (!ctx || !buffer || !this.ganhoSfx || ctx.state !== 'running') return;
+    const tocou = !(config.mudo || config.efeitos <= 0) && !!ctx && !!buffer && !!this.ganhoSfx && ctx.state === 'running';
+    if (nome !== 'ui-hover' && nome !== 'text-blip') {
+      this.historicoSfx.push({ nome, taxa: opcoes.taxa ?? 1, t: Math.round(performance.now()), tocou });
+      if (this.historicoSfx.length > 60) this.historicoSfx.shift();
+    }
+    if (!tocou || !ctx || !buffer || !this.ganhoSfx) return;
     if (nome === 'ui-hover') {
       const agora = performance.now();
       if (agora - this.ultimoHover < 60) return;
@@ -134,6 +138,14 @@ class GerenciadorAudio {
     }
     fonte.start();
   }
+
+  /** Os últimos efeitos pedidos (sem o hover e o blip do texto), para os testes. */
+  private historicoSfx: { nome: string; taxa: number; t: number; tocou: boolean }[] = [];
+  efeitosRecentes() { return [...this.historicoSfx]; }
+  /** Duração (s) de um efeito já decodificado, ou null. */
+  duracaoEfeito(nome: NomeSfx): number | null { return this.buffers.get(nome)?.duration ?? null; }
+  /** Fator de volume da música (abafada na câmera lenta = 0,3). */
+  get abafada(): boolean { return this.fatorAbafar < 1; }
 
   /** Efeito em loop (ex.: batida do coração na câmera lenta). Devolve a função que para. */
   sfxLoop(nome: NomeSfx, ganho = 1): () => void {

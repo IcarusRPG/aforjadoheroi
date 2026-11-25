@@ -17,6 +17,7 @@ import './styles/fase4f.css';
 import './styles/caderno.css';
 import './styles/fase5.css';
 import './styles/fase5b.css';
+import './styles/fase5c.css';
 import './styles/paisagem.css';
 
 import { instalarProtecoes } from './core/carregar';

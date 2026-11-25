@@ -19,6 +19,7 @@ export function estadoProgresso() {
   const c = getEstado().campanha;
   return {
     capitulo: c.capitulo,
+    parte: c.parte ?? null,
     flags: [...c.flags],
     pv: c.pvAtual,
     atraso: c.atraso,
@@ -31,6 +32,9 @@ export function estadoProgresso() {
     local: { ...c.local },
     toasts: avisosRecentes(),
     musica: audio.estadoMusica(),
+    efeitos: audio.efeitosRecentes(),
+    musicaAbafada: audio.abafada,
+    duracaoGritos: audio.duracaoEfeito('gritos-fullmun'),
     tutorial: estadoTutorial(),
     erro: !!document.querySelector('.tela-erro'),
     caderno: { ...estadoCaderno(), tela: telaCaderno() },

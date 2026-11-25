@@ -1,0 +1,75 @@
+/*
+ * ===================== Fase 5C: capítulo único (cartão de local), a nova tragédia e os créditos =====================
+ */
+
+/* ---------- Cartão de local: menor e mais discreto que o de capítulo ---------- */
+.cena-cartao-titulo.cartao-local { gap: 0.5rem; }
+.cartao-local-titulo {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(1.4rem, 5.5vw, 2.3rem);
+  letter-spacing: 0.08em;
+  color: var(--marmore);
+  text-shadow: 0 0 18px rgba(242, 212, 138, 0.25);
+}
+.cartao-local-subtitulo {
+  margin: 0;
+  font-family: var(--fonte-texto);
+  font-style: italic;
+  font-size: clamp(0.85rem, 3vw, 1.05rem);
+  color: var(--ouro-claro);
+  opacity: 0.85;
+}
+
+/* ---------- Tragédia ---------- */
+/* Corte seco: a imagem nova entra e a anterior sai na hora, sem crossfade. */
+.cena-fundo.corte { transition: none !important; }
+/* Os gritos: o alçapão escurece e desatura em 300 ms. */
+.palco-cena.visual-alcapao-escuro .cena-fundo.visivel { filter: brightness(0.42) saturate(0.35); transition: filter 0.3s ease-out; }
+/* Câmera lenta: ~70% dessaturado e um zoom muito lento. */
+.palco-cena.visual-camera-lenta .cena-fundo.visivel { filter: saturate(0.3); animation: zoom-lento 40s linear forwards; }
+/* A espada escorregando: zoom lento de 3% durante a frase. */
+.palco-cena.visual-zoom-espada .cena-fundo.visivel { animation: zoom-espada 7s ease-out forwards; }
+@keyframes zoom-espada { from { transform: scale(1); } to { transform: scale(1.03); } }
+/* Ela se vira: levemente dessaturado (~30%), zoom bem lento. */
+.palco-cena.visual-dessaturado-leve .cena-fundo.visivel { filter: saturate(0.7); animation: zoom-lento 45s linear forwards; }
+/* Ela tomba: fade lento para o preto (2,5 s). */
+.palco-cena.visual-para-preto::after { content: ''; position: absolute; inset: 0; z-index: 4; background: #000; animation: para-preto 2.5s ease-in forwards; pointer-events: none; }
+.palco-cena.visual-para-preto .cena-painel { z-index: 5; }
+.palco-cena.visual-para-preto .cena-caixa { background: rgba(0, 0, 0, 0.9); border-color: rgba(214, 169, 74, 0.35); }
+/* Flash curto (80 ms) das flechas. */
+.cena-flash.ativo.curto { animation: flash-cena 0.08s linear; }
+/* Tremor mínimo (a espada no chão). */
+.tela-capitulo.tremendo-leve { animation: tremor-leve 0.25s linear; }
+@keyframes tremor-leve {
+  25%, 75% { transform: translate(-1px, 0); }
+  50% { transform: translate(1px, 0); }
+}
+/* Tempo mínimo da fala (os gritos): a seta de avançar espera. */
+.cena-caixa.esperando .cena-seta { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .palco-cena.visual-camera-lenta .cena-fundo.visivel,
+  .palco-cena.visual-zoom-espada .cena-fundo.visivel,
+  .palco-cena.visual-dessaturado-leve .cena-fundo.visivel { animation: none; }
+}
+
+/* ---------- Créditos ---------- */
+.creditos-secao { display: grid; gap: 0.45rem; margin-top: 0.6rem; text-align: left; }
+.creditos-secao-titulo {
+  margin: 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(214, 169, 74, 0.35);
+  font-family: var(--fonte-titulo);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  color: var(--ouro);
+  text-align: center;
+}
+.creditos-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+.creditos-item { display: grid; gap: 0.1rem; line-height: 1.35; }
+.creditos-obra { color: var(--marmore); font-weight: 600; }
+.creditos-autor { color: var(--marmore-suave); font-size: 0.9rem; }
+.creditos-autor a { color: var(--ouro-claro); text-decoration: underline; text-underline-offset: 2px; }
+.creditos-licenca { color: var(--ouro-claro); font-size: 0.8rem; opacity: 0.85; }
+.opcao-creditos { width: 100%; min-height: 44px; }
