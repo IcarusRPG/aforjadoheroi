@@ -7,6 +7,9 @@ const BASE = import.meta.env.BASE_URL;
 /** URL pública de um asset (respeita o `base` do Vite, ex.: /aforjadoheroi/). */
 export const urlAsset = (caminho: string): string => `${BASE}assets/${caminho}`;
 
+/** Efeitos reais (gravações tratadas por scripts/prepare-audio.mjs), em MP3. */
+const SFX_MP3 = new Set(['gritos-fullmun', 'flecha-nyme']);
+
 export const ASSETS = {
   videoIntro: 'video/intro-icarus.mp4',
   videoPrologo: 'video/prologo.mp4',
@@ -18,7 +21,8 @@ export const ASSETS = {
   musicaSonho: ['music/sonho.mp3', 'music/sonho.ogg', 'music/sonho.m4a', 'music/sonho.wav'],
   spriteChibi: (raca: string, genero: Genero) => `sprites/chibi-${raca}-${genero}.png`,
   retrato: (raca: string, genero: Genero, classe = 'comum') => `img/herois/${raca}-${genero}-${classe}.webp`,
-  sfx: (nome: string) => `sfx/${nome}.wav`,
+  /** Efeitos: WAV gerados por código; os reais (gravações, Fase 5C) em MP3. */
+  sfx: (nome: string) => `sfx/${nome}.${SFX_MP3.has(nome) ? 'mp3' : 'wav'}`,
   musica: (id: string) => `music/${id}.mp3`,
   cena: (id: string) => `img/cenas/${id}.webp`,
   retratoNpc: (id: string, expressao?: string) => `img/retratos/npc-${id}${expressao ? `-${expressao}` : ''}.webp`,
@@ -50,6 +54,8 @@ export const SFX_CAPITULO = [
 export const SFX_FASE4 = [
   'rato-guincho', 'abobora-splat', 'pegar-item', 'esfregar', 'espirro', 'espada-treino', 'rasteira',
   'coracao-mais', 'coracao-menos', 'compendio', 'gritos-longe', 'batida-coracao', 'flecha',
+  // Fase 5C: a tragédia com os efeitos reais (gritos-longe e flecha ficam de reserva).
+  'gritos-fullmun', 'flecha-nyme', 'espada-clang',
 ] as const;
 export type NomeSfx = (typeof SFX)[number] | (typeof SFX_SONHO)[number] | (typeof SFX_CAPITULO)[number] | (typeof SFX_FASE4)[number];
 

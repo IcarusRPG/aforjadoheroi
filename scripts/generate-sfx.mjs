@@ -420,6 +420,29 @@ const efeitos = {
     tom(b, { freq: 1500, freqFim: 1150, dur: 0.06, amp: 0.3, ataque: 0.001, decai: 0.014, forma: 'tri' });
     return normalizar(b, 0.6);
   },
+  // Fase 5C: a espada da Nyme batendo no chão de pedra. Clang metálico (parciais inarmônicos), um
+  // segundo toque mais fraco (o quique) e reverb de salão (ecos difusos que se apagam).
+  'espada-clang': () => {
+    const b = buffer(2.6);
+    const metal = [[1, 1], [2.32, 0.7], [3.87, 0.45], [5.11, 0.3], [6.93, 0.18]];
+    tom(b, { freq: 690, freqFim: 682, dur: 1.6, amp: 0.55, ataque: 0.001, decai: 0.42, parciais: metal });
+    tom(b, { freq: 1240, freqFim: 1228, dur: 1.1, amp: 0.25, ataque: 0.001, decai: 0.22, parciais: metal });
+    ruido(b, { dur: 0.05, amp: 0.9, ataque: 0.0005, decai: 0.008, corte: 7000, passaAlta: 1200 });
+    tom(b, { inicio: 0.19, freq: 702, freqFim: 694, dur: 0.9, amp: 0.22, ataque: 0.001, decai: 0.18, parciais: metal });
+    ruido(b, { inicio: 0.19, dur: 0.03, amp: 0.35, ataque: 0.0005, decai: 0.006, corte: 6000, passaAlta: 1500 });
+    tom(b, { freq: 110, freqFim: 70, dur: 0.12, amp: 0.35, ataque: 0.001, decai: 0.04 });
+    // Reverb simples: ecos de pedra com atrasos primos, cada um mais fraco e mais escuro.
+    const seco = Float32Array.from(b);
+    for (const [ms, g] of [[37, 0.42], [53, 0.36], [79, 0.3], [113, 0.24], [167, 0.18], [241, 0.12], [331, 0.08]]) {
+      const d = Math.floor((ms / 1000) * SR);
+      let lp = 0;
+      for (let i = d; i < b.length; i++) {
+        lp += 0.35 * (seco[i - d] + 0.5 * b[i - d] - lp);
+        b[i] += g * lp;
+      }
+    }
+    return normalizar(b, 0.8);
+  },
 };
 
 await mkdir(OUT, { recursive: true });
