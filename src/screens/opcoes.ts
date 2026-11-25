@@ -4,6 +4,7 @@ import { botaoTelaCheia, dicaIphone, suportaTelaCheia } from '../core/telaCheia'
 import { escolhaDoDado } from './escolhaDado';
 import { textos } from '../core/textos';
 import { abrirModal, botao, h } from '../core/ui';
+import { abrirCreditos } from './creditos';
 import { VERSAO_JOGO } from '../core/erros';
 import { definirTutorial, tutorialLigado, zerarDicas } from '../core/tutorial';
 
@@ -79,7 +80,9 @@ export function abrirOpcoes(): void {
     dicaIphone('opcao-dica-iphone'),
     h('div', { class: 'opcao opcao-linha' }, h('label', { for: 'opcao-dicas' }, t.dicas), dicas),
     h('div', { class: 'opcao' }, rever, aviso),
+    // Créditos: fecha as Opções e abre por cima; ao fechar os créditos, as Opções voltam.
+    h('div', { class: 'opcao' }, botao(textos.menu.creditos, () => { fechar(); abrirCreditos(() => abrirOpcoes()); }, { classe: 'btn-discreto opcao-creditos' })),
     h('p', { class: 'opcoes-versao' }, t.versao.replace('{v}', VERSAO_JOGO)),
   );
-  abrirModal(t.titulo, corpo, t.fechar);
+  const fechar = abrirModal(t.titulo, corpo, t.fechar);
 }

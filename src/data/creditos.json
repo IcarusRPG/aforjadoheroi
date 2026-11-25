@@ -1,0 +1,57 @@
+{
+  "_sobre": "Créditos do jogo (Fase 5C). Cada item: obra, autor, fonte (site ou origem), link (opcional) e licença. Campos vazios não aparecem no jogo; preencha-os aqui. \"cortesia\": true = a licença não exige atribuição, mas ela fica como cortesia.",
+  "secoes": [
+    {
+      "id": "musica",
+      "titulo": "Música",
+      "itens": [
+        { "id": "the-first-choice", "obra": "The First Choice (menu)", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "sonho", "obra": "Sonho dos deuses", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "fullmun", "obra": "Füllmun (duas faixas)", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "tensao-porco", "obra": "Tensão (o Mirtilo)", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "batalha-ratazanas", "obra": "Batalha", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "vitoria", "obra": "Vitória", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "game-over", "obra": "Game Over", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "templo", "obra": "Templo de Sólem", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "treino", "obra": "Treino", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "tragedia", "obra": "Tragédia", "autor": "", "fonte": "", "licenca": "" }
+      ]
+    },
+    {
+      "id": "efeitos",
+      "titulo": "Efeitos sonoros",
+      "itens": [
+        {
+          "id": "gritos-fullmun",
+          "obra": "Screaming_Crowd.wav",
+          "autor": "magician5",
+          "fonte": "Freesound",
+          "link": "https://freesound.org/people/magician5/sounds/124022/",
+          "licenca": "CC0 (domínio público)",
+          "cortesia": true
+        },
+        {
+          "id": "flecha-nyme",
+          "obra": "Air Woosh Move",
+          "autor": "Almitory",
+          "fonte": "OpenGameArt.org",
+          "licenca": "CC0 (domínio público)",
+          "cortesia": true
+        },
+        { "id": "gerados", "obra": "Demais efeitos (interface, dado, passos, golpes, clang da espada): gerados por código para o jogo", "autor": "", "fonte": "", "licenca": "" }
+      ]
+    },
+    {
+      "id": "arte",
+      "titulo": "Arte",
+      "itens": [
+        { "id": "cenas", "obra": "Ilustrações das cenas", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "retratos", "obra": "Retratos e bustos", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "mapas", "obra": "Mapas (Füllmun, templo, sonho)", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "sprites", "obra": "Sprites (chibis, batalha, itens)", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "panteao", "obra": "Panteão (os deuses)", "autor": "", "fonte": "", "licenca": "" },
+        { "id": "videos", "obra": "Vídeos (abertura e prólogo)", "autor": "", "fonte": "", "licenca": "" }
+      ]
+    }
+  ]
+}

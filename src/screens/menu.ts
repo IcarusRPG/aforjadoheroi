@@ -79,7 +79,7 @@ export function telaMenu(): Tela {
     // O Compêndio usa o save mais recente (que é o que está em memória ao abrir o jogo).
     temSave() ? botao(t.compendio, () => abrirCompendio()) : null,
     botao(t.opcoes, abrirOpcoes),
-    botao(t.creditos, abrirCreditos),
+    botao(t.creditos, () => abrirCreditos()),
   );
   // Navegador limpo (aparelho novo): sem saves, o Carregar não aparece; a cópia de segurança fica
   // num link discreto para importar os saves de outro aparelho.
