@@ -36,3 +36,74 @@
 }
 @media (prefers-reduced-motion: reduce) { .cartao-tela { transition-duration: 0.01s; } }
 .animacoes-reduzidas .cartao-tela { transition-duration: 0.01s; }
+
+/* ---------- Palco: Ato I ---------- */
+/* C1-03: preto, com o brilho laranja da tocha pulsando no centro. */
+.palco-cena.visual-tocha-pulso { background: #000; }
+.palco-cena.visual-tocha-pulso::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 150, 60, 0.38) 0, rgba(200, 90, 30, 0.16) 16%, rgba(0, 0, 0, 0) 38%), #000;
+  animation: tocha-pulso 2.4s ease-in-out infinite;
+}
+.palco-cena.visual-tocha-pulso .cena-painel { z-index: 5; }
+.palco-cena.visual-tocha-pulso .cena-caixa { background: rgba(0, 0, 0, 0.88); }
+@keyframes tocha-pulso { 0%, 100% { opacity: 0.85; } 45% { opacity: 1; } 70% { opacity: 0.92; } }
+.animacoes-reduzidas .palco-cena.visual-tocha-pulso::after { animation: none; }
+@media (prefers-reduced-motion: reduce) { .palco-cena.visual-tocha-pulso::after { animation: none; } }
+
+/* Silêncio antes de uma fala (pausaAntes): a caixa some. */
+.cena-caixa.pausa { opacity: 0; transition: opacity 0.4s ease; }
+
+/* Narração em itálico (a memória). */
+.cena-caixa.estilo-italico .cena-texto { font-style: italic; color: var(--marmore-suave); }
+
+/* LEVANTE: texto grande, dourado, com tremor. */
+.cena-caixa.estilo-levante { text-align: center; background: rgba(0, 0, 0, 0.7); border-color: var(--ouro); }
+.cena-caixa.estilo-levante .cena-texto {
+  display: block;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(2.2rem, 11vw, 4.4rem);
+  letter-spacing: 0.12em;
+  color: #ffd25a;
+  text-shadow: 0 0 18px rgba(255, 196, 70, 0.75), 0 0 42px rgba(255, 160, 40, 0.45);
+  animation: levante-treme 0.09s linear infinite alternate;
+}
+@keyframes levante-treme { from { transform: translate(-1.5px, 0.5px); } to { transform: translate(1.5px, -0.5px); } }
+.animacoes-reduzidas .cena-caixa.estilo-levante .cena-texto { animation: none; }
+@media (prefers-reduced-motion: reduce) { .cena-caixa.estilo-levante .cena-texto { animation: none; } }
+
+/* Inscrição na parede (Parte 3): letras gravadas, iluminadas por um brilho suave. */
+.cena-caixa.estilo-inscricao { text-align: center; background: linear-gradient(180deg, rgba(40, 32, 22, 0.92), rgba(20, 16, 12, 0.94)); border-color: rgba(242, 212, 138, 0.5); box-shadow: 0 0 28px rgba(242, 212, 138, 0.18) inset; }
+.cena-caixa.estilo-inscricao .cena-texto { font-family: var(--fonte-titulo); letter-spacing: 0.04em; color: #f2dca0; text-shadow: 0 0 10px rgba(242, 212, 138, 0.45); }
+
+/* As sete vozes juntas: letras tremendo levemente. */
+.cena-caixa.estilo-vozes .cena-texto { display: inline-block; color: #fff3cf; text-shadow: 0 0 8px rgba(255, 230, 160, 0.6); animation: vozes-tremem 0.18s steps(2) infinite; }
+@keyframes vozes-tremem { 0% { transform: translate(0.6px, 0); } 50% { transform: translate(-0.6px, 0.4px); } 100% { transform: translate(0, -0.4px); } }
+.animacoes-reduzidas .cena-caixa.estilo-vozes .cena-texto { animation: none; }
+@media (prefers-reduced-motion: reduce) { .cena-caixa.estilo-vozes .cena-texto { animation: none; } }
+/* A frase de cada deus, na cor dele. */
+.cena-caixa.estilo-voz { border-color: var(--cor-voz, var(--ouro)); }
+.cena-caixa.estilo-voz .cena-nome { color: var(--cor-voz, var(--ouro)); }
+.cena-caixa.voz-solem { --cor-voz: #ffd25a; }
+.cena-caixa.voz-justar { --cor-voz: #e4ecf7; }
+.cena-caixa.voz-ardor { --cor-voz: #ff6a4d; }
+.cena-caixa.voz-expiria { --cor-voz: #5a9bff; }
+.cena-caixa.voz-eternus { --cor-voz: #ffffff; }
+.cena-caixa.voz-mentis { --cor-voz: #ffb340; }
+.cena-caixa.voz-irae { --cor-voz: #c286ff; }
+
+/* Só o busto do herói (narração com expressão, a visão do LEVANTE). */
+.cena-bustos.so-heroi { justify-content: flex-end; }
+/* A visão de si mesmo: aura dourada em volta do busto. */
+.cena-busto-heroi.aura {
+  filter: drop-shadow(0 0 10px rgba(255, 210, 90, 0.95)) drop-shadow(0 0 26px rgba(255, 180, 60, 0.7)) brightness(1.12);
+  animation: aura-pulsa 2.2s ease-in-out infinite;
+}
+@keyframes aura-pulsa { 50% { filter: drop-shadow(0 0 16px rgba(255, 220, 110, 1)) drop-shadow(0 0 36px rgba(255, 180, 60, 0.85)) brightness(1.2); } }
+.animacoes-reduzidas .cena-busto-heroi.aura { animation: none; }
+/* Uma memória: o busto do NPC escurecido e sem cor. */
+.cena-busto.memoria { filter: brightness(0.45) grayscale(0.7) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.6)); }

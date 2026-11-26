@@ -1,0 +1,809 @@
+{
+  "id": "ato1",
+  "numero": 1,
+  "titulo": "Provação Sob a Luz",
+  "lugar": "Templo de Sólem",
+  "nomesPartes": {
+    "1": "O alçapão se abre",
+    "2": "O túnel",
+    "3": "Os símbolos",
+    "4": "O corredor de Sólem",
+    "5": "A escuridão e a porta",
+    "6": "O Salão e a Forja"
+  },
+  "totalPartes": 6,
+  "inicio": "c1-01",
+  "proximoCapitulo": {
+    "numero": 2,
+    "titulo": ""
+  },
+  "fundoFim": "cena-salao-forja",
+  "musicaFim": "forja",
+  "resumo": [
+    {
+      "flag": "implorou_artho",
+      "texto": "Você implorou que Artho viesse junto. Ele ficou."
+    },
+    {
+      "flag": "quis_lutar",
+      "texto": "Você quis voltar e lutar pela Nyme. Artho não deixou."
+    },
+    {
+      "flag": "obedeceu_artho",
+      "texto": "Você apertou a tocha e desceu, em silêncio."
+    },
+    {
+      "flag": "desceu_alcapao",
+      "texto": "Artho trancou o alçapão sobre você."
+    },
+    {
+      "flag": "memoria_liessa",
+      "texto": "No túnel, você lembrou de Liessa."
+    },
+    {
+      "flag": "caminho_tolerancia",
+      "texto": "Você achou o caminho entre os símbolos dos outros deuses."
+    },
+    {
+      "flag": "atravessou_solem",
+      "texto": "Você atravessou o corredor de Sólem."
+    },
+    {
+      "flag": "coragem_escuro",
+      "texto": "No escuro total, você não parou."
+    },
+    {
+      "flag": "escolheu_voz",
+      "texto": "No Salão da Forja, você seguiu a voz de {Divindade}."
+    }
+  ],
+  "cenas": [
+    {
+      "id": "c1-01",
+      "falas": [
+        {
+          "texto": "Uma mão agarra o seu braço. Forte, trêmula. Artho.",
+          "ambiente": {
+            "som": "fogo-distante",
+            "ganho": 0.35
+          },
+          "ocasional": {
+            "som": "madeira-estalando",
+            "ganho": 0.55,
+            "min": 4000,
+            "max": 9000
+          }
+        },
+        {
+          "quem": "artho",
+          "texto": "Não! Para dentro! Agora!",
+          "bustoHeroi": "choque"
+        },
+        {
+          "texto": "Ele te arrasta de volta pelo salão principal. Pelas frestas das janelas, entra um cheiro de fumaça. Lá fora, alguém grita uma ordem numa língua que você não conhece.",
+          "bustoHeroi": "choque"
+        }
+      ],
+      "visual": "preto",
+      "musica": null,
+      "fadeMusica": 1200,
+      "seguir": {
+        "vai_para": "c1-02"
+      }
+    },
+    {
+      "id": "c1-02",
+      "fundo": "cena-artho-alcapao-aberto",
+      "falas": [
+        {
+          "texto": "Na biblioteca, Artho tira do pescoço uma chave que você nunca viu fora do lugar. As mãos dele tremem.",
+          "ambienteGanho": 0.2
+        },
+        {
+          "texto": "A chave gira no cadeado.",
+          "som": "cadeado-abrindo"
+        },
+        {
+          "texto": "O cadeado cai no chão.",
+          "som": "cadeado-cai"
+        },
+        {
+          "texto": "O alçapão se abre para uma escada de pedra que desce para o escuro."
+        },
+        {
+          "texto": "Ele acende uma tocha e a coloca na sua mão."
+        },
+        {
+          "quem": "artho",
+          "texto": "Desça. Siga o túnel até o fim. Não volte, aconteça o que acontecer."
+        }
+      ],
+      "musica": null,
+      "escolhas": [
+        {
+          "texto": "“Venha comigo, Artho!”",
+          "efeitos": {
+            "flag": "implorou_artho"
+          },
+          "vai_para": "c1-02-implorou"
+        },
+        {
+          "texto": "“Eu vou lutar! A Nyme…”",
+          "efeitos": {
+            "flag": "quis_lutar"
+          },
+          "vai_para": "c1-02-lutar"
+        },
+        {
+          "texto": "Apertar a tocha e assentir, em silêncio",
+          "efeitos": {
+            "flag": "obedeceu_artho"
+          },
+          "vai_para": "c1-02-silencio"
+        }
+      ]
+    },
+    {
+      "id": "c1-02-implorou",
+      "fundo": "cena-artho-alcapao-aberto",
+      "falas": [
+        {
+          "quem": "heroi",
+          "texto": "Venha comigo, Artho!"
+        },
+        {
+          "quem": "artho",
+          "texto": "Meu lugar é aqui. Alguém precisa ganhar tempo."
+        }
+      ],
+      "musica": null,
+      "seguir": {
+        "vai_para": "c1-02-pronto"
+      }
+    },
+    {
+      "id": "c1-02-lutar",
+      "fundo": "cena-artho-alcapao-aberto",
+      "falas": [
+        {
+          "quem": "heroi",
+          "expressao": "raiva",
+          "texto": "Eu vou lutar! A Nyme…"
+        },
+        {
+          "texto": "Ele segura o seu rosto com as duas mãos.",
+          "bustoHeroi": "raiva"
+        },
+        {
+          "quem": "artho",
+          "texto": "A Nyme escolheu proteger você. Não torne a escolha dela em vão."
+        }
+      ],
+      "musica": null,
+      "seguir": {
+        "vai_para": "c1-02-pronto"
+      }
+    },
+    {
+      "id": "c1-02-silencio",
+      "fundo": "cena-artho-alcapao-aberto",
+      "falas": [
+        {
+          "texto": "Você aperta a tocha e assente, em silêncio."
+        },
+        {
+          "quem": "artho",
+          "texto": "Bom {menino|menina}."
+        }
+      ],
+      "musica": null,
+      "seguir": {
+        "vai_para": "c1-02-pronto"
+      }
+    },
+    {
+      "id": "c1-02-pronto",
+      "fundo": "cena-artho-alcapao-aberto",
+      "falas": [
+        {
+          "quem": "artho",
+          "texto": "“Quando você estiver {pronto|pronta}”… Lembra? Você está, {nome}. Mais do que imagina."
+        }
+      ],
+      "musica": null,
+      "seguir": {
+        "vai_para": "c1-03"
+      }
+    },
+    {
+      "id": "c1-03",
+      "falas": [
+        {
+          "texto": "Ele te empurra escada abaixo."
+        },
+        {
+          "texto": "O alçapão se fecha sobre a sua cabeça.",
+          "som": "alcapao-fecha",
+          "tremor": "leve"
+        },
+        {
+          "texto": "Você ouve o cadeado.",
+          "som": "cadeado-tranca"
+        },
+        {
+          "texto": "Depois, os passos dele se afastando.",
+          "som": "passos-afastando"
+        },
+        {
+          "texto": "Depois, nada.",
+          "ambiente": null,
+          "ambienteFade": 3000,
+          "ocasional": null
+        },
+        {
+          "texto": "Só a tocha. Só você. E o escuro à frente.",
+          "pausaAntes": 2000,
+          "efeitos": {
+            "flag": "desceu_alcapao"
+          }
+        }
+      ],
+      "visual": "tocha-pulso",
+      "musica": null,
+      "seguir": {
+        "fim": true
+      }
+    },
+    {
+      "id": "t-inicio",
+      "falas": [
+        {
+          "texto": "Os degraus terminam num túnel úmido. Cheiro de terra e de musgo velho. A tocha estala na sua mão."
+        },
+        {
+          "quem": "pensamento",
+          "texto": "Por que Artho me mandou para cá? Por que eu?"
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "t-poca",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Lá em cima, a vila queima. E eu aqui, fugindo pelo escuro."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "t-teto",
+      "falas": [
+        {
+          "texto": "O teto desce tanto que você precisa curvar o corpo para passar."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "t-memoria",
+      "fundo": "cena-memoria-maes",
+      "falas": [
+        {
+          "texto": "Uma lembrança atravessa o escuro, sem pedir licença.",
+          "visual": "memoria",
+          "abafar": true
+        },
+        {
+          "texto": "Você é pequen{o|a}. Liessa está ajoelhada na porta, de armadura, pronta para partir para Vön Bicken.",
+          "visual": "memoria",
+          "estilo": "italico"
+        },
+        {
+          "quem": "heroi",
+          "rotulo": "Você (criança)",
+          "texto": "Por que eu não posso ir com vocês?",
+          "visual": "memoria"
+        },
+        {
+          "quem": "liessa",
+          "rotulo": "Liessa",
+          "texto": "Porque queremos que você tenha certeza do que deseja ser.",
+          "visual": "memoria-nitida"
+        },
+        {
+          "quem": "pensamento",
+          "texto": "E o que eu queria ser…?",
+          "visual": "memoria"
+        },
+        {
+          "quem": "pensamento",
+          "texto": "Eu queria ser forte.",
+          "visual": "memoria-estilhaca",
+          "abafar": false,
+          "efeitos": {
+            "flag": "memoria_liessa"
+          }
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "t-laje",
+      "falas": [
+        {
+          "texto": "O chão muda. A terra dá lugar a lajes perfeitas, cortadas por mãos que sabiam o que faziam. Alguém construiu isto. Há muito tempo."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-inscricao",
+      "falas": [
+        {
+          "texto": "“A luz de Sólem banha todos os caminhos. Quem pisa apenas na própria luz, tropeça nela.”",
+          "estilo": "inscricao"
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-levante",
+      "falas": [
+        {
+          "texto": "Você está no chão. A dor sobe pela perna. E, por um instante, você se vê, de pé, à sua frente, envolt{o|a} em luz.",
+          "bustoHeroi": "determinado",
+          "aura": true
+        },
+        {
+          "quem": "heroi",
+          "rotulo": "Você (a visão)",
+          "expressao": "determinado",
+          "aura": true,
+          "texto": "Se você quer ser forte, continue."
+        },
+        {
+          "texto": "Uma voz que não é sua ecoa pelo corredor:"
+        },
+        {
+          "texto": "LEVANTE!",
+          "estilo": "levante",
+          "tremor": "leve",
+          "efeitos": {
+            "flag": "levantou"
+          }
+        }
+      ],
+      "visual": "preto",
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-flecha2",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Toda vez que piso no sol… Será que o caminho não é só dele?"
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-flecha3",
+      "falas": [
+        {
+          "quem": "artho",
+          "texto": "Sólem não pede que você o siga sozinho, {nome}.",
+          "memoria": true
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-solta-visao",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Esta laje parece solta…"
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-solta-audicao",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Você ouve um estalo metálico embaixo dela."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-fim",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Toda vez que eu pisava só no sol… doía. Os outros caminhos estavam lá o tempo todo."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-chegada",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Só o sol. De um lado ao outro. Não tem como desviar."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-audicao",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Você ouve o ritmo do mecanismo: um estalo, uma pausa, a flecha."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-audicao-falha",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Você tenta ouvir o mecanismo, mas só escuta o próprio coração."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-fim",
+      "falas": [
+        {
+          "texto": "Você desaba do outro lado, ofegante, ferid{o|a}. Mas do outro lado.",
+          "bustoHeroi": "determinado"
+        },
+        {
+          "quem": "pensamento",
+          "texto": "Eu não posso desistir. Não ainda.",
+          "bustoHeroi": "determinado",
+          "efeitos": {
+            "flag": "atravessou_solem"
+          }
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "e-apaga",
+      "falas": [
+        {
+          "texto": "A tocha se apaga."
+        },
+        {
+          "texto": "A escuridão é total. Você não vê as próprias mãos."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "e-voltar",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Não há caminho de volta. Artho trancou o alçapão."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "e-vontade-ok",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "O medo está aqui. Mas você também está."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "e-vontade-falha",
+      "falas": [
+        {
+          "texto": "Suas pernas tremem. Você para, respira… e dá o passo mesmo assim."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "e-nyme",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Você sempre chega atrasad{o|a}, {nome}… mas sempre chega."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "e-porta",
+      "fundo": "cena-porta-solem",
+      "falas": [
+        {
+          "texto": "No fim do corredor, uma porta imensa, entalhada com padrões sagrados. No centro, um sol dourado brilha sozinho, como se esperasse por você."
+        }
+      ],
+      "seguir": {
+        "voltar": true,
+        "texto": "Abrir a porta"
+      }
+    },
+    {
+      "id": "f-entrada",
+      "fundo": "cena-salao-forja",
+      "falas": [
+        {
+          "texto": "A porta se abre para um salão que não deveria existir: mármore antigo, sete estátuas em círculo e, no centro, uma luz que sobe do chão como se respirasse."
+        },
+        {
+          "quem": "pensamento",
+          "texto": "Eu já estive aqui. No sonho."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "f-vozes",
+      "falas": [
+        {
+          "quem": "vozes",
+          "rotulo": "As vozes",
+          "estilo": "vozes",
+          "texto": "Todos os seres são importantes. Cada fé, cada povo, cada vida. Escute com o coração… e escolha a quem seguir."
+        },
+        {
+          "quem": "pensamento",
+          "texto": "São sete. Mas você consegue distinguir cada uma, como vozes conhecidas numa multidão."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "f-voz-solem",
+      "falas": [
+        {
+          "quem": "voz",
+          "rotulo": "Uma voz dourada",
+          "estilo": "voz voz-solem",
+          "texto": "Onde houver escuridão, leve a luz. Mesmo quando ela queimar suas mãos."
+        }
+      ],
+      "escolhas": [
+        {
+          "texto": "Seguir esta voz",
+          "efeitos": {
+            "divindade": "solem",
+            "flag": "escolheu_voz"
+          },
+          "voltar": true
+        },
+        {
+          "texto": "Ouvir as outras",
+          "voltar": true
+        }
+      ]
+    },
+    {
+      "id": "f-voz-justar",
+      "falas": [
+        {
+          "quem": "voz",
+          "rotulo": "Uma voz prateada",
+          "estilo": "voz voz-justar",
+          "texto": "Toda escolha tem peso. Eu ensino a carregá-lo sem cair."
+        }
+      ],
+      "escolhas": [
+        {
+          "texto": "Seguir esta voz",
+          "efeitos": {
+            "divindade": "justar",
+            "flag": "escolheu_voz"
+          },
+          "voltar": true
+        },
+        {
+          "texto": "Ouvir as outras",
+          "voltar": true
+        }
+      ]
+    },
+    {
+      "id": "f-voz-ardor",
+      "falas": [
+        {
+          "quem": "voz",
+          "rotulo": "Uma voz rubra",
+          "estilo": "voz voz-ardor",
+          "texto": "Nenhuma corrente é forte o bastante para quem decide ser livre."
+        }
+      ],
+      "escolhas": [
+        {
+          "texto": "Seguir esta voz",
+          "efeitos": {
+            "divindade": "ardor",
+            "flag": "escolheu_voz"
+          },
+          "voltar": true
+        },
+        {
+          "texto": "Ouvir as outras",
+          "voltar": true
+        }
+      ]
+    },
+    {
+      "id": "f-voz-expiria",
+      "falas": [
+        {
+          "quem": "voz",
+          "rotulo": "Uma voz azul como o mar",
+          "estilo": "voz voz-expiria",
+          "texto": "Eu guardo o último suspiro de todos. Proteja os que ainda não devem partir."
+        }
+      ],
+      "escolhas": [
+        {
+          "texto": "Seguir esta voz",
+          "efeitos": {
+            "divindade": "expiria",
+            "flag": "escolheu_voz"
+          },
+          "voltar": true
+        },
+        {
+          "texto": "Ouvir as outras",
+          "voltar": true
+        }
+      ]
+    },
+    {
+      "id": "f-voz-eternus",
+      "falas": [
+        {
+          "quem": "voz",
+          "rotulo": "Uma voz branca como estrelas",
+          "estilo": "voz voz-eternus",
+          "texto": "Todo fim é um recomeço. Eu vejo o caminho que você ainda não vê."
+        }
+      ],
+      "escolhas": [
+        {
+          "texto": "Seguir esta voz",
+          "efeitos": {
+            "divindade": "eternus",
+            "flag": "escolheu_voz"
+          },
+          "voltar": true
+        },
+        {
+          "texto": "Ouvir as outras",
+          "voltar": true
+        }
+      ]
+    },
+    {
+      "id": "f-voz-mentis",
+      "falas": [
+        {
+          "quem": "voz",
+          "rotulo": "Uma voz cor de âmbar",
+          "estilo": "voz voz-mentis",
+          "texto": "O tempo ensina a quem tem paciência. Pense antes, e vença depois."
+        }
+      ],
+      "escolhas": [
+        {
+          "texto": "Seguir esta voz",
+          "efeitos": {
+            "divindade": "mentis",
+            "flag": "escolheu_voz"
+          },
+          "voltar": true
+        },
+        {
+          "texto": "Ouvir as outras",
+          "voltar": true
+        }
+      ]
+    },
+    {
+      "id": "f-voz-irae",
+      "falas": [
+        {
+          "quem": "voz",
+          "rotulo": "Uma voz violeta de tempestade",
+          "estilo": "voz voz-irae",
+          "texto": "Sua fúria não é fraqueza. Deixe-a ser a tempestade que protege."
+        }
+      ],
+      "escolhas": [
+        {
+          "texto": "Seguir esta voz",
+          "efeitos": {
+            "divindade": "irae",
+            "flag": "escolheu_voz"
+          },
+          "voltar": true
+        },
+        {
+          "texto": "Ouvir as outras",
+          "voltar": true
+        }
+      ]
+    },
+    {
+      "id": "f-apresentacao",
+      "falas": [
+        {
+          "quem": "divindade",
+          "rotulo": "{Divindade}",
+          "texto": "Eu sou {Divindade}. E você, {nome}, foi ouvid{o|a}."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    }
+  ]
+}

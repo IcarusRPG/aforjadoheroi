@@ -1,7 +1,7 @@
 import { ASSETS, src } from '../core/assets';
 import { audio } from '../core/audio';
 import { atualizarCampanha, getEstado, marcarFlag, type ParteCapitulo } from '../core/estado';
-import { irPara, type Tela } from '../core/telas';
+import { existeTela, irPara, type NomeTela, type Tela } from '../core/telas';
 import { textos } from '../core/textos';
 import { botao, h } from '../core/ui';
 import { ATOS, nomeAto, parteAtual, resumoDoFim } from '../narrativa/capitulo';
@@ -16,8 +16,36 @@ import { ATOS, nomeAto, parteAtual, resumoDoFim } from '../narrativa/capitulo';
  * (Füllmun → Templo), segue para ela com o cartão de local, salvando (o save automático do antigo fim de
  * capítulo); senão, a tela de fim de capítulo.
  */
+/**
+ * A tela onde o jogo está agora: no Prólogo, a cena ou o mapa salvo; no Ato I, a Parte 1 é a tela de
+ * cenas, as Partes 2 a 5 são a fase lateral e a 6 é o Salão da Forja; depois do último ato pronto, o
+ * "Em breve".
+ */
+export function telaDaCampanha(): NomeTela {
+  const c = getEstado().campanha;
+  if (!ATOS[c.ato]) return 'emBreve';
+  if (c.ato >= 1) {
+    const parte = typeof c.parte === 'number' ? c.parte : 1;
+    const tela: NomeTela = parte <= 1 ? 'capitulo' : parte <= 5 ? 'lateral' : 'salao';
+    return existeTela(tela) ? tela : 'emBreve';
+  }
+  return c.local.tela === 'mapa' ? 'mapa' : 'capitulo';
+}
+
+/** Começa a parte seguinte do ato (save no início dela) e vai para a tela dela, com o cartão da parte. */
+export function proximaParteDoAto(): void {
+  const c = getEstado().campanha;
+  const cap = parteAtual(c);
+  const parte = (typeof c.parte === 'number' ? c.parte : 1) + 1;
+  if (parte > (cap.totalPartes ?? 1)) { void irPara('fimCapitulo', undefined, { duracao: 900 }); return; }
+  atualizarCampanha({ parte, cena: 'inicio', modo: 'falas', local: { tela: parte <= 5 ? 'lateral' : 'mapa' } });
+  void irPara(telaDaCampanha(), undefined, { duracao: 900 });
+}
+
 export function terminarParte(): void {
-  const cap = parteAtual(getEstado().campanha);
+  const c0 = getEstado().campanha;
+  if (c0.ato >= 1) return proximaParteDoAto();
+  const cap = parteAtual(c0);
   if (cap.proximaParte) {
     marcarFlag(`chegou_${cap.proximaParte}`);
     atualizarCampanha({ parte: cap.proximaParte as ParteCapitulo, cena: null, modo: 'falas', local: { tela: 'capitulo' } });
@@ -38,7 +66,7 @@ export function telaFimCapitulo(): Tela {
   // Continuar: salva o começo do ato seguinte e segue para ele (ou para o "Em breve", se ainda não existe).
   const seguir = botao(T.seguir, () => {
     atualizarCampanha({ ato: prox, parte: 1, cena: 'inicio', modo: 'falas', local: { tela: 'capitulo' } });
-    void irPara(ATOS[prox] ? 'capitulo' : 'emBreve', undefined, { duracao: 800 });
+    void irPara(telaDaCampanha(), undefined, { duracao: 800 });
   }, { classe: 'btn-principal' });
   const el = h('div', { class: 'tela-fim-capitulo' },
     h('img', { class: 'fim-fundo', src: src(ASSETS.cena(ultima.fundoFim ?? 'cena-templo-porta')), alt: '', draggable: 'false' }),

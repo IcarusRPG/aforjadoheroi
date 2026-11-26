@@ -22,7 +22,7 @@ import './styles/fase6.css';
 import './styles/paisagem.css';
 
 import { instalarProtecoes } from './core/carregar';
-import { definirConstrutorLocal, iniciarEstado } from './core/estado';
+import { definirConstrutorLocal, iniciarEstado, marcarAnimacoes } from './core/estado';
 import { localDoJogo } from './core/lugar';
 import { irPara, registrarTela } from './core/telas';
 import { telaCriacao } from './screens/criacao';
@@ -43,6 +43,7 @@ import { telaIntroFullmun } from './screens/introFullmun';
 // Antes de tudo: pedaço que não veio depois de um deploy, erros não tratados e service workers antigos.
 instalarProtecoes();
 
+marcarAnimacoes();
 registrarTela('loading', telaLoading);
 registrarTela('intro', telaIntro);
 registrarTela('menu', telaMenu);

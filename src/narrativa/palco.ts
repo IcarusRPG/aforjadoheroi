@@ -5,7 +5,7 @@ import { imagemPronta } from '../core/imagens';
 import NPCS from '../data/npcs.json';
 import { ASSETS, existeAsset, existeAssetCache, src, type NomeSfx } from '../core/assets';
 import { dica } from '../core/tutorial';
-import { audio } from '../core/audio';
+import { audio, type LoopAmbiente } from '../core/audio';
 import { rolarD20 } from '../core/dados';
 import { animacoesReduzidas, atualizarCampanha, getEstado, limparInicioCena, marcarFlag, marcarInicioCena, tremoresLigados } from '../core/estado';
 import { PERICIAS, bonusPericia } from '../core/pericias';
@@ -50,6 +50,7 @@ export function aplicarEfeitos(e: Efeitos | undefined): void {
     if (c.usadas.includes(chave)) return;
     atualizarCampanha({ usadas: [...c.usadas, chave] });
   }
+  if (e.divindade) atualizarCampanha({ divindade: e.divindade });
   for (const f of e.flag === undefined ? [] : Array.isArray(e.flag) ? e.flag : [e.flag]) marcarFlag(f);
   if (e.bonusProximoTeste) atualizarCampanha({ bonusProximoTeste: getEstado().campanha.bonusProximoTeste + e.bonusProximoTeste });
   const max = pvMaxAtual();
@@ -91,6 +92,7 @@ export interface Palco {
   digitando(): boolean;
   escolhasVisiveis(): string[];
   fundo(): string;
+  bustoHeroi(): { visivel: boolean; expressao: string; aura: boolean };
   destruir(): void;
 }
 
@@ -129,6 +131,20 @@ export function criarPalco(o: OpcoesPalco): Palco {
   let timerFala = 0;
   let ocupado = false;
   let pararLoop: (() => void) | null = null;
+  /** Fase 6: loop de ambiente (fogo distante) e o efeito ocasional (madeira estalando). */
+  let ambiente: LoopAmbiente | null = null;
+  let timerOcasional = 0;
+  function ocasional(o: NonNullable<Fala['ocasional']>) {
+    window.clearTimeout(timerOcasional);
+    const proximo = () => {
+      timerOcasional = window.setTimeout(() => {
+        if (destruido) return;
+        audio.sfx(o.som as NomeSfx, { ganho: o.ganho ?? 1 });
+        proximo();
+      }, o.min + Math.random() * (o.max - o.min));
+    };
+    proximo();
+  }
 
   function pararFala() {
     window.clearInterval(timerFala);
@@ -170,6 +186,7 @@ export function criarPalco(o: OpcoesPalco): Palco {
   }
 
   function quemFala(f: Fala): { nome: string | null; classe: string } {
+    if (f.rotulo && f.quem && f.quem !== 'pensamento') return { nome: interpolar(f.rotulo), classe: f.quem === 'heroi' ? 'heroi' : 'npc' };
     if (!f.quem) return { nome: null, classe: 'narracao' };
     if (f.quem === 'pensamento') return { nome: null, classe: 'pensamento' };
     if (f.quem === 'heroi') return { nome: p?.nome ?? '', classe: 'heroi' };
@@ -233,11 +250,40 @@ export function criarPalco(o: OpcoesPalco): Palco {
     painel.classList.remove('com-busto');
   }
 
+  /** Expressão do busto do herói (choque, dor, raiva, determinado); sem o arquivo, o busto normal. */
+  async function expressaoHeroi(expr: string | undefined) {
+    if (!p) return;
+    const normal = ASSETS.bustoHeroi(p.raca, p.genero);
+    const com = expr ? ASSETS.bustoHeroi(p.raca, p.genero, expr) : normal;
+    const alvo = com !== normal && (await existeAssetCache(com, 'image')) ? com : normal;
+    if (bustoHeroi.dataset.retrato !== alvo) { bustoHeroi.src = src(alvo); bustoHeroi.dataset.retrato = alvo; }
+    bustoHeroi.dataset.expressao = alvo === normal ? 'normal' : expr!;
+  }
+
   async function arrumarBustos(f: Fala) {
     // Fala nova: qualquer busto que ainda estava carregando para a fala anterior é descartado.
     pedidoBusto++;
-    // Narração e pensamento: sem bustos (a conversa recomeça na próxima fala).
+    const meu = pedidoBusto;
+    bustoHeroi.classList.toggle('aura', !!f.aura);
+    busto.classList.toggle('memoria', !!f.memoria);
+    // O herói aparece (com expressão) numa narração ou fala de NPC: "bustoHeroi" na fala.
+    if (f.bustoHeroi !== undefined || f.quem === 'heroi') await expressaoHeroi(f.bustoHeroi ?? (f.quem === 'heroi' ? f.expressao : undefined));
+    if (meu !== pedidoBusto) return;
+    // Narração e pensamento: sem bustos (a conversa recomeça na próxima fala), a não ser o do herói pedido.
+    if ((!f.quem || f.quem === 'pensamento') && f.bustoHeroi !== undefined && p) {
+      esconderBustos();
+      heroiNaConversa = true;
+      bustoHeroi.hidden = false;
+      bustos.hidden = false;
+      bustos.className = 'cena-bustos so-heroi fala-heroi';
+      bustoHeroi.classList.remove('apagado');
+      painel.classList.add('com-busto');
+      return;
+    }
     if (!f.quem || f.quem === 'pensamento') return esconderBustos();
+    // Vozes, a divindade e personagens sem busto (Liessa, na memória): só o nome, sem retrato.
+    if (f.quem !== 'heroi' && !NOMES_NPC[f.quem]) return esconderBustos();
+    if (f.bustoHeroi !== undefined) heroiNaConversa = true;
     const falaHeroi = f.quem === 'heroi';
     if (falaHeroi) {
       if (!p) return esconderBustos();
@@ -262,11 +308,19 @@ export function criarPalco(o: OpcoesPalco): Palco {
   }
 
   async function mostrarFala(f: Fala): Promise<void> {
+    if (f.pausaAntes) {
+      // Silêncio: a caixa some e a cena espera, sem aceitar toque.
+      caixa.classList.add('pausa');
+      texto.textContent = '';
+      await esperar(f.pausaAntes);
+      caixa.classList.remove('pausa');
+      if (destruido) return;
+    }
     const inicioFala = performance.now();
     const q = quemFala(f);
     await arrumarBustos(f);
     if (destruido) return;
-    caixa.className = `cena-caixa ${q.classe}`;
+    caixa.className = `cena-caixa ${q.classe}${f.estilo ? ` estilo-${f.estilo}` : ''}`;
     nome.hidden = !q.nome;
     nome.textContent = q.nome ?? '';
     const cheio = interpolar(f.texto);
@@ -496,6 +550,15 @@ export function criarPalco(o: OpcoesPalco): Palco {
       pararLoop?.();
       pararLoop = f.loop ? audio.sfxLoop(f.loop as NomeSfx) : null;
     }
+    if (f.ambiente !== undefined) {
+      ambiente?.parar(f.ambienteFade ?? 1500);
+      ambiente = f.ambiente ? audio.loopAmbiente(f.ambiente.som as NomeSfx, f.ambiente.ganho ?? 1, 600) : null;
+    }
+    if (f.ambienteGanho !== undefined) ambiente?.ganho(f.ambienteGanho, f.ambienteFade ?? 1200);
+    if (f.ocasional !== undefined) {
+      window.clearTimeout(timerOcasional);
+      if (f.ocasional) ocasional(f.ocasional);
+    }
     if (f.visual) { for (const c of [...el.classList]) if (c.startsWith('visual-')) el.classList.remove(c); el.classList.add(`visual-${f.visual}`); }
     if (f.som) audio.sfx(f.som as NomeSfx, f.somTaxa ? { taxa: f.somTaxa } : {});
     // Animações reduzidas: sem flash (os cortes continuam secos).
@@ -583,6 +646,8 @@ export function criarPalco(o: OpcoesPalco): Palco {
     digitando: () => digitando,
     escolhasVisiveis: () => [...escolhas.querySelectorAll('.cena-escolha')].map((b) => b.querySelector('.escolha-texto')?.textContent ?? b.textContent ?? ''),
     fundo: () => fundoAtual,
+    /** Busto do herói na tela: visível e a expressão ("normal", "choque"…), e a aura. */
+    bustoHeroi: () => ({ visivel: !bustoHeroi.hidden && !bustos.hidden, expressao: bustoHeroi.dataset.expressao ?? 'normal', aura: bustoHeroi.classList.contains('aura') }),
     destruir() {
       destruido = true;
       window.removeEventListener('keydown', teclado, true);
@@ -590,6 +655,8 @@ export function criarPalco(o: OpcoesPalco): Palco {
       pararFala();
       window.clearTimeout(timerMusica);
       pararLoop?.();
+      ambiente?.parar(800);
+      window.clearTimeout(timerOcasional);
       audio.abafar(false);
     },
   };

@@ -89,6 +89,7 @@ export function estadoCaderno() {
     paginas: l.paginas.map((p) => p.id),
     anotacoes: l.anotacoes.map((a) => a.id),
     perguntas: l.perguntas.map((q) => q.id),
+    respondidas: l.perguntas.filter(perguntaRespondida).map((q) => q.id),
     novidade: cadernoTemNovidade(),
   };
 }

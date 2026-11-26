@@ -406,6 +406,12 @@ export function tremoresLigados(): boolean {
 export function atualizarConfig(parcial: Partial<Config>): void {
   Object.assign(estado.config, parcial);
   gravarOpcoes(estado.config);
+  marcarAnimacoes();
+}
+
+/** Classe "animacoes-reduzidas" no <html>, para o CSS (Fase 6: memória, LEVANTE, tocha, cartões). */
+export function marcarAnimacoes(): void {
+  if (typeof document !== 'undefined') document.documentElement.classList.toggle('animacoes-reduzidas', animacoesReduzidas());
 }
 
 /** Salva um herói novo (e zera o progresso do sonho, que é dele). */

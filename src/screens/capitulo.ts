@@ -1,6 +1,7 @@
 import { verificarCaderno } from '../core/caderno';
 import { etapaDoCapitulo, garantirEtapa } from '../core/etapas';
-import { SFX_CAPITULO, SFX_FASE4 } from '../core/assets';
+import { SFX_ATO1_PARTE1, SFX_CAPITULO, SFX_FASE4 } from '../core/assets';
+import { cartaoAto, cartaoParte } from '../narrativa/cartoes';
 import { audio } from '../core/audio';
 import { atualizarCampanha, getEstado, marcarFlag } from '../core/estado';
 import { terminarParte } from './fimCapitulo';
@@ -92,21 +93,37 @@ export function telaCapitulo(params?: unknown): Tela {
       digitando: palco.digitando(),
       escolhas: palco.escolhasVisiveis(),
       fundo: palco.fundo(),
+      bustoHeroi: palco.bustoHeroi(),
+      nomeFala: document.querySelector('.tela-capitulo .cena-nome')?.textContent ?? null,
     }),
   });
 
   return {
     el,
     aoEntrar() {
-      void audio.carregarEfeitos([...SFX_CAPITULO, ...SFX_FASE4]);
+      const ato = getEstado().campanha.ato;
+      const sons = audio.carregarEfeitos(ato >= 1 ? [...SFX_CAPITULO, ...SFX_ATO1_PARTE1] : [...SFX_CAPITULO, ...SFX_FASE4]);
       void (async () => {
-        // Cenas, bustos, mapas e batalhas do capítulo em memória antes da primeira cena.
+        // Cenas, bustos, mapas e batalhas do capítulo em memória antes da primeira cena (no Ato I, também
+        // os sons da Parte 1, antes do cartão do ato).
         await garantirEtapa(etapaDoCapitulo(), el);
+        if (ato >= 1) await sons;
         if (saiu) return;
         // Caderno de estudos: saves antigos e jogo novo começam coerentes (sem aviso do que já existe).
         verificarCaderno();
         const c = getEstado().campanha;
         if (prm.cena) return palco.entrar(prm.cena, 'falas');
+        if ((!c.cena || c.cena === 'inicio') && c.ato >= 1) {
+          // Ato I: o cartão do ato (só na primeira parte) e o da parte, e a primeira cena.
+          audio.pararMusica(1200);
+          if (p && c.pvAtual === null) atualizarCampanha({ pvAtual: pvAntesDaForjaDe(p) });
+          const parte = typeof c.parte === 'number' ? c.parte : 1;
+          if (parte === 1) await cartaoAto(c.ato);
+          if (saiu) return;
+          await cartaoParte(c.ato, parte);
+          if (saiu) return;
+          return palco.entrar(cap.inicio, 'falas');
+        }
         if (!c.cena || c.cena === 'inicio') {
           if (p && c.pvAtual === null) atualizarCampanha({ pvAtual: pvAntesDaForjaDe(p) });
           tocarMusicaDaCena(cenaPorId(cap, cap.inicio).musica, 2500);

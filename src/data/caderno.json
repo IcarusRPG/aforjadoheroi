@@ -102,15 +102,20 @@
     { "id": "livro-povos", "data": "Tarde, na biblioteca do templo", "gatilho": { "flag": "leu_livro_povos" }, "texto": "Cada povo tem um deus por trás. Os Nyashi, Eternus. Os Ogbari, Mentis. Os dragões, Draconara." },
     { "id": "livro-solem", "data": "Tarde, na biblioteca do templo", "gatilho": { "flag": "leu_livro_solem" }, "texto": "Depois de uma guerra antiga, Sólem fortaleceu uma barreira no Núcleo. A mesma barreira das preces do Artho?" },
     { "id": "alcapao", "data": "Tarde, na biblioteca do templo", "gatilho": { "flag": "artho_alcapao" }, "texto": "\"Quando você estiver {pronto|pronta}.\" Pronto pra quê, Artho?" },
-    { "id": "fim-cap02", "sozinha": true, "gatilho": { "flag": "fim_capitulo_02" }, "texto": "Não consigo escrever sobre hoje." }
+    { "id": "fim-cap02", "sozinha": true, "gatilho": { "flag": "fim_capitulo_02" }, "texto": "Não consigo escrever sobre hoje." },
+    { "id": "alcapao-aberto", "data": "Noite, debaixo do templo", "gatilho": { "flag": "desceu_alcapao" }, "texto": "Artho me deu uma tocha e trancou o alçapão. Ele ficou lá em cima. Sozinho." },
+    { "id": "memoria-liessa", "data": "No túnel", "gatilho": { "flag": "memoria_liessa" }, "texto": "Lembrei da Liessa na porta. 'Queremos que você tenha certeza do que deseja ser.' Eu ainda não tenho." },
+    { "id": "tochas", "data": "No fim do túnel", "gatilho": { "flag": "tochas_acenderam" }, "texto": "A tocha apagou. Eu continuei. As tochas acenderam sozinhas, como se alguém soubesse que eu viria." },
+    { "id": "forja", "data": "No Salão da Forja", "gatilho": { "flag": "escolheu_voz" }, "texto": "{Divindade}. Eu fui ouvid{o|a}." }
   ],
   "perguntas": [
     { "id": "guerra", "gatilho": { "inicio": true }, "texto": "Por que os Alfars e os Baldurs guerrearam?" },
-    { "id": "alcapao", "gatilho": { "inicio": true }, "texto": "O que há debaixo do alçapão?" },
-    { "id": "vozes", "gatilho": { "inicio": true }, "texto": "De quem são as sete vozes do sonho?" },
+    { "id": "alcapao", "gatilho": { "inicio": true }, "texto": "O que há debaixo do alçapão?", "respondida": { "gatilho": { "flag": "desceu_alcapao" }, "resposta": "Um túnel. Artho sabia." } },
+    { "id": "vozes", "gatilho": { "inicio": true }, "texto": "De quem são as sete vozes do sonho?", "respondida": { "gatilho": { "flag": "escolheu_voz" }, "resposta": "Dos deuses. E uma delas me escolheu." } },
     { "id": "trinco", "gatilho": { "flag": "pista_trinco" }, "texto": "Quem arrebentou o trinco do chiqueiro?" },
     { "id": "paginas", "gatilho": { "flag": "leu_livro_guerra" }, "texto": "Por que arrancaram as páginas do livro da guerra?" },
     { "id": "barreira", "gatilho": { "flag": "leu_livro_solem" }, "texto": "O que é a barreira do Núcleo?" },
-    { "id": "ataque", "gatilho": { "flag": "fim_capitulo_02" }, "texto": "Quem atacou Füllmun?" }
+    { "id": "ataque", "gatilho": { "flag": "fim_capitulo_02" }, "texto": "Quem atacou Füllmun?" },
+    { "id": "tunel", "gatilho": { "flag": "desceu_alcapao" }, "texto": "Para onde leva o túnel?", "respondida": { "gatilho": { "flag": "escolheu_voz" }, "resposta": "Ao Salão da Forja." } }
   ]
 }

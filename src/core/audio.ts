@@ -32,6 +32,14 @@ export interface EstadoMusica {
  * - Efeitos: Web Audio (buffers decodificados no pré-carregamento, com um nó de ganho).
  * Volume e mudo vêm das Opções (estado.config).
  */
+/** Loop de ambiente (ver GerenciadorAudio.loopAmbiente). */
+export interface LoopAmbiente {
+  nome: string;
+  ganho(v: number, ms?: number): void;
+  parar(ms?: number): void;
+  atual(): number;
+}
+
 class GerenciadorAudio {
   private ctx: AudioContext | null = null;
   private ganhoSfx: GainNode | null = null;
@@ -160,6 +168,62 @@ class GerenciadorAudio {
     fonte.connect(g).connect(this.ganhoSfx);
     fonte.start();
     return () => { try { fonte.stop(); } catch { /* já parou */ } };
+  }
+
+  /**
+   * Loop de ambiente controlável (Fase 6): o fogo distante, a tocha, o gotejar. O volume muda com rampa
+   * (fade) e o loop para com fade-out. Os loops ativos aparecem no estado dos testes.
+   */
+  private loops = new Set<{ nome: string; g: GainNode; alvo: number }>();
+  loopAmbiente(nome: NomeSfx, ganho = 1, fadeMs = 0): LoopAmbiente {
+    const ctx = this.ctx;
+    const buffer = this.buffers.get(nome);
+    const { config } = getEstado();
+    this.historicoSfx.push({ nome, taxa: 1, t: Math.round(performance.now()), tocou: !!(ctx && buffer && !config.mudo) });
+    if (!ctx || !buffer || !this.ganhoSfx) {
+      // Sem áudio (ou o arquivo não carregou): um loop "mudo" que ainda informa o volume pedido.
+      const reg = { nome, g: null as unknown as GainNode, alvo: ganho };
+      this.loops.add(reg);
+      return { nome, ganho: (v) => { reg.alvo = v; }, parar: () => { this.loops.delete(reg); }, atual: () => reg.alvo };
+    }
+    const fonte = ctx.createBufferSource();
+    fonte.buffer = buffer;
+    fonte.loop = true;
+    const g = ctx.createGain();
+    const agora = ctx.currentTime;
+    g.gain.setValueAtTime(fadeMs > 0 ? 0.0001 : ganho, agora);
+    if (fadeMs > 0) g.gain.linearRampToValueAtTime(ganho, agora + fadeMs / 1000);
+    fonte.connect(g).connect(this.ganhoSfx);
+    fonte.start();
+    const reg = { nome, g, alvo: ganho };
+    this.loops.add(reg);
+    let parado = false;
+    return {
+      nome,
+      ganho: (v, ms = 400) => {
+        if (parado) return;
+        reg.alvo = v;
+        const t = ctx.currentTime;
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(g.gain.value, t);
+        g.gain.linearRampToValueAtTime(Math.max(0, v), t + Math.max(0.02, ms / 1000));
+      },
+      parar: (ms = 0) => {
+        if (parado) return;
+        parado = true;
+        reg.alvo = 0;
+        const t = ctx.currentTime;
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(g.gain.value, t);
+        g.gain.linearRampToValueAtTime(0, t + Math.max(0.02, ms / 1000));
+        window.setTimeout(() => { try { fonte.stop(); } catch { /* já parou */ } this.loops.delete(reg); }, ms + 60);
+      },
+      atual: () => reg.alvo,
+    };
+  }
+  /** Loops de ambiente tocando agora (nome e volume pedido), para os testes. */
+  loopsAtivos(): { nome: string; ganho: number }[] {
+    return [...this.loops].map((l) => ({ nome: l.nome, ganho: Math.round(l.alvo * 100) / 100 }));
   }
 
   /** Música abafada (câmera lenta): o elemento de áudio não passa por filtro, então só baixa o volume. */

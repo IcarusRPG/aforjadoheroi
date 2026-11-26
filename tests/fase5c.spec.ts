@@ -157,12 +157,9 @@ test('fim: "Fim do Capítulo 01 — Amanhecer Tardio" com um resumo único (até
   const s = await st(page);
   expect(s.caderno.anotacoes).toEqual(expect.arrayContaining(['fim-cap01', 'fim-cap02']));
   expect(s.caderno.perguntas).toContain('ataque');
+  // Fase 6: o Continuar abre o Ato I (cartão do ato).
   await fim.getByRole('button', { name: 'Continuar' }).click();
-  const breve = page.locator('.tela-embreve');
-  await expect(breve).toBeVisible({ timeout: 15_000 });
-  await expect(breve.locator('.embreve-capitulo')).toHaveText('Ato I');
-  await expect(breve.locator('.embreve-titulo')).toHaveText('Provação Sob a Luz');
-  await expect(breve.locator('.embreve-breve')).toHaveText('Em breve');
+  await expect(page.locator('.cartao-tela.cartao-ato')).toContainText('Provação Sob a Luz', { timeout: 15_000 });
 });
 
 /* ======================================================================

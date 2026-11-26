@@ -1,5 +1,7 @@
 import CAP01 from '../data/capitulos/cap01.json';
 import CAP02 from '../data/capitulos/cap02.json';
+import ATO1 from '../data/capitulos/ato1.json';
+import CADERNO from '../data/caderno.json';
 import { getEstado, type Campanha, type EstadoMissao, type ParteCapitulo, type Personagem } from '../core/estado';
 import type { IdPericia } from '../core/pericias';
 import { textos } from '../core/textos';
@@ -60,6 +62,8 @@ export interface Efeitos {
   contador?: Record<string, number>;
   /** Estes efeitos só contam uma vez no jogo inteiro (chave única). */
   uma_vez?: string;
+  /** A voz escolhida na Forja (id do deus). */
+  divindade?: string;
   /** Efeitos que só valem se a condição for verdadeira. */
   condicional?: { requer: Condicao; efeitos: Efeitos }[];
 }
@@ -67,6 +71,8 @@ export interface Efeitos {
 export interface Fala {
   /** Sem `quem`: narração. "pensamento": pensamento do herói. "heroi": fala do herói. Ou o id de um NPC. */
   quem?: string;
+  /** Nome mostrado no lugar do nome do personagem ("Você (criança)", "Liessa", "{Divindade}"). */
+  rotulo?: string;
   /** Expressão do NPC: usa npc-<id>-<expressao>.webp se existir; senão, o busto normal. */
   expressao?: string;
   texto: string;
@@ -206,6 +212,8 @@ export interface Capitulo {
    * `prioridade` (escolhas raras), na ordem da lista; a linha `final` vem por último, sozinha.
    */
   resumoFim?: (Condicao & { texto: string; prioridade?: number; final?: boolean })[];
+  /** Quantas partes o ato tem (o Ato I tem 6). */
+  totalPartes?: number;
   /** Nomes das partes de um ato, para os cards de save ({ "2": "O túnel" }). */
   nomesPartes?: Record<string, string>;
   /** Lugar do capítulo, para os cards de save ("Füllmun", "Templo de Sólem"). */
@@ -224,8 +232,10 @@ export interface Capitulo {
  * no seu arquivo: Füllmun (cap01.json) e o Templo de Sólem (cap02.json). `ATOS` tem um registro por ato
  * (o da primeira parte: número, título, próximo ato e o resumo do fim); `PARTES` tem as cenas de cada parte.
  */
-export const PARTES: Record<string, Capitulo> = { fullmun: CAP01 as unknown as Capitulo, templo: CAP02 as unknown as Capitulo };
-export const ATOS: Record<number, Capitulo> = { 0: PARTES.fullmun };
+export const PARTES: Record<string, Capitulo> = {
+  fullmun: CAP01 as unknown as Capitulo, templo: CAP02 as unknown as Capitulo, ato1: ATO1 as unknown as Capitulo,
+};
+export const ATOS: Record<number, Capitulo> = { 0: PARTES.fullmun, 1: PARTES.ato1 };
 /** Apelido de compatibilidade (o antigo registro por capítulo). */
 export const CAPITULOS = ATOS;
 
@@ -300,7 +310,16 @@ export function atende(cond: Condicao | undefined, p: Personagem | null = getEst
 export function interpolar(texto: string, p: Personagem | null = getEstado().personagem): string {
   return texto
     .replace(/\{nome\}/g, p?.nome ?? 'Herói')
+    .replace(/\{[Dd]ivindade\}/g, () => dadosDeus(getEstado().campanha.divindade)?.nome ?? 'Sólem')
     .replace(/\{([^{}|]*)\|([^{}|]*)\}/g, (_m, a: string, b: string) => (p?.genero === 'f' ? b : a));
+}
+
+/** Os deuses do Caderno (nome, Alfar ou Baldur, domínio e imagem do panteão). */
+export interface DadosDeus { id: string; nome: string; grupo: 'alfar' | 'baldur'; dominio: string; imagem: string }
+const PAGINAS = (CADERNO as unknown as { paginas: { id: string; deus?: { nome: string; grupo: 'alfar' | 'baldur'; dominio: string }; imagem?: string }[] }).paginas;
+export function dadosDeus(id: string | null | undefined): DadosDeus | null {
+  const p = PAGINAS.find((x) => x.id === id && x.deus);
+  return p?.deus ? { id: p.id, ...p.deus, imagem: p.imagem ?? p.id } : null;
 }
 
 /** Linhas do resumo de uma parte (Diário), pelas flags. */

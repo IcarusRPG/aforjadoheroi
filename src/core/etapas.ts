@@ -1,7 +1,9 @@
 import CAP01 from '../data/capitulos/cap01.json';
 import CAP02 from '../data/capitulos/cap02.json';
+import ATO1 from '../data/capitulos/ato1.json';
 import AMEACAS from '../data/ameacas.json';
 import REGIOES from '../data/regioes.json';
+import NPCS from '../data/npcs.json';
 import { ASSETS, jaCarregado } from './assets';
 import { getEstado } from './estado';
 import { preCarregar, preCarregarEmSegundoPlano, type ItemPreload } from './preloader';
@@ -10,14 +12,27 @@ import { mostrarCarregando, type TelaCarregando } from './carregando';
 /**
  * Pré-carregamento por etapa (Fase 4F). Cada etapa tem o seu manifesto, montado a partir dos dados
  * (capítulos, mapas, batalhas), sem lista feita à mão:
- *   intro → sonho → cap01 → cap02.
+ *   intro → sonho → cap01 → cap02 → a1p1 (Ato I, Parte 1) → a1lateral (Partes 2 a 5) → a1salao (Parte 6).
  * - Ao começar uma etapa, `garantirEtapa` baixa o que falta, com a tela de carregamento e a barra.
  * - Enquanto o jogador está numa etapa, a próxima vem em segundo plano, com prioridade baixa.
  * - Os arquivos ficam em memória (blob:), então as telas e o Phaser abrem na hora.
  */
 
-export type Etapa = 'intro' | 'sonho' | 'cap01' | 'cap02';
-const ORDEM: Etapa[] = ['intro', 'sonho', 'cap01', 'cap02'];
+export type Etapa = 'intro' | 'sonho' | 'cap01' | 'cap02' | 'a1p1' | 'a1lateral' | 'a1salao';
+const ORDEM: Etapa[] = ['intro', 'sonho', 'cap01', 'cap02', 'a1p1', 'a1lateral', 'a1salao'];
+
+/** Cenas do Ato I por etapa, pelo prefixo do id (c1-: Parte 1; t-, s-, c-, e-: laterais; f-: Salão). */
+const cenasAto1 = (prefixos: string[]) => ({ cenas: (ATO1 as { cenas: { id: string }[] }).cenas.filter((c) => prefixos.some((p) => c.id.startsWith(p))) });
+/** Painéis e peças da fase lateral (Partes 2 a 5). */
+export const PAINEIS_LATERAIS = ['tunel-1', 'tunel-2', 'tunel-3', 'corredor-1', 'corredor-2', 'tochas-1', 'tochas-2'];
+export const PECAS_FRENTE = ['pilar', 'estalactites', 'raizes', 'pedras', 'coluna', 'teias', 'musgo', 'estalagmite', 'borda'];
+export const SIMBOLOS = ['solem', 'justar', 'ardor', 'expiria', 'eternus', 'mentis', 'irae', 'solem-rachado', 'rachaduras'];
+export const DEUSES_FORJA = ['solem', 'justar', 'ardor', 'expiria', 'eternus', 'mentis', 'irae'];
+/** Bustos do herói com expressão (opcionais: sem o arquivo, o jogo usa o normal). */
+const bustosExpressao = (exprs: string[]): ItemPreload[] => {
+  const p = getEstado().personagem;
+  return p ? exprs.map((x) => ({ caminho: ASSETS.bustoHeroi(p.raca, p.genero, x), estimativa: 110 * KB, opcional: true })) : [];
+};
 
 const KB = 1024;
 type MapaJson = { id: string; chao?: { imagem?: string; blocos?: { imagem: string }[] }; imagem?: string; npcs?: { id: string }[]; seguidores?: { id: string }[]; objetos?: { item?: string; semIcone?: boolean }[]; itens?: { item: string; semIcone?: boolean }[]; objetosAtlas?: string };
@@ -60,7 +75,7 @@ function itensDoCapitulo(cap: unknown): ItemPreload[] {
   const itens: ItemPreload[] = [];
   const fundos = new Set([...valores(cap, 'fundo'), ...valores(cap, 'fundoFim')]);
   for (const f of fundos) itens.push({ caminho: ASSETS.cena(f), estimativa: 350 * KB });
-  for (const q of valores(cap, 'quem')) if (q !== 'heroi' && q !== 'pensamento') itens.push({ caminho: ASSETS.retratoNpc(q), estimativa: 120 * KB });
+  for (const q of valores(cap, 'quem')) if (q !== 'heroi' && q !== 'pensamento' && q in NPCS) itens.push({ caminho: ASSETS.retratoNpc(q), estimativa: 120 * KB });
   // Expressões usadas (ex.: Aylin chorando).
   const falas = (cap as { cenas: { falas?: { quem?: string; expressao?: string }[] }[] }).cenas.flatMap((c) => c.falas ?? []);
   for (const f of falas) if (f.quem && f.expressao) itens.push({ caminho: ASSETS.retratoNpc(f.quem, f.expressao), estimativa: 130 * KB, opcional: true });
@@ -108,16 +123,44 @@ export function itensDaEtapa(e: Etapa): ItemPreload[] {
     itens = itensDoCapitulo(CAP02);
     for (const d of ['bellica', 'nocturna', 'draconara']) itens.push({ caminho: `img/panteao/${d}.webp`, estimativa: 150 * KB });
     if (p) itens.push({ caminho: ASSETS.spriteChibi(p.raca, p.genero), estimativa: 8 * KB });
+  } else if (e === 'a1p1') {
+    // Ato I, Parte 1: a imagem do alçapão, o busto do Artho e os do herói (choque e raiva).
+    itens = [...itensDoCapitulo(cenasAto1(['c1-'])), ...bustosExpressao(['choque', 'raiva'])];
+  } else if (e === 'a1lateral') {
+    itens = [
+      ...PAINEIS_LATERAIS.map((id) => ({ caminho: `img/lateral/${id}.webp`, estimativa: 380 * KB })),
+      ...PECAS_FRENTE.map((id) => ({ caminho: `img/lateral/frente-${id}.png`, estimativa: 240 * KB })),
+      ...SIMBOLOS.map((id) => ({ caminho: `img/simbolos/${id}.png`, estimativa: 45 * KB })),
+      ...itensDoCapitulo(cenasAto1(['t-', 's-', 'c-', 'e-'])),
+      ...bustosExpressao(['dor', 'determinado']),
+    ];
+    if (p) itens.push({ caminho: `sprites/lateral-${p.raca}-${p.genero}.png`, estimativa: 18 * KB });
+  } else if (e === 'a1salao') {
+    itens = [
+      { caminho: 'img/mapas/salao-forja.webp', estimativa: 530 * KB },
+      ...itensDoCapitulo(cenasAto1(['f-'])),
+      ...DEUSES_FORJA.map((d) => ({ caminho: `img/panteao/${d}.webp`, estimativa: 150 * KB })),
+      ...bustosExpressao(['determinado']),
+    ];
+    if (p) {
+      itens.push({ caminho: ASSETS.spriteChibi(p.raca, p.genero), estimativa: 8 * KB });
+      if (p.classe) itens.push({ caminho: ASSETS.cena(`cena-reliquia-${p.classe}`), estimativa: 180 * KB });
+      itens.push({ caminho: ASSETS.retrato(p.raca, p.genero, p.classe ?? 'comum'), estimativa: 200 * KB, opcional: true });
+    }
   }
   const vistos = new Set<string>();
   return itens.filter((i) => !vistos.has(i.caminho) && vistos.add(i.caminho));
 }
 
-/** A etapa da campanha atual (pelo capítulo). */
+/** A etapa da campanha atual (pelo ato e pela parte). */
 export function etapaDoCapitulo(): Etapa {
   const c = getEstado().campanha;
+  if (c.ato >= 1) {
+    const parte = typeof c.parte === 'number' ? c.parte : 1;
+    return parte <= 1 ? 'a1p1' : parte <= 5 ? 'a1lateral' : 'a1salao';
+  }
   // A parte do templo do Prólogo (antigo Capítulo 02) carrega as cenas e mapas dela.
-  return c.ato >= 1 || c.parte === 'templo' ? 'cap02' : 'cap01';
+  return c.parte === 'templo' ? 'cap02' : 'cap01';
 }
 
 const prontas = new Set<Etapa>();

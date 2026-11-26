@@ -16,7 +16,8 @@ export interface Tela {
 
 export type NomeTela =
   | 'loading' | 'intro' | 'menu' | 'criacao' | 'prologo' | 'sonho' | 'despertar'
-  | 'introFullmun' | 'capitulo' | 'mapa' | 'batalha' | 'fimCapitulo' | 'gameOver' | 'emBreve';
+  | 'introFullmun' | 'capitulo' | 'mapa' | 'batalha' | 'fimCapitulo' | 'gameOver' | 'emBreve'
+  | 'lateral' | 'salao';
 type Fabrica = (params?: unknown) => Tela;
 
 const fabricas = new Map<NomeTela, Fabrica>();
@@ -26,6 +27,9 @@ let trocando = false;
 export function registrarTela(nome: NomeTela, fabrica: Fabrica): void {
   fabricas.set(nome, fabrica);
 }
+
+/** A tela já existe no jogo? */
+export const existeTela = (nome: NomeTela): boolean => fabricas.has(nome);
 
 export interface OpcoesTroca {
   /** Toca o whoosh de transição (padrão: sim). */
