@@ -8,6 +8,7 @@ import {
   nomeArquivoCopia, tempoRelativo, type IdSlot, type InfoSlot, type MetaSave, type RegistroSave,
 } from '../core/saves';
 import { fmt, textos } from '../core/textos';
+import { nomeAto, tituloAto } from '../narrativa/capitulo';
 import { avisar } from '../core/toasts';
 import { botao, confirmar, h } from '../core/ui';
 
@@ -21,7 +22,9 @@ const T = () => textos.saves;
 
 /* ------------------------------ textos do card ------------------------------ */
 
-export const nomeCapitulo = (n: number): string => (n > 0 ? fmt(T().capitulo, 'm', { n: String(n).padStart(2, '0') }) : T().prologo);
+/** "Prólogo" ou "Ato I · Provação Sob a Luz" (o card e o Continuar). */
+export const nomeCapitulo = (m: Pick<MetaSave, 'ato'>): string =>
+  m.ato > 0 ? [nomeAto(m.ato), tituloAto(m.ato)].filter(Boolean).join(' · ') : T().prologo;
 
 function racaEClasse(m: MetaSave): string {
   const raca = racaPorId(m.raca)?.nome ?? m.raca;
@@ -29,11 +32,13 @@ function racaEClasse(m: MetaSave): string {
   return c ? `${raca} · ${nomeDaClasse(c, m.genero)}` : raca;
 }
 
-const capituloELocal = (m: MetaSave): string => [nomeCapitulo(m.capitulo), m.local].filter(Boolean).join(' · ');
+/** "Prólogo · Füllmun — Praça" e "Ato I · Provação Sob a Luz — O túnel". */
+const capituloELocal = (m: MetaSave): string =>
+  m.ato > 0 ? [nomeCapitulo(m), m.local].filter(Boolean).join(' — ') : [nomeCapitulo(m), m.local].filter(Boolean).join(' · ');
 
-/** "Thaelion · Capítulo 01 · há 3 dias" (embaixo do Continuar). */
+/** "Thaelion · Prólogo · há 3 dias" (embaixo do Continuar). */
 export const resumoContinuar = (m: MetaSave): string =>
-  fmt(textos.menu.continuarInfo, m.genero, { nome: m.nomeHeroi, capitulo: nomeCapitulo(m.capitulo), quando: tempoRelativo(m.salvoEm) });
+  fmt(textos.menu.continuarInfo, m.genero, { nome: m.nomeHeroi, capitulo: m.ato > 0 ? nomeAto(m.ato) : nomeCapitulo(m), quando: tempoRelativo(m.salvoEm) });
 
 /* ------------------------------ ícones ------------------------------ */
 
@@ -137,7 +142,7 @@ export function abrirSalvar(): void {
     if (atual.estado === 'ok') {
       const m = atual.meta;
       const sim = await confirmar({
-        texto: fmt(T().substituirPergunta, m.genero, { nome: m.nomeHeroi, capitulo: nomeCapitulo(m.capitulo), local: m.local || '—', quando: tempoRelativo(m.salvoEm) }),
+        texto: fmt(T().substituirPergunta, m.genero, { nome: m.nomeHeroi, capitulo: nomeCapitulo(m), local: m.local || '—', quando: tempoRelativo(m.salvoEm) }),
         ok: T().substituir, cancelar: T().cancelar, classe: 'confirmar-substituir',
       });
       if (!sim) return;

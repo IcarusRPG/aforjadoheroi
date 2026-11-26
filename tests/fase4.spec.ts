@@ -678,7 +678,7 @@ test('save antigo da Fase 3 (parado em "Capítulo 02 · Em breve") migra para o 
   expect(s.capitulo).toBe(1);
   expect(s.parte).toBe('templo');
   const salvo = await page.evaluate(() => ((a) => ({ ...(a?.jogo ?? {}), versaoSave: a?.versaoSave, config: JSON.parse(localStorage.getItem('fdg.opcoes') ?? '{}') }))(JSON.parse(localStorage.getItem('fdg.save.auto') ?? 'null')));
-  expect(salvo.versaoSave).toBe(6);
+  expect(salvo.versaoSave).toBe(7);
 });
 
 test('modo de ajuste (F2) nos três mapas novos', async ({ page }, info) => {

@@ -200,8 +200,14 @@
       "Faça o seu juramento."
     ]
   },
+  "atos": {
+    "prologo": "Prólogo",
+    "ato": "Ato {n}",
+    "parte": "Parte {n}",
+    "fimDo": "Fim do"
+  },
   "emBreve": {
-    "capitulo": "Capítulo 02",
+    "capitulo": "Ato I",
     "titulo": "Provação Sob a Luz",
     "emBreve": "Em breve",
     "voltar": "Voltar ao menu"
@@ -454,6 +460,7 @@
     "danificadoInfo": "Este save não pode ser lido.",
     "prologo": "Prólogo",
     "capitulo": "Capítulo {n}",
+    "ato": "Ato {n}",
     "deJogo": "{tempo} de jogo",
     "salvo": "Jogo salvo no {slot}",
     "falhou": "Não foi possível salvar. Libere espaço no navegador e tente de novo.",

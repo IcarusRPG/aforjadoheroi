@@ -3,13 +3,13 @@ import { ASSETS, src } from '../core/assets';
 import { audio } from '../core/audio';
 import { atualizarConfig, carregarSlot, getEstado, temSave } from '../core/estado';
 import { lerSlot, maisRecente, temAlgumSave, type IdSlot } from '../core/saves';
-import { irPara, type Tela } from '../core/telas';
+import { irPara, type NomeTela, type Tela } from '../core/telas';
 import { ehToque, fmt, textos } from '../core/textos';
 import { botao, confirmar, h } from '../core/ui';
 import { abrirCreditos } from './creditos';
 import { abrirOpcoes } from './opcoes';
 import { abrirCompendio } from './compendio';
-import { CAPITULOS } from '../narrativa/capitulo';
+import { ATOS } from '../narrativa/capitulo';
 import { abrirCarregar, abrirCopia, nomeCapitulo, resumoContinuar } from './saves';
 import { tutorialRespondido } from '../core/tutorial';
 import { perguntarTutorial } from './tutorial';
@@ -27,14 +27,20 @@ function dicaIphoneUmaVez(): HTMLElement | null {
   return d;
 }
 
+/** A tela onde o jogo salvo retoma: cena, mapa ou fase lateral (ou o "Em breve" depois do último ato). */
+function telaDoLocal(): NomeTela {
+  const l = getEstado().campanha.local;
+  return l.tela === 'mapa' ? 'mapa' : 'capitulo';
+}
+
 export function retomarJogo(): void {
   const p = getEstado().personagem;
   // Heróis salvos antes da escolha de classe retomam a criação no passo Classe.
   if (p && !p.classe) void irPara('criacao', { retomar: p });
   // Herói pronto que ainda não terminou o sonho dos deuses: retoma no sonho.
   else if (p && !getEstado().sonho.concluido) void irPara('sonho');
-  // Capítulo em andamento: retoma na última cena ou no mapa, na posição salva.
-  else if (CAPITULOS[getEstado().campanha.capitulo]) void irPara(getEstado().campanha.local.tela === 'mapa' ? 'mapa' : 'capitulo');
+  // Prólogo ou ato em andamento: retoma na última cena, no mapa ou na fase lateral, na posição salva.
+  else if (ATOS[getEstado().campanha.ato]) void irPara(telaDoLocal());
   else void irPara('emBreve');
 }
 
@@ -55,7 +61,7 @@ async function novoJogo(): Promise<void> {
       texto: h('div', {},
         h('h2', { class: 'modal-titulo' }, A.titulo),
         h('p', {}, A.manuais),
-        h('p', {}, fmt(A.auto, m.genero, { nome: m.nomeHeroi, capitulo: nomeCapitulo(m.capitulo) }))),
+        h('p', {}, fmt(A.auto, m.genero, { nome: m.nomeHeroi, capitulo: nomeCapitulo(m) }))),
       ok: A.comecar, cancelar: A.voltar, classe: 'aviso-novo-jogo',
     });
     if (!sim) return;

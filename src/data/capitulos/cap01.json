@@ -1,13 +1,13 @@
 {
   "id": "cap01",
-  "numero": 1,
+  "numero": 0,
   "titulo": "Amanhecer Tardio",
   "lugar": "Füllmun",
   "inicio": "c01-quarto",
   "parte": "fullmun",
   "proximaParte": "templo",
   "proximoCapitulo": {
-    "numero": 2,
+    "numero": 1,
     "titulo": "Provação Sob a Luz"
   },
   "resumo": [

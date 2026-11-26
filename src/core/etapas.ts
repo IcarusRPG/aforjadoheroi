@@ -116,8 +116,8 @@ export function itensDaEtapa(e: Etapa): ItemPreload[] {
 /** A etapa da campanha atual (pelo capítulo). */
 export function etapaDoCapitulo(): Etapa {
   const c = getEstado().campanha;
-  // A parte do templo do Capítulo 01 (antigo Capítulo 02) carrega as cenas e mapas dela.
-  return c.capitulo >= 2 || c.parte === 'templo' ? 'cap02' : 'cap01';
+  // A parte do templo do Prólogo (antigo Capítulo 02) carrega as cenas e mapas dela.
+  return c.ato >= 1 || c.parte === 'templo' ? 'cap02' : 'cap01';
 }
 
 const prontas = new Set<Etapa>();

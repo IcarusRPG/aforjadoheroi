@@ -18,7 +18,9 @@ export const modoTeste = (): boolean => new URLSearchParams(location.search).has
 export function estadoProgresso() {
   const c = getEstado().campanha;
   return {
-    capitulo: c.capitulo,
+    ato: c.ato,
+    /** Apelido de compatibilidade dos testes antigos: o Prólogo era o Capítulo 01. */
+    capitulo: c.ato + 1,
     parte: c.parte ?? null,
     flags: [...c.flags],
     pv: c.pvAtual,

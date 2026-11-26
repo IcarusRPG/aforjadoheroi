@@ -231,7 +231,7 @@ test('salvar manual no mapa: Manual 1 guarda a posição exata; o autosave segue
   await expect(card(page, 'auto')).toContainText('AUTOMÁTICO');
   await expect(card(page, 'auto')).toContainText('Salvo pelo jogo');
   const m1 = (await saves(page)).find((s) => s.slot === 'manual1')!;
-  expect(m1).toMatchObject({ estado: 'ok', tipo: 'manual', nomeHeroi: 'Thaelion', capitulo: 1, local: 'Füllmun — Praça do mercado', versaoSave: 6 });
+  expect(m1).toMatchObject({ estado: 'ok', tipo: 'manual', nomeHeroi: 'Thaelion', ato: 0, local: 'Füllmun — Praça do mercado', versaoSave: 7 });
   await page.waitForTimeout(600);
   await foto(page, info.project.name, 'tela-salvar');
   await page.locator('.saves-fechar').click();
@@ -290,7 +290,7 @@ test('substituir: salvar por cima de um slot ocupado pede confirmação', async 
   await page.locator('.btn-salvar').click();
   await card(page, 'manual1').locator('.save-btn-salvar').click();
   const pergunta = page.locator('.confirmar-substituir');
-  await expect(pergunta).toContainText('Substituir o save de Thaelion · Capítulo 01 · Füllmun — Praça do mercado · salvo há 2 dias?');
+  await expect(pergunta).toContainText('Substituir o save de Thaelion · Prólogo · Füllmun — Praça do mercado · salvo há 2 dias?');
   await foto(page, info.project.name, 'confirmar-substituir');
   await pergunta.getByRole('button', { name: 'Cancelar' }).click();
   await expect(pergunta).toHaveCount(0);
@@ -323,7 +323,7 @@ test('Continuar carrega sempre o save mais recente; o menu mostra Continuar e Ca
   await irAteMenu(page, './?test=1');
   await expect(page.locator('.btn-continuar')).toBeVisible();
   await expect(page.locator('.btn-carregar')).toBeVisible();
-  await expect(page.locator('.menu-continuar-info')).toHaveText('Recente · Capítulo 01 · há 3 dias'); // o antigo Capítulo 02 é a parte do templo do 01
+  await expect(page.locator('.menu-continuar-info')).toHaveText('Recente · Prólogo · há 3 dias'); // o antigo Capítulo 02 é a parte do templo do 01
   const ordem = (await page.locator('.menu-botoes > .btn').allTextContents()).map((t) => t.split('Recente')[0].trim());
   expect(ordem.slice(0, 3)).toEqual(['Continuar', 'Carregar', 'Novo Jogo']);
   await page.waitForTimeout(1500);
@@ -352,7 +352,7 @@ test('novo jogo: aviso, desistir mantém o automático, e só o primeiro autosav
   await page.locator('.btn-novo-jogo').click();
   const aviso = page.locator('.aviso-novo-jogo');
   await expect(aviso).toContainText('Seus saves manuais continuam guardados.');
-  await expect(aviso).toContainText('O save automático atual (Antigo, Capítulo 01) será substituído pela nova aventura.');
+  await expect(aviso).toContainText('O save automático atual (Antigo, Prólogo) será substituído pela nova aventura.');
   await foto(page, info.project.name, 'aviso-novo-jogo');
   await aviso.getByRole('button', { name: 'Voltar' }).click();
   await expect(aviso).toHaveCount(0);
@@ -388,7 +388,7 @@ test('novo jogo: aviso, desistir mantém o automático, e só o primeiro autosav
   await expect.poll(async () => (await saves(page)).find((s) => s.slot === 'auto')?.nomeHeroi, { timeout: 15_000 }).toBe('Shirra');
   const lista = await saves(page);
   expect(lista.find((s) => s.slot === 'manual1')).toMatchObject({ estado: 'ok', nomeHeroi: 'Guardado' });
-  expect(lista.find((s) => s.slot === 'auto')).toMatchObject({ tipo: 'auto', capitulo: 0, local: 'O sonho dos deuses' });
+  expect(lista.find((s) => s.slot === 'auto')).toMatchObject({ tipo: 'auto', ato: 0, local: 'O sonho dos deuses' });
 });
 
 test('persistência: recarregar e abrir um navegador novo com o mesmo armazenamento mantêm os 3 saves', async ({ page, browser }, info) => {
@@ -472,7 +472,7 @@ test('migração: o save único antigo vira o slot automático; os manuais come�
   await irAteMenu(page, './?test=1');
   const lista = await saves(page);
   expect(lista.map((s) => s.estado)).toEqual(['ok', 'vazio', 'vazio']);
-  expect(lista[0]).toMatchObject({ slot: 'auto', tipo: 'auto', nomeHeroi: 'Thaelion', capitulo: 1, local: 'Füllmun', versaoSave: 6 });
+  expect(lista[0]).toMatchObject({ slot: 'auto', tipo: 'auto', nomeHeroi: 'Thaelion', ato: 0, local: 'Füllmun', versaoSave: 7 });
   expect(await page.evaluate(() => localStorage.getItem('a-forja-do-heroi:estado'))).toBeNull();
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('fdg.opcoes')))!)).toMatchObject({ musica: 0.7, efeitos: 0.8 });
   await page.locator('.btn-continuar').click();

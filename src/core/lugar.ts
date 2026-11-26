@@ -1,4 +1,4 @@
-import { CAPITULOS, parteAtual } from '../narrativa/capitulo';
+import { ATOS, parteAtual } from '../narrativa/capitulo';
 import type { EstadoJogo } from './estado';
 
 /** Nome legível do lugar onde o jogo está, para os cards de save ("Füllmun — Praça do mercado"). */
@@ -23,13 +23,15 @@ export function lugarDoMapa(id: string, x?: number, y?: number): string {
   return area ? `${nome} — ${area.nome}` : nome;
 }
 
-export function localDoJogo(e: Pick<EstadoJogo, 'personagem' | 'sonho' | 'campanha'>): { capitulo: number; local: string } {
-  if (!e.personagem?.classe) return { capitulo: 0, local: 'Criação do herói' };
-  if (!e.sonho.concluido) return { capitulo: 0, local: 'O sonho dos deuses' };
+export function localDoJogo(e: Pick<EstadoJogo, 'personagem' | 'sonho' | 'campanha'>): { ato: number; parte?: string | number; local: string } {
+  if (!e.personagem?.classe) return { ato: 0, local: 'Criação do herói' };
+  if (!e.sonho.concluido) return { ato: 0, local: 'O sonho dos deuses' };
   const c = e.campanha;
-  if (!CAPITULOS[c.capitulo]) return { capitulo: c.capitulo, local: '' };
-  // "Capítulo 01 · Füllmun — Praça" ou "Capítulo 01 · Templo de Sólem — Biblioteca".
+  if (!ATOS[c.ato]) return { ato: c.ato, parte: c.parte, local: '' };
+  // "Prólogo · Füllmun — Praça" ou "Ato I · Provação Sob a Luz — O túnel".
   const cap = parteAtual(c);
-  if (c.local.tela === 'mapa' && c.local.mapa) return { capitulo: c.capitulo, local: lugarDoMapa(c.local.mapa, c.local.x, c.local.y) };
-  return { capitulo: c.capitulo, local: cap.lugar ?? '' };
+  const nomeParte = typeof c.parte === 'number' ? cap.nomesPartes?.[c.parte] : undefined;
+  if (nomeParte) return { ato: c.ato, parte: c.parte, local: nomeParte };
+  if (c.local.tela === 'mapa' && c.local.mapa) return { ato: c.ato, parte: c.parte, local: lugarDoMapa(c.local.mapa, c.local.x, c.local.y) };
+  return { ato: c.ato, parte: c.parte, local: cap.lugar ?? '' };
 }

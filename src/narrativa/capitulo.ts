@@ -2,6 +2,7 @@ import CAP01 from '../data/capitulos/cap01.json';
 import CAP02 from '../data/capitulos/cap02.json';
 import { getEstado, type Campanha, type EstadoMissao, type ParteCapitulo, type Personagem } from '../core/estado';
 import type { IdPericia } from '../core/pericias';
+import { textos } from '../core/textos';
 import { atrasoFinal, cestoIntacto, contador, estadoMissao, qtdItem, relacao } from '../core/progresso';
 
 /**
@@ -107,6 +108,24 @@ export interface Fala {
   velocidade?: number;
   /** Avança sozinha depois de tantos ms (sem esperar o toque). */
   auto?: number;
+  // ---- Fase 6 ----
+  /** Loop de ambiente (ex.: o fogo distante); null para, com `ambienteFade` ms de fade-out. */
+  ambiente?: { som: string; ganho?: number } | null;
+  /** Muda o volume do ambiente atual (ex.: o fogo mais baixo na biblioteca). */
+  ambienteGanho?: number;
+  ambienteFade?: number;
+  /** Um efeito que toca de vez em quando (ex.: madeira estalando), entre `min` e `max` ms; null para. */
+  ocasional?: { som: string; ganho?: number; min: number; max: number } | null;
+  /** Silêncio antes de a fala aparecer (ms). */
+  pausaAntes?: number;
+  /** Mostra o busto do herói nesta fala (narração ou NPC), com esta expressão ("normal", "choque"…). */
+  bustoHeroi?: string;
+  /** Aura dourada no busto do herói (a visão do LEVANTE). */
+  aura?: boolean;
+  /** Busto do NPC escurecido (uma memória). */
+  memoria?: boolean;
+  /** Estilo especial da caixa: "levante" = texto grande, dourado, com tremor. */
+  estilo?: string;
 }
 
 export interface Escolha {
@@ -177,9 +196,9 @@ export interface Capitulo {
   numero: number;
   titulo: string;
   /** Parte do capítulo que este arquivo cobre (o Capítulo 01 tem "fullmun" e "templo"). */
-  parte?: ParteCapitulo;
+  parte?: ParteCapitulo | number;
   /** Ao terminar esta parte, segue para a próxima (cartão de local), sem a tela de fim de capítulo. */
-  proximaParte?: ParteCapitulo;
+  proximaParte?: string;
   /** Cartão de local no começo da parte (no lugar do cartão de capítulo). */
   cartaoLocal?: { titulo: string; subtitulo?: string };
   /**
@@ -187,6 +206,8 @@ export interface Capitulo {
    * `prioridade` (escolhas raras), na ordem da lista; a linha `final` vem por último, sozinha.
    */
   resumoFim?: (Condicao & { texto: string; prioridade?: number; final?: boolean })[];
+  /** Nomes das partes de um ato, para os cards de save ({ "2": "O túnel" }). */
+  nomesPartes?: Record<string, string>;
   /** Lugar do capítulo, para os cards de save ("Füllmun", "Templo de Sólem"). */
   lugar?: string;
   inicio: string;
@@ -199,23 +220,34 @@ export interface Capitulo {
 }
 
 /**
- * Fase 5C: o Capítulo 01 tem duas partes, cada uma no seu arquivo: Füllmun (cap01.json) e o Templo de
- * Sólem (cap02.json). `CAPITULOS` tem um registro por capítulo (o da primeira parte: número, título,
- * próximo capítulo e o resumo do fim); `PARTES` tem as cenas de cada parte.
+ * Fase 6: o jogo é o Prólogo (ato 0, "Amanhecer Tardio") e os atos. O Prólogo tem duas partes, cada uma
+ * no seu arquivo: Füllmun (cap01.json) e o Templo de Sólem (cap02.json). `ATOS` tem um registro por ato
+ * (o da primeira parte: número, título, próximo ato e o resumo do fim); `PARTES` tem as cenas de cada parte.
  */
-export const PARTES: Record<ParteCapitulo, Capitulo> = { fullmun: CAP01 as unknown as Capitulo, templo: CAP02 as unknown as Capitulo };
-export const CAPITULOS: Record<number, Capitulo> = { 1: PARTES.fullmun };
+export const PARTES: Record<string, Capitulo> = { fullmun: CAP01 as unknown as Capitulo, templo: CAP02 as unknown as Capitulo };
+export const ATOS: Record<number, Capitulo> = { 0: PARTES.fullmun };
+/** Apelido de compatibilidade (o antigo registro por capítulo). */
+export const CAPITULOS = ATOS;
 
-/** O arquivo de cenas que vale agora (a parte do Capítulo 01, ou o capítulo). */
-export function parteAtual(c: Pick<Campanha, 'capitulo' | 'parte'> = getEstado().campanha): Capitulo {
-  if (c.capitulo === 1) return PARTES[c.parte ?? 'fullmun'];
-  return CAPITULOS[c.capitulo] ?? PARTES.fullmun;
+const ROMANOS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+/** "Prólogo", "Ato I", "Ato II"… */
+export const nomeAto = (n: number): string => (n <= 0 ? textos.atos.prologo : fmtAto(n));
+const fmtAto = (n: number) => textos.atos.ato.replace('{n}', ROMANOS[n] ?? String(n));
+
+/** Título do ato ("Provação Sob a Luz"), mesmo de um ato que ainda não existe (pelo anúncio do anterior). */
+export const tituloAto = (n: number): string =>
+  ATOS[n]?.titulo ?? Object.values(ATOS).find((a) => a.proximoCapitulo.numero === n)?.proximoCapitulo.titulo ?? '';
+
+/** O arquivo de cenas que vale agora (a parte do Prólogo, ou o ato). */
+export function parteAtual(c: Pick<Campanha, 'ato' | 'parte'> = getEstado().campanha): Capitulo {
+  if (c.ato === 0) return PARTES[typeof c.parte === 'string' ? c.parte : 'fullmun'] ?? PARTES.fullmun;
+  return ATOS[c.ato] ?? PARTES.fullmun;
 }
 
-/** As partes de um capítulo, em ordem. */
+/** As partes (arquivos de cenas) de um ato, em ordem. */
 export function partesDo(numero: number): Capitulo[] {
   const r: Capitulo[] = [];
-  for (let cap: Capitulo | undefined = CAPITULOS[numero]; cap; cap = cap.proximaParte ? PARTES[cap.proximaParte] : undefined) r.push(cap);
+  for (let cap: Capitulo | undefined = ATOS[numero]; cap; cap = cap.proximaParte ? PARTES[cap.proximaParte] : undefined) r.push(cap);
   return r;
 }
 
@@ -286,7 +318,7 @@ export function resumoDoDiario(numero: number): string[] {
  * primeiro; aparecem na ordem da lista, e a linha final (a Nyme) vem por último, sozinha.
  */
 export function resumoDoFim(numero: number, max = 8): string[] {
-  const cap = CAPITULOS[numero];
+  const cap = ATOS[numero];
   if (!cap?.resumoFim) return resumoDoDiario(numero).slice(0, max);
   const valem = cap.resumoFim.filter((r) => atende(r));
   const finais = valem.filter((r) => r.final);

@@ -77,16 +77,17 @@ export interface PassoCaminho {
 }
 
 /**
- * Progresso nos capítulos. `cena` é a cena atual (null = início do capítulo, com o cartão de título);
- * `modo` diz se ela retoma nas falas ou direto nas escolhas.
+ * Progresso no Prólogo e nos atos. `cena` é a cena atual (null ou "inicio" = começo da parte, com o
+ * cartão); `modo` diz se ela retoma nas falas ou direto nas escolhas.
  */
 export interface Campanha {
-  capitulo: number;
+  /** 0 = Prólogo (Amanhecer Tardio); 1 = Ato I (Provação Sob a Luz); 2 = Ato II (em breve)… */
+  ato: number;
   /**
-   * Parte do Capítulo 01 (Fase 5C): "fullmun" (quarto → vila → Mirtilo) ou "templo" (lâmina → treino →
-   * biblioteca → tragédia). Ausente nos outros capítulos e em saves antigos (= "fullmun").
+   * Parte do ato. No Prólogo: "fullmun" (quarto → vila → Mirtilo) ou "templo" (lâmina → treino →
+   * biblioteca → tragédia). Nos atos: 1, 2, 3…
    */
-  parte?: ParteCapitulo;
+  parte?: ParteCapitulo | number;
   cena: string | null;
   modo: 'falas' | 'escolhas';
   flags: string[];
@@ -116,6 +117,9 @@ export interface Campanha {
   contadores: Record<string, number>;
   /** Onde o jogo retoma: numa cena (tela de capítulo) ou num mapa, na posição salva. */
   local: LocalJogo;
+  /** Ato I (Fase 6): a voz escolhida na Forja (id do deus) e os poderes concedidos escolhidos. */
+  divindade?: string | null;
+  poderes?: string[];
 }
 
 export type ParteCapitulo = 'fullmun' | 'templo';
@@ -123,7 +127,9 @@ export type ParteCapitulo = 'fullmun' | 'templo';
 export type EstadoMissao = 'nao_iniciada' | 'aceita' | 'concluida' | 'recusada';
 
 export interface LocalJogo {
-  tela: 'capitulo' | 'mapa';
+  tela: 'capitulo' | 'mapa' | 'lateral';
+  /** Fase lateral: o painel atual (save a cada painel). */
+  painel?: number;
   mapa?: string;
   x?: number;
   y?: number;
@@ -177,7 +183,7 @@ const padrao = (): EstadoJogo => ({
 });
 
 export const campanhaNova = (): Campanha => ({
-  capitulo: 1, parte: 'fullmun', cena: null, modo: 'falas', flags: [], caminho: [], usadas: [], pvAtual: null, bonusProximoTeste: 0, cenaAntesDaBatalha: null,
+  ato: 0, parte: 'fullmun', cena: null, modo: 'falas', flags: [], caminho: [], usadas: [], pvAtual: null, bonusProximoTeste: 0, cenaAntesDaBatalha: null,
   atraso: 0, missoes: {}, inventario: {}, reais: 0, relacoes: { ...RELACOES_INICIAIS },
   compendio: { conhecidos: [], bestiario: {}, vistos: {}, novidade: false },
   coletados: [], contadores: {}, local: { tela: 'capitulo' },
@@ -201,8 +207,9 @@ function migrar(c: Campanha, versao: number | undefined): Campanha {
     const k = 2400 / 1672;
     m.local = { ...m.local, x: Math.round(m.local.x * k), y: Math.round((m.local.y ?? 0) * k), versaoMapa: 2 };
   }
+  const v = m as Campanha & { capitulo?: number };
   if ((versao ?? 1) < 4) {
-    if (m.capitulo >= 2) {
+    if ((v.capitulo ?? 1) >= 2) {
       Object.assign(m, { capitulo: 2, cena: null, modo: 'falas', atraso: 2, inventario: {}, reais: 0, relacoes: { ...RELACOES_INICIAIS }, local: { tela: 'capitulo' } });
     } else if (m.cena && ['c01-hulda', 'c01-osric', 'c01-kobanu'].includes(m.cena)) {
       Object.assign(m, { cena: 'c01-soleira', modo: 'escolhas' });
@@ -211,12 +218,21 @@ function migrar(c: Campanha, versao: number | undefined): Campanha {
   // Fase 5C (versaoSave 6): um capítulo só, com duas partes. O antigo Capítulo 02 vira a parte "templo"
   // do Capítulo 01, na mesma cena ("inicio" = começo da parte); o antigo "Capítulo 03 · Em breve" vira o 02.
   if ((versao ?? 1) < 6) {
-    if (m.capitulo === 2) {
-      Object.assign(m, { capitulo: 1, parte: 'templo', cena: m.cena === 'inicio' ? null : m.cena });
-      if (!m.flags.includes('chegou_templo')) m.flags = [...m.flags, 'chegou_templo'];
-    } else if (m.capitulo >= 3) Object.assign(m, { capitulo: m.capitulo - 1, parte: undefined });
+    if (v.capitulo === 2) {
+      Object.assign(v, { capitulo: 1, parte: 'templo', cena: v.cena === 'inicio' ? null : v.cena });
+      if (!v.flags.includes('chegou_templo')) v.flags = [...v.flags, 'chegou_templo'];
+    } else if ((v.capitulo ?? 1) >= 3) Object.assign(v, { capitulo: v.capitulo! - 1, parte: undefined });
   }
-  if (m.capitulo === 1 && !m.parte) m.parte = 'fullmun';
+  // Fase 6 (versaoSave 7): capítulos viram Prólogo + atos. O Capítulo 01 é o Prólogo (ato 0, mesma parte
+  // e cena); o "Capítulo 02 · Em breve" é o começo do Ato I (parte 1, cena "inicio").
+  if ((versao ?? 1) < 7 || typeof v.ato !== 'number') {
+    const cap = v.capitulo ?? 1;
+    if (cap <= 1) Object.assign(v, { ato: 0 });
+    else Object.assign(v, { ato: 1, parte: 1, cena: 'inicio', modo: 'falas', local: { tela: 'capitulo' } });
+    delete v.capitulo;
+  }
+  if (m.ato === 0 && typeof m.parte !== 'string') m.parte = 'fullmun';
+  if (m.ato >= 1 && typeof m.parte !== 'number') m.parte = 1;
   return m;
 }
 
@@ -253,8 +269,8 @@ function gravarOpcoes(c: Config): void {
 
 /* ---------- metadados do card (o nome legível do lugar vem de quem conhece mapas e capítulos) ---------- */
 
-type ConstrutorLocal = (e: Pick<EstadoJogo, 'personagem' | 'sonho' | 'campanha'>) => { capitulo: number; local: string };
-let construirLocal: ConstrutorLocal = (e) => ({ capitulo: e.sonho.concluido ? e.campanha.capitulo : 0, local: '' });
+type ConstrutorLocal = (e: Pick<EstadoJogo, 'personagem' | 'sonho' | 'campanha'>) => { ato: number; parte?: string | number; local: string };
+let construirLocal: ConstrutorLocal = (e) => ({ ato: e.sonho.concluido ? e.campanha.ato : 0, local: '' });
 export function definirConstrutorLocal(fn: ConstrutorLocal): void { construirLocal = fn; }
 
 function metaDe(jogo: Pick<EstadoJogo, 'personagem' | 'sonho' | 'campanha' | 'tempoDeJogo'>, tipo: 'auto' | 'manual'): Omit<MetaSave, 'versaoSave'> {

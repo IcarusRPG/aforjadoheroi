@@ -1,6 +1,6 @@
 {
   "id": "cap02",
-  "numero": 1,
+  "numero": 0,
   "parte": "templo",
   "titulo": "Amanhecer Tardio",
   "cartaoLocal": {
@@ -10,7 +10,7 @@
   "lugar": "Templo de Sólem",
   "inicio": "c02-lamina",
   "proximoCapitulo": {
-    "numero": 2,
+    "numero": 1,
     "titulo": "Provação Sob a Luz"
   },
   "fundoFim": "cena-nyme-porta",

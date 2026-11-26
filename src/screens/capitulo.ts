@@ -7,9 +7,8 @@ import { terminarParte } from './fimCapitulo';
 import { estadoProgresso, registrarGanchos } from '../core/ganchos';
 import { pvAntesDaForjaDe } from '../core/pericias';
 import { irPara, type Tela } from '../core/telas';
-import { textos } from '../core/textos';
 import { botaoMenu, esperar, h } from '../core/ui';
-import { type Capitulo, cenaPorId, parteAtual } from '../narrativa/capitulo';
+import { type Capitulo, cenaPorId, nomeAto, parteAtual } from '../narrativa/capitulo';
 import { aplicarEfeitos, criarPalco, tocarMusicaDaCena } from '../narrativa/palco';
 import { abrirMenuPausa } from './pausa';
 
@@ -20,7 +19,6 @@ import { abrirMenuPausa } from './pausa';
 
 export { aplicarEfeitos, tocarMusicaDaCena };
 
-const T = textos.cenas;
 
 export interface ParamsCapitulo {
   /** Vai direto para esta cena (volta de batalha, saída de um mapa…). */
@@ -54,7 +52,7 @@ export function telaCapitulo(params?: unknown): Tela {
         h('h1', { class: 'cartao-local-titulo' }, cap.cartaoLocal.titulo),
         cap.cartaoLocal.subtitulo ? h('p', { class: 'cartao-local-subtitulo' }, cap.cartaoLocal.subtitulo) : null)
     : h('div', { class: 'cena-cartao-titulo', hidden: true },
-        h('p', { class: 'cartao-capitulo' }, `${T.capitulo} ${String(cap.numero).padStart(2, '0')}`),
+        h('p', { class: 'cartao-capitulo' }, nomeAto(cap.numero)),
         h('h1', { class: 'cartao-titulo' }, cap.titulo));
   const btnPausa = botaoMenu('cena-btn-pausa');
   const el = h('div', { class: 'tela-capitulo' }, palco.el, btnPausa, cartao);

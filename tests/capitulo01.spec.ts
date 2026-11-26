@@ -99,7 +99,7 @@ test('quarto: Estudioso vê a pista do sonho; as escolhas "uma vez" somem e a ce
   await page.getByRole('button', { name: 'Continuar' }).click();
   // Cartão de título
   await expect(page.locator('.cena-cartao-titulo.visivel')).toContainText('Amanhecer Tardio');
-  await expect(page.locator('.cena-cartao-titulo')).toContainText('Capítulo 01');
+  await expect(page.locator('.cena-cartao-titulo')).toContainText('Prólogo');
   await foto(page, info.project.name, '00-titulo');
   await expect.poll(async () => (await estado(page)).cena, { timeout: 20_000 }).toBe('c01-quarto');
   await expect(page.locator('.cena-fundo.visivel')).toHaveAttribute('data-cena', 'cena-quarto');

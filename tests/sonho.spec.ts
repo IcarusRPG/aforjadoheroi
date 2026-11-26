@@ -220,7 +220,7 @@ test('sonho dos deuses: andar, ouvir as sete vozes, caminhada sozinho até o alt
   expect(salvo.concluido).toBe(true);
   // Depois do despertar, o Capítulo 01 começa com o cartão de título
   await expect(page.locator('.tela-capitulo .cena-cartao-titulo')).toContainText('Amanhecer Tardio', { timeout: 30_000 });
-  await expect(page.locator('.tela-capitulo .cena-cartao-titulo')).toContainText('Capítulo 01');
+  await expect(page.locator('.tela-capitulo .cena-cartao-titulo')).toContainText('Prólogo');
   await foto(page, 'sonho-fim-capitulo01', info.project.name);
 });
 

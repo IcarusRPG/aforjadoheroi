@@ -8,19 +8,19 @@ const classeDe = (id: string | null, g: Genero) => {
   return c ? nomeDaClasse(c, g) : null;
 };
 import { racaPorId } from '../core/regras';
-import { CAPITULOS } from '../narrativa/capitulo';
+import { ATOS, nomeAto } from '../narrativa/capitulo';
 import { irPara, type Tela } from '../core/telas';
 import { textos } from '../core/textos';
 import { botao, h } from '../core/ui';
 
-/** Tela provisória depois do Capítulo 01: "Capítulo 02 — Provação Sob a Luz · Em breve". */
+/** Tela provisória depois do último ato pronto: "Ato II · Em breve". */
 export function telaEmBreve(): Tela {
   const t = textos.emBreve;
-  // O capítulo que vem a seguir (ex.: "Capítulo 02 — Provação Sob a Luz").
-  const atual = getEstado().campanha.capitulo;
-  const anterior = Object.values(CAPITULOS).find((c) => c.proximoCapitulo.numero === atual);
-  const capitulo = anterior ? `${textos.cenas.capitulo} ${String(atual).padStart(2, '0')}` : t.capitulo;
-  const tituloProx = anterior?.proximoCapitulo.titulo ?? t.titulo;
+  // O ato que vem a seguir (ex.: "Ato II"), com o título, se já tiver um.
+  const atual = getEstado().campanha.ato;
+  const anterior = Object.values(ATOS).find((c) => c.proximoCapitulo.numero === atual);
+  const capitulo = atual > 0 ? nomeAto(atual) : t.capitulo;
+  const tituloProx = anterior ? anterior.proximoCapitulo.titulo : t.titulo;
   const p = getEstado().personagem;
   const heroi = p
     ? h('figure', { class: 'embreve-heroi' },

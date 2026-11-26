@@ -88,9 +88,9 @@ test('capítulo único: o fim de Füllmun vira o cartão "Templo de Sólem", sem
   if (umAparelho(info) || info.project.name.startsWith('paisagem')) await foto(page, info, 'cartao-templo');
   // O save automático já está na parte do templo; o Caderno anota o fim de Füllmun na chegada.
   const salvo = await salvoAuto(page);
-  expect(salvo.jogo.campanha.capitulo).toBe(1);
+  expect(salvo.jogo.campanha.ato).toBe(0);
   expect(salvo.jogo.campanha.parte).toBe('templo');
-  expect(salvo.meta.capitulo).toBe(1);
+  expect(salvo.meta.ato).toBe(0);
   const s = await st(page);
   expect(s.parte).toBe('templo');
   expect(s.caderno.anotacoes).toContain('fim-cap01');
@@ -119,7 +119,7 @@ test('fim: "Fim do Capítulo 01 — Amanhecer Tardio" com um resumo único (até
   await page.locator('.btn-menu').click();
   await page.getByRole('button', { name: 'Diário' }).click();
   await expect(page.locator('.diario h3')).toHaveCount(1);
-  await expect(page.locator('.diario h3')).toHaveText('Capítulo 01 · Amanhecer Tardio');
+  await expect(page.locator('.diario h3')).toHaveText('Prólogo · Amanhecer Tardio');
   const diario = await page.locator('.diario-resumo li').allInnerTexts();
   expect(diario).toContain('Você acalmou o Mirtilo.');
   expect(diario).toContain('Você leu os três livros da biblioteca.');
@@ -136,7 +136,7 @@ test('fim: "Fim do Capítulo 01 — Amanhecer Tardio" com um resumo único (até
     else await f(page, 'avancar');
     return false;
   }, { timeout: 150_000, intervals: [400] }).toBe(true);
-  await expect(fim.locator('.fim-rotulo')).toHaveText('Fim do Capítulo 01');
+  await expect(fim.locator('.fim-rotulo')).toHaveText('Fim do Prólogo');
   await expect(fim.locator('.fim-titulo')).toHaveText('Amanhecer Tardio');
   const linhas = await fim.locator('.fim-resumo li').allInnerTexts();
   expect(linhas.length).toBeLessThanOrEqual(8);
@@ -150,9 +150,9 @@ test('fim: "Fim do Capítulo 01 — Amanhecer Tardio" com um resumo único (até
   await page.waitForTimeout(1200);
   await foto(page, info, 'fim-capitulo');
   const salvo = await salvoAuto(page);
-  expect(salvo.jogo.campanha.capitulo).toBe(2);
+  expect(salvo.jogo.campanha.ato).toBe(1);
   expect(salvo.jogo.campanha.cena).toBe('inicio');
-  expect(salvo.meta.capitulo).toBe(2);
+  expect(salvo.meta.ato).toBe(1);
   // O Caderno: a anotação do fim e a pergunta do ataque.
   const s = await st(page);
   expect(s.caderno.anotacoes).toEqual(expect.arrayContaining(['fim-cap01', 'fim-cap02']));
@@ -160,7 +160,7 @@ test('fim: "Fim do Capítulo 01 — Amanhecer Tardio" com um resumo único (até
   await fim.getByRole('button', { name: 'Continuar' }).click();
   const breve = page.locator('.tela-embreve');
   await expect(breve).toBeVisible({ timeout: 15_000 });
-  await expect(breve.locator('.embreve-capitulo')).toHaveText('Capítulo 02');
+  await expect(breve.locator('.embreve-capitulo')).toHaveText('Ato I');
   await expect(breve.locator('.embreve-titulo')).toHaveText('Provação Sob a Luz');
   await expect(breve.locator('.embreve-breve')).toHaveText('Em breve');
 });
@@ -187,8 +187,8 @@ test('saves antigos: o antigo Capítulo 02 vira "Capítulo 01 · Templo de Sóle
   await irAteMenu(page, './?test=1');
   await page.getByRole('button', { name: 'Carregar' }).click();
   const cards = page.locator('.save-local');
-  await expect(cards.filter({ hasText: 'Templo de Sólem' })).toHaveText('Capítulo 01 · Templo de Sólem — Biblioteca');
-  await expect(cards.filter({ hasText: /^Capítulo 02$/ })).toHaveCount(1);
+  await expect(cards.filter({ hasText: 'Templo de Sólem' })).toHaveText('Prólogo · Templo de Sólem — Biblioteca');
+  await expect(cards.filter({ hasText: /^Ato I · Provação Sob a Luz$/ })).toHaveCount(1);
   if (umAparelho(info)) await foto(page, info, 'cards-migrados');
   // O antigo Capítulo 02 carrega na parte do templo, na mesma cena e no mesmo mapa.
   await page.locator('[data-slot="manual1"] .save-btn-carregar').click();
@@ -210,10 +210,10 @@ test('migração: um save antigo em "Capítulo 03 · Em breve" abre o "Capítulo
     localStorage.setItem('fdg.save.auto', JSON.stringify(a));
   }, [registroAntigo({ nome: 'Breve', salvoEm: new Date().toISOString(), capitulo: 3, local: '', campanha: { cena: 'inicio', flags: ['fim_capitulo_02', 'nyme_caiu'] } }), CONFIG] as const);
   await irAteMenu(page, './?test=1');
-  await expect(page.locator('.menu-continuar-info')).toContainText('Capítulo 02');
+  await expect(page.locator('.menu-continuar-info')).toContainText('Ato I');
   await page.getByRole('button', { name: /Continuar/ }).click();
   await expect(page.locator('.tela-embreve .embreve-titulo')).toHaveText('Provação Sob a Luz', { timeout: 30_000 });
-  await expect(page.locator('.tela-embreve .embreve-capitulo')).toHaveText('Capítulo 02');
+  await expect(page.locator('.tela-embreve .embreve-capitulo')).toHaveText('Ato I');
 });
 
 /* ======================================================================

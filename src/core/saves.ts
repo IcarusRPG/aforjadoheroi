@@ -13,7 +13,7 @@
 export type IdSlot = 'auto' | 'manual1' | 'manual2';
 export const SLOTS: readonly IdSlot[] = ['auto', 'manual1', 'manual2'];
 /** 5 = Fase 4B (slots). A campanha dentro do save segue a migração da Fase 4. */
-export const VERSAO_SAVE = 6;
+export const VERSAO_SAVE = 7;
 const FORMATO_SAVE = 'forja-do-heroi-save';
 const FORMATO_COPIA = 'forja-do-heroi-saves';
 const CHAVE_TMP = 'fdg.save.tmp';
@@ -25,8 +25,10 @@ export interface MetaSave {
   variante: string | null;
   genero: 'm' | 'f';
   classe: string | null;
-  /** 0 = antes do Capítulo 01 (prólogo e sonho). */
-  capitulo: number;
+  /** 0 = Prólogo (com a criação e o sonho); 1 = Ato I… */
+  ato: number;
+  /** Parte do ato (Ato I: 1 a 6). */
+  parte?: string | number;
   /** Nome legível do lugar: "Füllmun — Praça do mercado", "Templo de Sólem — Biblioteca". */
   local: string;
   /** Segundos de jogo (só com a aba visível). */
@@ -82,13 +84,17 @@ export function validarRegistro(x: unknown): x is RegistroSave {
 }
 
 /**
- * Card de um save antigo na numeração nova (Fase 5C, versaoSave 6): o antigo Capítulo 02 (Templo de
- * Sólem) virou a segunda parte do Capítulo 01, e o "Capítulo 03 · Em breve" virou o Capítulo 02.
+ * Card de um save antigo na numeração nova. Fase 5C (versaoSave 6): o antigo Capítulo 02 (Templo de
+ * Sólem) virou a segunda parte do Capítulo 01, e o "Capítulo 03 · Em breve" virou o Capítulo 02. Fase 6
+ * (versaoSave 7): o Capítulo 01 é o Prólogo (ato 0) e o Capítulo 02 é o começo do Ato I.
  */
 export function metaAtual(r: RegistroSave): MetaSave {
-  const m = r.meta;
-  if (r.versaoSave >= 6 || !(m.capitulo >= 2)) return m;
-  return { ...m, capitulo: m.capitulo - 1 };
+  const m = r.meta as MetaSave & { capitulo?: number };
+  if (r.versaoSave >= 7 && typeof m.ato === 'number') return m;
+  let cap = m.capitulo ?? 0;
+  if (r.versaoSave < 6 && cap >= 2) cap -= 1;
+  const { capitulo: _velho, ...resto } = m;
+  return cap >= 2 ? { ...resto, ato: 1, parte: 1, local: '' } : { ...resto, ato: 0 };
 }
 
 export function montarRegistro(meta: Omit<MetaSave, 'versaoSave'>, jogo: DadosJogo): RegistroSave {
