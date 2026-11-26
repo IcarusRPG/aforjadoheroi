@@ -1,0 +1,38 @@
+/* Fase 6: Prólogo + atos, Ato I (Partes 1 a 6). */
+
+/* ---------- Cartões de ato e de parte (narrativa/cartoes.ts) ---------- */
+.cartao-tela {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-content: center;
+  gap: 0.45rem;
+  padding: 24px;
+  text-align: center;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+.cartao-tela.sem-fundo { background: rgba(0, 0, 0, 0.55); }
+.cartao-tela.visivel { opacity: 1; }
+.cartao-tela-rotulo {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ouro);
+  font-size: clamp(0.9rem, 3vw, 1.1rem);
+}
+.cartao-tela-titulo { margin: 0; font-family: var(--fonte-titulo); color: var(--marmore); }
+.cartao-ato .cartao-tela-titulo { font-size: clamp(2rem, 8vw, 3.6rem); text-shadow: 0 0 24px rgba(242, 212, 138, 0.35); }
+.cartao-parte .cartao-tela-titulo {
+  font-size: clamp(1.05rem, 4vw, 1.5rem);
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: var(--ouro-claro);
+  opacity: 0.9;
+}
+@media (prefers-reduced-motion: reduce) { .cartao-tela { transition-duration: 0.01s; } }
+.animacoes-reduzidas .cartao-tela { transition-duration: 0.01s; }
