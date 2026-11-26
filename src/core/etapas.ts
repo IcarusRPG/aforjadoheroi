@@ -122,6 +122,8 @@ export function itensDaEtapa(e: Etapa): ItemPreload[] {
   } else if (e === 'cap02') {
     itens = itensDoCapitulo(CAP02);
     for (const d of ['bellica', 'nocturna', 'draconara']) itens.push({ caminho: `img/panteao/${d}.webp`, estimativa: 150 * KB });
+    // A tragédia: o busto do herói em choque (opcional).
+    itens.push(...bustosExpressao(['choque']));
     if (p) itens.push({ caminho: ASSETS.spriteChibi(p.raca, p.genero), estimativa: 8 * KB });
   } else if (e === 'a1p1') {
     // Ato I, Parte 1: a imagem do alçapão, o busto do Artho e os do herói (choque e raiva).

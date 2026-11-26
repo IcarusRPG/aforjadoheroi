@@ -1034,7 +1034,8 @@
         },
         {
           "texto": "Você abre a boca para gritar. Nenhum som sai.",
-          "velocidade": 48
+          "velocidade": 48,
+          "bustoHeroi": "choque"
         },
         {
           "texto": "O mundo volta de repente.",

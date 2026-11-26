@@ -1,0 +1,241 @@
+{
+  "_sobre": "Fase 6: para que lado o rosto de cada busto aponta (do ponto de vista de quem olha a tela). Regra das falas: o NPC fica à esquerda, olhando para a direita, e o herói à direita, olhando para a esquerda. Busto virado para o lado errado é espelhado por CSS (scaleX(-1)), só a imagem; se existir uma versão própria (<id>-esq / <id>-dir), ela tem preferência. As divindades aparecem de frente, no centro (Forja), e não entram nessa regra. Folha de conferência: node scripts/prepare-retratos.mjs → tests/screenshots/retratos-orientacao.png.",
+  "lados": {
+    "npc": "direita",
+    "heroi": "esquerda"
+  },
+  "bustos": {
+    "heroi-arake-f-choque": {
+      "arquivo": "img/retratos/heroi-arake-f-choque.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-f-determinado": {
+      "arquivo": "img/retratos/heroi-arake-f-determinado.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-f-dor": {
+      "arquivo": "img/retratos/heroi-arake-f-dor.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-f-raiva": {
+      "arquivo": "img/retratos/heroi-arake-f-raiva.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-f": {
+      "arquivo": "img/retratos/heroi-arake-f.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-m-choque": {
+      "arquivo": "img/retratos/heroi-arake-m-choque.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-m-determinado": {
+      "arquivo": "img/retratos/heroi-arake-m-determinado.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-m-dor": {
+      "arquivo": "img/retratos/heroi-arake-m-dor.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-m-raiva": {
+      "arquivo": "img/retratos/heroi-arake-m-raiva.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-arake-m": {
+      "arquivo": "img/retratos/heroi-arake-m.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-f-choque": {
+      "arquivo": "img/retratos/heroi-ayoran-f-choque.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-f-determinado": {
+      "arquivo": "img/retratos/heroi-ayoran-f-determinado.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-f-dor": {
+      "arquivo": "img/retratos/heroi-ayoran-f-dor.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-f-raiva": {
+      "arquivo": "img/retratos/heroi-ayoran-f-raiva.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-f": {
+      "arquivo": "img/retratos/heroi-ayoran-f.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-m-choque": {
+      "arquivo": "img/retratos/heroi-ayoran-m-choque.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-m-determinado": {
+      "arquivo": "img/retratos/heroi-ayoran-m-determinado.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-m-dor": {
+      "arquivo": "img/retratos/heroi-ayoran-m-dor.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-m-raiva": {
+      "arquivo": "img/retratos/heroi-ayoran-m-raiva.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-ayoran-m": {
+      "arquivo": "img/retratos/heroi-ayoran-m.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-f-choque": {
+      "arquivo": "img/retratos/heroi-azakar-f-choque.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-f-determinado": {
+      "arquivo": "img/retratos/heroi-azakar-f-determinado.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-f-dor": {
+      "arquivo": "img/retratos/heroi-azakar-f-dor.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-f-raiva": {
+      "arquivo": "img/retratos/heroi-azakar-f-raiva.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-f": {
+      "arquivo": "img/retratos/heroi-azakar-f.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-m-choque": {
+      "arquivo": "img/retratos/heroi-azakar-m-choque.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-m-determinado": {
+      "arquivo": "img/retratos/heroi-azakar-m-determinado.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-m-dor": {
+      "arquivo": "img/retratos/heroi-azakar-m-dor.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-m-raiva": {
+      "arquivo": "img/retratos/heroi-azakar-m-raiva.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-azakar-m": {
+      "arquivo": "img/retratos/heroi-azakar-m.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-f-choque": {
+      "arquivo": "img/retratos/heroi-nyashi-f-choque.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-f-determinado": {
+      "arquivo": "img/retratos/heroi-nyashi-f-determinado.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-f-dor": {
+      "arquivo": "img/retratos/heroi-nyashi-f-dor.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-f-raiva": {
+      "arquivo": "img/retratos/heroi-nyashi-f-raiva.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-f": {
+      "arquivo": "img/retratos/heroi-nyashi-f.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-m-choque": {
+      "arquivo": "img/retratos/heroi-nyashi-m-choque.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-m-determinado": {
+      "arquivo": "img/retratos/heroi-nyashi-m-determinado.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-m-dor": {
+      "arquivo": "img/retratos/heroi-nyashi-m-dor.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-m-raiva": {
+      "arquivo": "img/retratos/heroi-nyashi-m-raiva.webp",
+      "olhaPara": "esquerda"
+    },
+    "heroi-nyashi-m": {
+      "arquivo": "img/retratos/heroi-nyashi-m.webp",
+      "olhaPara": "esquerda"
+    },
+    "npc-artho": {
+      "arquivo": "img/retratos/npc-artho.webp",
+      "olhaPara": "direita"
+    },
+    "npc-aylin-chorando": {
+      "arquivo": "img/retratos/npc-aylin-chorando.webp",
+      "olhaPara": "direita"
+    },
+    "npc-aylin": {
+      "arquivo": "img/retratos/npc-aylin.webp",
+      "olhaPara": "direita"
+    },
+    "npc-dagna": {
+      "arquivo": "img/retratos/npc-dagna.webp",
+      "olhaPara": "direita"
+    },
+    "npc-gerulf": {
+      "arquivo": "img/retratos/npc-gerulf.webp",
+      "olhaPara": "direita"
+    },
+    "npc-kobanu": {
+      "arquivo": "img/retratos/npc-kobanu.webp",
+      "olhaPara": "direita"
+    },
+    "npc-nyme": {
+      "arquivo": "img/retratos/npc-nyme.webp",
+      "olhaPara": "direita"
+    },
+    "npc-osric": {
+      "arquivo": "img/retratos/npc-osric.webp",
+      "olhaPara": "direita"
+    },
+    "npc-selene": {
+      "arquivo": "img/retratos/npc-selene.webp",
+      "olhaPara": "direita"
+    },
+    "npc-tobias": {
+      "arquivo": "img/retratos/npc-tobias.webp",
+      "olhaPara": "direita"
+    },
+    "npc-vo-hulda": {
+      "arquivo": "img/retratos/npc-vo-hulda.webp",
+      "olhaPara": "direita"
+    },
+    "deus-solem": {
+      "arquivo": "img/panteao/solem.webp",
+      "olhaPara": "frente"
+    },
+    "deus-justar": {
+      "arquivo": "img/panteao/justar.webp",
+      "olhaPara": "direita"
+    },
+    "deus-ardor": {
+      "arquivo": "img/panteao/ardor.webp",
+      "olhaPara": "frente"
+    },
+    "deus-expiria": {
+      "arquivo": "img/panteao/expiria.webp",
+      "olhaPara": "frente"
+    },
+    "deus-eternus": {
+      "arquivo": "img/panteao/eternus.webp",
+      "olhaPara": "direita"
+    },
+    "deus-mentis": {
+      "arquivo": "img/panteao/mentis.webp",
+      "olhaPara": "frente"
+    },
+    "deus-irae": {
+      "arquivo": "img/panteao/irae.webp",
+      "olhaPara": "frente"
+    }
+  }
+}

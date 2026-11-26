@@ -14,6 +14,7 @@ import {
 } from '../core/progresso';
 import { textos } from '../core/textos';
 import { botao, esperar, h } from '../core/ui';
+import RETRATOS from '../data/retratos.json';
 import { efeitoMemoria, type ModoMemoria } from './memoria';
 import { atende, cenaGlobal, interpolar, type Cena, type Efeitos, type Escolha, type Fala, type Seguir } from './capitulo';
 import { mostrarRolagem } from './rolagem';
@@ -95,6 +96,14 @@ export interface Palco {
   fundo(): string;
   bustoHeroi(): { visivel: boolean; expressao: string; aura: boolean };
   destruir(): void;
+}
+
+/** Orientação dos bustos (src/data/retratos.json): o busto está virado para o lado errado da conversa? */
+const BUSTOS = (RETRATOS as unknown as { lados: Record<'npc' | 'heroi', string>; bustos: Record<string, { arquivo: string; olhaPara: string }> });
+export function precisaEspelhar(caminho: string, lado: 'npc' | 'heroi'): boolean {
+  const id = caminho.split('/').pop()!.replace(/\.webp$/, '');
+  const o = BUSTOS.bustos[id]?.olhaPara;
+  return !!o && o !== 'frente' && o !== BUSTOS.lados[lado];
 }
 
 export function criarPalco(o: OpcoesPalco): Palco {
@@ -206,6 +215,13 @@ export function criarPalco(o: OpcoesPalco): Palco {
     return (await existeAssetCache(comExpressao, 'image')) ? comExpressao : normal;
   }
 
+  /** Versão própria virada para o lado certo (<id>-dir / <id>-esq), quando existir, no lugar do espelho. */
+  async function versaoDoLado(caminho: string, lado: 'npc' | 'heroi'): Promise<string> {
+    if (!precisaEspelhar(caminho, lado)) return caminho;
+    const propria = caminho.replace(/\.webp$/, lado === 'npc' ? '-dir.webp' : '-esq.webp');
+    return (await existeAssetCache(propria, 'image')) ? propria : caminho;
+  }
+
   /** Troca o busto do NPC; na troca de expressão do mesmo NPC, crossfade de 150 ms (sem piscar). */
   /** Cada fala tem o seu busto: se a fala mudou enquanto a imagem carregava, ela é descartada. */
   let pedidoBusto = 0;
@@ -232,6 +248,9 @@ export function criarPalco(o: OpcoesPalco): Palco {
     }
     busto.dataset.retrato = retrato;
     busto.dataset.npc = id;
+    // Fase 6: de frente um para o outro. O NPC (à esquerda) olha para a direita; se o busto olha para o
+    // outro lado, a imagem é espelhada (scaleX(-1)).
+    busto.classList.toggle('espelhado', precisaEspelhar(retrato, 'npc'));
     busto.alt = NOMES_NPC[id]?.nome ?? id;
     busto.hidden = false;
     return 'ok';
@@ -256,8 +275,9 @@ export function criarPalco(o: OpcoesPalco): Palco {
     if (!p) return;
     const normal = ASSETS.bustoHeroi(p.raca, p.genero);
     const com = expr ? ASSETS.bustoHeroi(p.raca, p.genero, expr) : normal;
-    const alvo = com !== normal && (await existeAssetCache(com, 'image')) ? com : normal;
+    const alvo = await versaoDoLado(com !== normal && (await existeAssetCache(com, 'image')) ? com : normal, 'heroi');
     if (bustoHeroi.dataset.retrato !== alvo) { bustoHeroi.src = src(alvo); bustoHeroi.dataset.retrato = alvo; }
+    bustoHeroi.classList.toggle('espelhado', precisaEspelhar(alvo, 'heroi'));
     bustoHeroi.dataset.expressao = alvo === normal ? 'normal' : expr!;
   }
 
@@ -291,7 +311,7 @@ export function criarPalco(o: OpcoesPalco): Palco {
       heroiNaConversa = true;
     } else {
       if (npcNaConversa && npcNaConversa !== f.quem) heroiNaConversa = false;
-      const r = await mostrarNpc(f.quem, await retratoDe(f));
+      const r = await mostrarNpc(f.quem, await versaoDoLado(await retratoDe(f), 'npc'));
       // A fala já mudou (o jogador avançou): este busto não vale mais, e a fala nova arruma os bustos.
       if (r === 'descartado') return;
       if (r === 'ok') npcNaConversa = f.quem;
