@@ -22,6 +22,8 @@ const PREVIAS = path.join(ROOT, 'tests', 'screenshots', 'sprites');
 
 const QUADRO = 48;
 const ALTURA_ALVO = 46;
+/** Ampliação da folha lateral (Fase 6): quadros de 240 × 240. */
+export const ESCALA_LATERAL = 5;
 
 /**
  * Ordem das vistas em cada folha: [baixo, esquerda, direita, cima] → quadrante (coluna, linha).
@@ -152,6 +154,16 @@ async function processar(arquivo) {
     quadrosDaDirecao(reduzidas[linha], d).forEach((q, col) => colar(folha, q, col * QUADRO, linha * QUADRO));
   });
   await salvarPng(folha, path.join(SAIDA, `chibi-${nome}.png`));
+  // Fase 6 (fase lateral): as linhas de baixo (parado), esquerda e direita, já na escala final
+  // (5×, filtro nearest), para o herói do túnel ficar nítido com ~20% da altura do painel.
+  if (/-(m|f)$/.test(nome)) {
+  const lateral = nova(QUADRO * 4, QUADRO * 3);
+  for (let linha = 0; linha < 3; linha++) for (let y = 0; y < QUADRO; y++) for (let x = 0; x < QUADRO * 4; x++) {
+    const a = idx(folha, x, linha * QUADRO + y), b = idx(lateral, x, linha * QUADRO + y);
+    for (let c = 0; c < 4; c++) lateral.d[b + c] = folha.d[a + c];
+  }
+  await salvarPng(lateral, path.join(SAIDA, `lateral-${nome}.png`), ESCALA_LATERAL);
+  }
   await salvarPng(folha, path.join(PREVIAS, `${nome}-preview.png`), 6);
   await salvarGif(folha, path.join(PREVIAS, `${nome}-andando.gif`));
   console.log(`  ${nome}: vistas ${reduzidas.map((v) => `${v.w}×${v.h}`).join(', ')} (fator ${fator.toFixed(4)})`);

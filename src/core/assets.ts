@@ -8,7 +8,12 @@ const BASE = import.meta.env.BASE_URL;
 export const urlAsset = (caminho: string): string => `${BASE}assets/${caminho}`;
 
 /** Efeitos reais (gravações tratadas por scripts/prepare-audio.mjs), em MP3. */
-const SFX_MP3 = new Set(['gritos-fullmun', 'flecha-nyme']);
+const SFX_MP3 = new Set([
+  'gritos-fullmun', 'flecha-nyme',
+  // Fase 6 (Ato I): scripts/prepare-audio-ato1.mjs.
+  'fogo-distante', 'madeira-estalando', 'cadeado-abrindo', 'cadeado-cai', 'alcapao-fecha', 'cadeado-tranca',
+  'passos-afastando', 'gotejar', 'tocha', 'armadilha-estalo', 'tochas-acendendo', 'porta-antiga',
+]);
 
 export const ASSETS = {
   videoIntro: 'video/intro-icarus.mp4',
@@ -27,7 +32,8 @@ export const ASSETS = {
   cena: (id: string) => `img/cenas/${id}.webp`,
   retratoNpc: (id: string, expressao?: string) => `img/retratos/npc-${id}${expressao ? `-${expressao}` : ''}.webp`,
   /** Busto do herói (olha para a esquerda; o Azakar usa o mesmo nas variantes Luz e Sombra). */
-  bustoHeroi: (raca: string, genero: Genero) => `img/retratos/heroi-${raca}-${genero}.webp`,
+  bustoHeroi: (raca: string, genero: Genero, expressao?: string) =>
+    `img/retratos/heroi-${raca}-${genero}${expressao && expressao !== 'normal' ? `-${expressao}` : ''}.webp`,
   ameaca: (id: string) => `img/ameacas/${id}.webp`,
   /** Fundos de batalha em WebP (originais em assets-fonte/batalha-fundos; scripts/comprimir-imagens.mjs). */
   fundoBatalha: (id: string) => `img/batalha/fundos/${id}.webp`,
@@ -57,7 +63,16 @@ export const SFX_FASE4 = [
   // Fase 5C: a tragédia com os efeitos reais (gritos-longe e flecha ficam de reserva).
   'gritos-fullmun', 'flecha-nyme', 'espada-clang',
 ] as const;
-export type NomeSfx = (typeof SFX)[number] | (typeof SFX_SONHO)[number] | (typeof SFX_CAPITULO)[number] | (typeof SFX_FASE4)[number];
+/** Efeitos do Ato I (Fase 6): a Parte 1 (alçapão) e as fases laterais (túnel, símbolos, tochas). */
+export const SFX_ATO1_PARTE1 = [
+  'fogo-distante', 'madeira-estalando', 'cadeado-abrindo', 'cadeado-cai', 'alcapao-fecha', 'cadeado-tranca', 'passos-afastando', 'tremor',
+] as const;
+export const SFX_ATO1 = [
+  'gotejar', 'tocha', 'armadilha-estalo', 'tochas-acendendo', 'porta-antiga', 'flecha-nyme', 'vento-sopro', 'fall', 'kick',
+  'dice-roll', 'dado-toc', 'step-marble', 'divine-chord', 'statue-glow', 'statue-awaken', 'coracao-menos', 'coracao-mais',
+] as const;
+export type NomeSfx = (typeof SFX)[number] | (typeof SFX_SONHO)[number] | (typeof SFX_CAPITULO)[number] | (typeof SFX_FASE4)[number]
+  | (typeof SFX_ATO1_PARTE1)[number] | (typeof SFX_ATO1)[number];
 
 /** O arquivo existe e é do tipo esperado? (No dev server do Vite, um arquivo ausente pode voltar como HTML.) */
 const existencias = new Map<string, Promise<boolean>>();

@@ -443,6 +443,14 @@ const efeitos = {
     }
     return normalizar(b, 0.8);
   },
+  // Fase 6 (provisório): a lufada de ar frio que apaga a tocha na Parte 5. Ruído que cresce e some, com o
+  // filtro abrindo e fechando (o "fuuu" do vento num corredor de pedra).
+  'vento-sopro': () => {
+    const b = buffer(1.6);
+    ruido(b, { dur: 1.6, amp: 0.7, ataque: 0.45, decai: 0.35, corte: 300, corteFim: 1400, passaAlta: 120 });
+    ruido(b, { inicio: 0.25, dur: 1.2, amp: 0.35, ataque: 0.3, decai: 0.25, corte: 900, corteFim: 2600, passaAlta: 400 });
+    return normalizar(b, 0.6);
+  },
 };
 
 await mkdir(OUT, { recursive: true });

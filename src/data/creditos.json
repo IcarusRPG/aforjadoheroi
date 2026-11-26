@@ -1,20 +1,94 @@
 {
-  "_sobre": "Créditos do jogo (Fase 5C). Cada item: obra, autor, fonte (site ou origem), link (opcional) e licença. Campos vazios não aparecem no jogo; preencha-os aqui. \"cortesia\": true = a licença não exige atribuição, mas ela fica como cortesia.",
+  "_sobre": "Créditos do jogo (Fase 5C). Cada item: obra, autor, fonte (site ou origem), link (opcional) e licença. Campos vazios ou \"<<ADAM: preencher>>\" não aparecem no jogo; preencha-os aqui. \"cortesia\": true = a licença não exige atribuição, mas ela fica como cortesia.",
   "secoes": [
     {
       "id": "musica",
       "titulo": "Música",
       "itens": [
-        { "id": "the-first-choice", "obra": "The First Choice (menu)", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "sonho", "obra": "Sonho dos deuses", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "fullmun", "obra": "Füllmun (duas faixas)", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "tensao-porco", "obra": "Tensão (o Mirtilo)", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "batalha-ratazanas", "obra": "Batalha", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "vitoria", "obra": "Vitória", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "game-over", "obra": "Game Over", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "templo", "obra": "Templo de Sólem", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "treino", "obra": "Treino", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "tragedia", "obra": "Tragédia", "autor": "", "fonte": "", "licenca": "" }
+        {
+          "id": "the-first-choice",
+          "obra": "The First Choice (menu)",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "sonho",
+          "obra": "Sonho dos deuses",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "fullmun",
+          "obra": "Füllmun (duas faixas)",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "tensao-porco",
+          "obra": "Tensão (o Mirtilo)",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "batalha-ratazanas",
+          "obra": "Batalha",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "vitoria",
+          "obra": "Vitória",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "game-over",
+          "obra": "Game Over",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "templo",
+          "obra": "Templo de Sólem",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "treino",
+          "obra": "Treino",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "tragedia",
+          "obra": "Tragédia",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "tunel",
+          "obra": "Distant Heartbeat (o túnel)",
+          "autor": "icarusrecords",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "forja",
+          "obra": "The Dawn of Ages (a Forja)",
+          "autor": "icarusrecords",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        }
       ]
     },
     {
@@ -38,19 +112,146 @@
           "licenca": "CC0 (domínio público)",
           "cortesia": true
         },
-        { "id": "gerados", "obra": "Demais efeitos (interface, dado, passos, golpes, clang da espada): gerados por código para o jogo", "autor": "", "fonte": "", "licenca": "" }
+        {
+          "id": "fogo-distante",
+          "obra": "Fogo distante (fx_fogo_distante.wav)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "madeira-estalando",
+          "obra": "Madeira estalando (fx_madeira_estalando.m4a)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "cadeado-abrindo",
+          "obra": "Cadeado abrindo (fx_cadeado_abrindo.wav)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "cadeado-cai",
+          "obra": "Cadeado caindo (fx_cadeado_cai.wav)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "alcapao-fecha",
+          "obra": "Alçapão fechando (fx_alcapao_fecha.wav)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "cadeado-tranca",
+          "obra": "Cadeado trancando (fx_cadeado_tranca.wav)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "passos-afastando",
+          "obra": "Passos se afastando (fx_passos_afastando.wav)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "gotejar",
+          "obra": "Gotejar (fx_gotejar.mp3)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "tocha",
+          "obra": "Tocha (fx_tocha.wav)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "tochas-acendendo",
+          "obra": "Tochas acendendo (fx_tochas_acendendo.wav)",
+          "autor": "<<ADAM: preencher>>",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "armadilha-estalo",
+          "obra": "34-TrampaDePiso",
+          "autor": "Morales",
+          "fonte": "<<ADAM: preencher>>",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "porta-antiga",
+          "obra": "opening door squeak (Freesound 553250)",
+          "autor": "nachtmahrtv",
+          "fonte": "Freesound",
+          "link": "https://freesound.org/s/553250/",
+          "licenca": "<<ADAM: preencher>>"
+        },
+        {
+          "id": "gerados",
+          "obra": "Demais efeitos (interface, dado, passos, golpes, clang da espada, sopro de vento): gerados por código para o jogo",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        }
       ]
     },
     {
       "id": "arte",
       "titulo": "Arte",
       "itens": [
-        { "id": "cenas", "obra": "Ilustrações das cenas", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "retratos", "obra": "Retratos e bustos", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "mapas", "obra": "Mapas (Füllmun, templo, sonho)", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "sprites", "obra": "Sprites (chibis, batalha, itens)", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "panteao", "obra": "Panteão (os deuses)", "autor": "", "fonte": "", "licenca": "" },
-        { "id": "videos", "obra": "Vídeos (abertura e prólogo)", "autor": "", "fonte": "", "licenca": "" }
+        {
+          "id": "cenas",
+          "obra": "Ilustrações das cenas",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "retratos",
+          "obra": "Retratos e bustos",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "mapas",
+          "obra": "Mapas (Füllmun, templo, sonho)",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "sprites",
+          "obra": "Sprites (chibis, batalha, itens)",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "panteao",
+          "obra": "Panteão (os deuses)",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        },
+        {
+          "id": "videos",
+          "obra": "Vídeos (abertura e prólogo)",
+          "autor": "",
+          "fonte": "",
+          "licenca": ""
+        }
       ]
     }
   ]

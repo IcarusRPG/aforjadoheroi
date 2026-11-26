@@ -17,16 +17,19 @@ interface SecaoCredito { id: string; titulo: string; itens: ItemCredito[] }
 
 const SECOES = (CREDITOS as { secoes: SecaoCredito[] }).secoes;
 
+/** Campo a preencher (vazio ou "<<ADAM: preencher>>"): não aparece no jogo. */
+const pendente = (v?: string) => !v || /^<<.*>>$/.test(v.trim());
+
 /** Uma linha dos créditos: obra, "de autor, via fonte", licença. Campos vazios não aparecem. */
 function itemCredito(i: ItemCredito): HTMLElement {
   const t = textos.creditos;
-  const fonte = i.fonte
+  const fonte = !pendente(i.fonte)
     ? i.link ? h('a', { href: i.link, target: '_blank', rel: 'noopener noreferrer' }, i.fonte) : i.fonte
     : null;
   const quem: (Node | string)[] = [];
-  if (i.autor) quem.push(`${t.de} ${i.autor}`);
+  if (!pendente(i.autor)) quem.push(`${t.de} ${i.autor}`);
   if (fonte) quem.push(quem.length ? `, ${t.via} ` : `${t.via} `, fonte);
-  const licenca = i.licenca ? `${i.licenca}${i.cortesia ? ` · ${t.cortesia}` : ''}` : '';
+  const licenca = !pendente(i.licenca) ? `${i.licenca}${i.cortesia ? ` · ${t.cortesia}` : ''}` : '';
   return h('li', { class: 'creditos-item', 'data-credito': i.id },
     h('span', { class: 'creditos-obra' }, i.obra),
     quem.length ? h('span', { class: 'creditos-autor' }, ...quem) : null,
