@@ -197,7 +197,7 @@ test('saves antigos: o antigo Capítulo 02 vira "Capítulo 01 · Templo de Sóle
   expect(s.caderno.anotacoes).toContain('fim-cap01');
 });
 
-test('migração: um save antigo em "Capítulo 03 · Em breve" abre o "Capítulo 02 — Provação Sob a Luz"', async ({ page }) => {
+test('migração: um save antigo em "Capítulo 03 · Em breve" abre o Ato I, Parte 1 (Fase 6)', async ({ page }) => {
   test.setTimeout(180_000);
   test.skip(!umAparelho(test.info()), 'um aparelho basta');
   await page.addInitScript(([a, cf]) => {
@@ -209,8 +209,8 @@ test('migração: um save antigo em "Capítulo 03 · Em breve" abre o "Capítulo
   await irAteMenu(page, './?test=1');
   await expect(page.locator('.menu-continuar-info')).toContainText('Ato I');
   await page.getByRole('button', { name: /Continuar/ }).click();
-  await expect(page.locator('.tela-embreve .embreve-titulo')).toHaveText('Provação Sob a Luz', { timeout: 30_000 });
-  await expect(page.locator('.tela-embreve .embreve-capitulo')).toHaveText('Ato I');
+  // Fase 6: o antigo "Em breve" virou o começo do Ato I (o alçapão).
+  await expect.poll(async () => { const s = await st(page); return `${s.tela}|${s.ato}|${s.parte}`; }, { timeout: 30_000 }).toBe('capitulo|1|1');
 });
 
 /* ======================================================================
@@ -254,7 +254,8 @@ async function tragedia(page: Page, info: TestInfo, o: { fotos?: boolean } = {})
   }
   s = await st(page);
   expect(s.cena).toBe('c02-gritos');
-  expect(await textoFala(page)).toContain('Gritos rasgam o ar lá fora');
+  // A fala nova pode ainda estar entrando (máquina carregada): espera o texto trocar.
+  await expect.poll(() => textoFala(page), { timeout: 10_000 }).toContain('Gritos rasgam o ar lá fora');
   expect(primeira.length).toBeGreaterThan(0);
   if (o.fotos) await foto(page, info, 'tragedia-00-gritos');
   await page.waitForTimeout(Math.max(0, 3300 - (Date.now() - t0)));

@@ -163,6 +163,9 @@ async function simbolos() {
     const dest = path.join(out, `${SIMBOLOS[i]}.png`);
     await sharp(px, { raw: { width: cel, height: cel, channels: 4 } }).trim({ threshold: 1 }).resize({ width: 256, height: 256, fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png({ compressionLevel: 9 }).toFile(dest);
     console.log(`  símbolo ${SIMBOLOS[i]} → simbolos/${SIMBOLOS[i]}.png (${await kb(dest)})`);
+    // O brilho (desfoque do traço), pronto: o jogo só pinta na cor do deus e pulsa (sem filtro na hora).
+    const brilho = path.join(out, `${SIMBOLOS[i]}-brilho.png`);
+    await sharp(dest).extend({ top: 24, bottom: 24, left: 24, right: 24, background: { r: 0, g: 0, b: 0, alpha: 0 } }).blur(9).png({ compressionLevel: 9 }).toFile(brilho);
   }
 }
 

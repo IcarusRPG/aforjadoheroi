@@ -26,6 +26,10 @@ export const PERICIAS = {
   atletismo: { nome: 'Atletismo', atributo: 'FOR' },
   barganha: { nome: 'Barganha', atributo: 'CAR' },
   reflexos: { nome: 'Reflexos', atributo: 'DES' },
+  // Fase 6 (Ato I): Núcleo do Icarus.
+  audicao: { nome: 'Audição', atributo: 'SAB' },
+  visao: { nome: 'Visão', atributo: 'SAB' },
+  vontade: { nome: 'Vontade', atributo: 'SAB' },
 } as const satisfies Record<string, { nome: string; atributo: Atributo }>;
 
 export type IdPericia = keyof typeof PERICIAS;

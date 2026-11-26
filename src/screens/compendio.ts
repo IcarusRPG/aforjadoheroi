@@ -1,3 +1,4 @@
+import { dadosDeus } from '../narrativa/capitulo';
 import { abrirCaderno } from './caderno';
 import { ASSETS, src } from '../core/assets';
 import { audio } from '../core/audio';
@@ -122,12 +123,14 @@ export function abrirCompendio(aba: 'personagens' | 'bestiario' | 'vozes' = 'per
 
   function vozes() {
     const ouvidas = getEstado().sonho.ouvidas;
+    // Depois da Forja (Ato I, Parte 6), cada frase ganha o nome do seu deus.
+    const forjou = getEstado().campanha.flags.includes('escolheu_voz');
     const V = textos.sonho.vozes as Record<string, { titulo: string; mensagem: string }>;
     const itens = COMPENDIO_DADOS.vozes.map((v) => ouvidas.includes(v.id)
       ? h('div', { class: 'compendio-voz', role: 'listitem', 'data-voz': v.id },
           h('p', { class: 'voz-titulo' }, V[v.id]?.titulo ?? ''),
           h('p', { class: 'voz-frase' }, `“${V[v.id]?.mensagem ?? ''}”`),
-          h('p', { class: 'voz-nome' }, v.nomeDivindade ?? T().nomeNaForja))
+          h('p', { class: 'voz-nome' }, v.nomeDivindade ?? (forjou ? dadosDeus(v.id)?.nome ?? T().nomeNaForja : T().nomeNaForja)))
       : h('div', { class: 'compendio-voz bloqueado', role: 'listitem' }, h('p', { class: 'voz-titulo' }, T().desconhecido)));
     // O Compêndio é o registro objetivo; o que o herói estudou sobre os deuses fica no caderno.
     const link = getEstado().personagem

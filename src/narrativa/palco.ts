@@ -14,6 +14,7 @@ import {
 } from '../core/progresso';
 import { textos } from '../core/textos';
 import { botao, esperar, h } from '../core/ui';
+import { efeitoMemoria, type ModoMemoria } from './memoria';
 import { atende, cenaGlobal, interpolar, type Cena, type Efeitos, type Escolha, type Fala, type Seguir } from './capitulo';
 import { mostrarRolagem } from './rolagem';
 
@@ -559,6 +560,7 @@ export function criarPalco(o: OpcoesPalco): Palco {
       window.clearTimeout(timerOcasional);
       if (f.ocasional) ocasional(f.ocasional);
     }
+    if (f.visual?.startsWith('memoria')) efeitoMemoria(el, f.visual as ModoMemoria, animacoesReduzidas());
     if (f.visual) { for (const c of [...el.classList]) if (c.startsWith('visual-')) el.classList.remove(c); el.classList.add(`visual-${f.visual}`); }
     if (f.som) audio.sfx(f.som as NomeSfx, f.somTaxa ? { taxa: f.somTaxa } : {});
     // Animações reduzidas: sem flash (os cortes continuam secos).

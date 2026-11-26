@@ -4,7 +4,8 @@ import { atualizarCampanha, getEstado, marcarFlag, type ParteCapitulo } from '..
 import { existeTela, irPara, type NomeTela, type Tela } from '../core/telas';
 import { textos } from '../core/textos';
 import { botao, h } from '../core/ui';
-import { ATOS, nomeAto, parteAtual, resumoDoFim } from '../narrativa/capitulo';
+import { ATOS, interpolar, nomeAto, parteAtual, resumoDoFim } from '../narrativa/capitulo';
+import { classePorId, nomeDaClasse } from '../core/classes';
 
 /**
  * "Fim do Prólogo — Amanhecer Tardio" (ou "Fim do Ato I — …"), com um resumo único das partes (até 8
@@ -55,13 +56,34 @@ export function terminarParte(): void {
   void irPara('fimCapitulo', undefined, { duracao: 900 });
 }
 
+/**
+ * Resumo do "Fim do Ato I" (até 6 linhas): o caminho dos símbolos, quantas flechas, se levantou, a coragem
+ * no escuro, a voz escolhida e a classe.
+ */
+export function resumoDoAto1(): string[] {
+  const c = getEstado().campanha;
+  const p = getEstado().personagem;
+  const tem = (f: string) => c.flags.includes(f);
+  const flechas = c.contadores.flechas ?? 0;
+  const classe = p ? classePorId(p.classe) : null;
+  const linhas = [
+    tem('caminho_tolerancia') ? 'Você achou o caminho entre os símbolos dos outros deuses.' : 'Você aprendeu o caminho dos símbolos, mesmo ferid{o|a}.',
+    flechas === 1 ? 'Uma flecha te acertou no caminho.' : `${flechas} flechas te acertaram no caminho.`,
+    tem('levantou') ? 'Você caiu. E se levantou.' : 'Você não caiu nenhuma vez.',
+    tem('coragem_escuro') ? 'No escuro total, você não parou.' : 'No escuro, suas pernas tremeram, mas você seguiu em frente.',
+    'Você seguiu a voz de {Divindade}.',
+    classe && p ? `Você se ergueu como ${nomeDaClasse(classe, p.genero)}.` : null,
+  ];
+  return linhas.filter((l): l is string => !!l).slice(0, 6).map((l) => interpolar(l));
+}
+
 export function telaFimCapitulo(): Tela {
   const T = textos.cenas.fim;
   const c = { ...getEstado().campanha };
   const cap = ATOS[c.ato] ?? ATOS[0];
   // A última parte (o templo) dá o fundo e a música da tela.
   const ultima = parteAtual(c);
-  const resumo = resumoDoFim(cap.numero);
+  const resumo = c.ato === 1 ? resumoDoAto1() : resumoDoFim(cap.numero);
   const prox = cap.proximoCapitulo.numero;
   // Continuar: salva o começo do ato seguinte e segue para ele (ou para o "Em breve", se ainda não existe).
   const seguir = botao(T.seguir, () => {

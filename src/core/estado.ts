@@ -110,13 +110,15 @@ export interface Campanha {
   relacoes: Record<string, number>;
   compendio: ProgressoCompendio;
   /** Caderno de estudos (Fase 4E): o que já foi anunciado e se há novidade. Ausente em saves antigos. */
-  caderno?: { anunciados: string[]; novidade: boolean };
+  caderno?: { anunciados: string[]; novidade: boolean; lidas?: string[] };
   /** Itens de mapa já recolhidos e pontos já usados (ids únicos: "fullmun:lenco", "salao:mancha-3"…). */
   coletados: string[];
   /** Contadores livres (abóboras quebradas, manchas limpas, estantes…). */
   contadores: Record<string, number>;
   /** Onde o jogo retoma: numa cena (tela de capítulo) ou num mapa, na posição salva. */
   local: LocalJogo;
+  /** Fase lateral (Fase 6): o estado no início da parte (o Continuar do game over volta para ele). */
+  inicioParte?: { parte: number; pv: number | null; flags: string[]; coletados: string[]; contadores: Record<string, number> };
   /** Ato I (Fase 6): a voz escolhida na Forja (id do deus) e os poderes concedidos escolhidos. */
   divindade?: string | null;
   poderes?: string[];

@@ -34,7 +34,7 @@ export function telaEmBreve(): Tela {
       heroi,
       h('div', { class: 'embreve-texto' },
         h('p', { class: 'embreve-capitulo' }, capitulo),
-        h('h1', { class: 'embreve-titulo' }, tituloProx),
+        tituloProx ? h('h1', { class: 'embreve-titulo' }, tituloProx) : null,
         h('p', { class: 'embreve-breve' }, t.emBreve),
         voltar,
       ),

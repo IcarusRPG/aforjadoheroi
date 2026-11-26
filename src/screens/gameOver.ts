@@ -11,12 +11,27 @@ import { botao, h } from '../core/ui';
  * "Sua jornada termina aqui…" e os botões "Tentar novamente" (volta à última cena salva antes da
  * batalha, com os PV cheios) e "Voltar ao menu". Para conferir: ?tela=gameover.
  */
-export function telaGameOver(): Tela {
+export function telaGameOver(params?: unknown): Tela {
   const T = textos.gameOver;
-  const tentar = botao(T.tentar, () => {
+  // Fase lateral do Ato I (regra do LEVANTE): "Continuar" volta ao início da parte, sem a flag levantou.
+  const lateral = !!(params as { lateral?: boolean } | undefined)?.lateral;
+  const tentar = botao(lateral ? textos.cenas.continuar : T.tentar, () => {
     const c = getEstado().campanha;
     const p = getEstado().personagem;
     if (!p) return void irPara('menu');
+    if (lateral && c.inicioParte) {
+      const ini = c.inicioParte;
+      // Os PV do começo da parte (no mínimo a metade, para a parte não ficar impossível de vencer).
+      const max = pvAntesDaForjaDe(p);
+      atualizarCampanha({
+        parte: ini.parte, cena: 'inicio', modo: 'falas',
+        pvAtual: Math.max(ini.pv ?? max, Math.ceil(max / 2)),
+        flags: ini.flags.filter((f) => f !== 'levantou'),
+        coletados: ini.coletados, contadores: ini.contadores,
+        local: { tela: 'lateral' },
+      });
+      return void irPara('lateral');
+    }
     atualizarCampanha({ cena: c.cenaAntesDaBatalha ?? c.cena, modo: 'escolhas', pvAtual: pvAntesDaForjaDe(p) });
     void irPara('capitulo');
   }, { classe: 'btn-principal' });

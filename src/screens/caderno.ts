@@ -1,6 +1,6 @@
 import { src } from '../core/assets';
 import { audio } from '../core/audio';
-import { CADERNO, liberados, marcarCadernoVisto, perguntaRespondida, verificarCaderno, type AnotacaoCaderno, type PaginaCaderno, type PerguntaCaderno } from '../core/caderno';
+import { CADERNO, liberados, marcarCadernoVisto, marcarPaginasLidas, perguntaRespondida, verificarCaderno, type AnotacaoCaderno, type PaginaCaderno, type PerguntaCaderno } from '../core/caderno';
 import { getEstado } from '../core/estado';
 import { fmt, textos } from '../core/textos';
 import { h } from '../core/ui';
@@ -166,6 +166,7 @@ export function abrirCaderno(o: { aba?: AbaCaderno; pagina?: string } = {}): Pro
       indicador.textContent = fmt(T.pagina, 'm', { n: pagina, total });
       fundo.dataset.aba = aba;
       fundo.dataset.pagina = visiveis.map((f) => f.id).join(' ');
+      marcarPaginasLidas(visiveis.map((f) => f.id));
       if (som) audio.sfx('compendio', { ganho: 0.6 });
     }
 

@@ -80,6 +80,16 @@ export function marcarCadernoVisto(): void {
   if (c?.novidade) atualizarCampanha({ caderno: { ...c, novidade: false } });
 }
 
+/** Páginas do Caderno que o herói já abriu (Fase 6: o nome das lajes do Ato I). */
+export function marcarPaginasLidas(ids: string[]): void {
+  const c = getEstado().campanha.caderno;
+  if (!c) return;
+  const lidas = c.lidas ?? [];
+  const novas = ids.filter((i) => !lidas.includes(i));
+  if (novas.length) atualizarCampanha({ caderno: { ...c, lidas: [...lidas, ...novas] } });
+}
+export const paginaLida = (id: string): boolean => !!getEstado().campanha.caderno?.lidas?.includes(id);
+
 export const cadernoTemNovidade = (): boolean => !!getEstado().campanha.caderno?.novidade;
 
 /** Para os testes. */

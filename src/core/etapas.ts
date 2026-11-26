@@ -131,6 +131,7 @@ export function itensDaEtapa(e: Etapa): ItemPreload[] {
       ...PAINEIS_LATERAIS.map((id) => ({ caminho: `img/lateral/${id}.webp`, estimativa: 380 * KB })),
       ...PECAS_FRENTE.map((id) => ({ caminho: `img/lateral/frente-${id}.png`, estimativa: 240 * KB })),
       ...SIMBOLOS.map((id) => ({ caminho: `img/simbolos/${id}.png`, estimativa: 45 * KB })),
+      ...SIMBOLOS.map((id) => ({ caminho: `img/simbolos/${id}-brilho.png`, estimativa: 30 * KB })),
       ...itensDoCapitulo(cenasAto1(['t-', 's-', 'c-', 'e-'])),
       ...bustosExpressao(['dor', 'determinado']),
     ];

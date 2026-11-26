@@ -14,6 +14,9 @@ export interface OpcoesControles {
   rotuloPausa: string;
   aoInteragir: () => void;
   aoPausar: () => void;
+  /** Fase lateral (Fase 6): Espaço pula (E interage) e aparece o botão PULAR no celular. */
+  aoPular?: () => void;
+  rotuloPular?: string;
 }
 
 const TECLAS: Record<string, [number, number]> = {
@@ -31,6 +34,7 @@ export class Controles {
   readonly joystick: HTMLElement;
   readonly botaoInteragir: HTMLButtonElement;
   readonly botaoPausa: HTMLButtonElement;
+  readonly botaoPular: HTMLButtonElement | null = null;
   private pino: HTMLElement;
   private limpar: (() => void)[] = [];
 
@@ -42,6 +46,17 @@ export class Controles {
       o.toque ? null : h('span', { class: 'btn-interagir-tecla', 'aria-hidden': 'true' }, 'E'));
     this.botaoPausa = botaoMenu();
     o.raiz.append(this.joystick, this.botaoInteragir, this.botaoPausa);
+    if (o.aoPular) {
+      this.botaoPular = h('button', { type: 'button', class: 'btn-pular', 'aria-label': o.rotuloPular ?? 'Pular', hidden: !o.toque },
+        h('span', { class: 'btn-pular-texto' }, o.rotuloPular ?? 'PULAR'));
+      o.raiz.append(this.botaoPular);
+      this.ouvir(this.botaoPular, 'pointerdown', (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.habilitado) o.aoPular?.();
+      });
+      this.ouvir(window, 'touchstart', () => { if (this.botaoPular) this.botaoPular.hidden = false; }, { passive: true, once: true });
+    }
 
     this.ouvir(window, 'keydown', (e: KeyboardEvent) => this.teclaDesce(e));
     this.ouvir(window, 'keyup', (e: KeyboardEvent) => this.apertadas.delete(e.code));
@@ -77,6 +92,13 @@ export class Controles {
       return;
     }
     if (e.repeat) return;
+    if (e.code === 'Space' && this.o.aoPular) {
+      // Fase lateral: Espaço pula (o diálogo aberto continua avançando com Espaço: o palco trata antes).
+      if (e.defaultPrevented || performance.now() - this.religadoEm < 150) { e.preventDefault(); return; }
+      e.preventDefault();
+      if (this.habilitado) this.o.aoPular();
+      return;
+    }
     if (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter') {
       // Enter num botão focado (pausa, Opções) não deve virar interação.
       if (e.code === 'Enter' && document.activeElement instanceof HTMLButtonElement) return;
@@ -163,5 +185,6 @@ export class Controles {
     this.joystick.remove();
     this.botaoInteragir.remove();
     this.botaoPausa.remove();
+    this.botaoPular?.remove();
   }
 }

@@ -206,6 +206,42 @@
     "parte": "Parte {n}",
     "fimDo": "Fim do"
   },
+  "forja": {
+    "listaTitulo": "Escolher a voz",
+    "listaIntro": "As sete vozes, cada uma com a sua frase. Escute com o coração.",
+    "escolherLista": "Escolher a voz em lista",
+    "juramento": "Juramento",
+    "votos": {
+      "tolerancia": "Juro respeitar todos os seres: cada fé, cada povo, cada vida.",
+      "coragem": "Juro não recuar diante do medo quando alguém precisar de mim.",
+      "protecao": "Juro proteger quem não pode se proteger."
+    },
+    "ecos": {
+      "toleranciaCom": "Você já pisou nesses caminhos.",
+      "toleranciaSem": "Você aprendeu, mesmo ferid{o|a}.",
+      "coragem": "Você atravessou o sol.",
+      "protecao": "Você seguiu em frente pelos que ficaram lá em cima."
+    },
+    "euJuro": "Eu juro",
+    "voce": "Você",
+    "depoisVoce": "“Eu juro… mas antes de tudo, preciso salvar meus amigos.”",
+    "depoisDeus": "“Então vá. E leve a minha luz.”",
+    "poderes": "Poderes Concedidos",
+    "escolhaUm": "Escolha 1 poder",
+    "escolhaDois": "Escolha 2 poderes",
+    "confirmarPoderes": "Receber",
+    "reliquiaTexto": "Sobre o pedestal, algo que você já conhecia sem nunca ter visto. Quatro pedras dormem nele: três azuis e uma vermelha.",
+    "toleranciaBrilha": "A pedra azul da Tolerância acende, fraca, como uma promessa.",
+    "pedras": "As quatro pedras da relíquia",
+    "nomesPedras": {
+      "tolerancia": "Tolerância",
+      "egide": "Égide",
+      "verdade": "Verdade",
+      "preco": "Preço"
+    },
+    "curaTexto": "A luz envolve você. As flechas se desfazem em faíscas, e a dor vai embora.",
+    "ergaSe": "Erga-se, {classe} de {divindade}"
+  },
   "emBreve": {
     "capitulo": "Ato I",
     "titulo": "Provação Sob a Luz",

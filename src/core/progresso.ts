@@ -1,3 +1,4 @@
+import { classePorId, pmPrimeiroNivel, pvPrimeiroNivel } from './classes';
 import COMPENDIO from '../data/compendio.json';
 import ITENS from '../data/itens.json';
 import NPCS from '../data/npcs.json';
@@ -88,9 +89,18 @@ export function somarReais(n: number): void {
 }
 
 export const cestoIntacto = (): boolean => qtdItem('cesto-paes') > 0 && !temFlag('comeu_pao');
+/** PV máximos: antes da Forja, 10 + CON; depois (Ato I, Parte 6), os da classe. */
 export const pvMaxAtual = (): number => {
   const p = getEstado().personagem;
-  return p ? pvAntesDaForjaDe(p) : 10;
+  if (!p) return 10;
+  const c = classePorId(p.classe);
+  return temFlag('forjado') && c ? pvPrimeiroNivel(c, p.atributosFinais) : pvAntesDaForjaDe(p);
+};
+/** PM máximos: nenhum antes da Forja; depois, os da classe. */
+export const pmMaxAtual = (): number => {
+  const p = getEstado().personagem;
+  const c = p ? classePorId(p.classe) : null;
+  return p && c && temFlag('forjado') ? pmPrimeiroNivel(c, p.atributosFinais, p.raca) : 0;
 };
 export const pvAtual = (): number => getEstado().campanha.pvAtual ?? pvMaxAtual();
 

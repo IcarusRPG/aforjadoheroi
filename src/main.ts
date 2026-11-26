@@ -19,6 +19,7 @@ import './styles/fase5.css';
 import './styles/fase5b.css';
 import './styles/fase5c.css';
 import './styles/fase6.css';
+import './styles/fase6-forja.css';
 import './styles/paisagem.css';
 
 import { instalarProtecoes } from './core/carregar';
@@ -39,6 +40,8 @@ import { telaFimCapitulo } from './screens/fimCapitulo';
 import { telaGameOver } from './screens/gameOver';
 import { telaMapa } from './screens/mapa';
 import { telaIntroFullmun } from './screens/introFullmun';
+import { telaLateral } from './screens/lateral';
+import { telaSalao } from './screens/salao';
 
 // Antes de tudo: pedaço que não veio depois de um deploy, erros não tratados e service workers antigos.
 instalarProtecoes();
@@ -58,6 +61,8 @@ registrarTela('gameOver', telaGameOver);
 registrarTela('emBreve', telaEmBreve);
 registrarTela('mapa', telaMapa);
 registrarTela('introFullmun', telaIntroFullmun);
+registrarTela('lateral', telaLateral);
+registrarTela('salao', telaSalao);
 
 // Saves: o nome do lugar no card vem dos capítulos e mapas; depois migra o save antigo e abre o mais recente.
 definirConstrutorLocal(localDoJogo);

@@ -78,6 +78,8 @@ export type NomeSfx = (typeof SFX)[number] | (typeof SFX_SONHO)[number] | (typeo
 const existencias = new Map<string, Promise<boolean>>();
 /** existeAsset com cache (para trocas de expressão, que se repetem). */
 export function existeAssetCache(caminho: string, tipo: 'image' | 'audio' | 'video'): Promise<boolean> {
+  // Já pré-carregado (blob): existe, sem nova requisição (nada pode ser baixado no meio de uma sequência).
+  if (jaCarregado(caminho)) return Promise.resolve(true);
   let r = existencias.get(caminho);
   if (!r) existencias.set(caminho, (r = existeAsset(caminho, tipo)));
   return r;

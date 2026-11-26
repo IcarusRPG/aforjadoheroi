@@ -1,0 +1,127 @@
+/* Fase 6: o Salão da Forja (Ato I, Parte 6) e as telas da Forja. */
+
+.tela-salao { position: relative; height: 100dvh; background: #0b0806; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+.salao-jogo { position: absolute; inset: 0; }
+.tela-salao.com-palco .salao-palco { pointer-events: auto; }
+
+/* As sete vozes ao mesmo tempo: balões ao lado de cada estátua, quase juntos, sobrepondo-se um pouco. */
+.salao-baloes { position: fixed; inset: 0; z-index: 15; pointer-events: none; }
+.salao-balao {
+  position: fixed;
+  max-width: min(46vw, 260px);
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  transform: translate(-50%, -110%) scale(0.9);
+  border: 1px solid var(--cor, var(--ouro));
+  border-radius: 12px;
+  background: rgba(12, 10, 8, 0.86);
+  color: #fff6dc;
+  font-size: clamp(0.72rem, 2.4vw, 0.9rem);
+  line-height: 1.3;
+  text-align: center;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--cor, #ffd25a) 55%, transparent);
+  opacity: 0;
+}
+.salao-baloes.visiveis .salao-balao { animation: balao-entra 0.35s ease forwards; }
+@keyframes balao-entra { to { opacity: 1; transform: translate(-50%, -110%) scale(1); } }
+.animacoes-reduzidas .salao-baloes.visiveis .salao-balao { animation-duration: 0.01s; }
+
+/* A divindade se apresenta, grande e luminosa sobre o Salão escurecido. */
+.forja-divindade {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  place-items: center;
+  padding: max(56px, env(safe-area-inset-top)) 16px max(150px, calc(env(safe-area-inset-bottom) + 140px));
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--cor) 30%, transparent) 0, rgba(0, 0, 0, 0.82) 60%);
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  pointer-events: none;
+}
+.forja-divindade.visivel { opacity: 1; }
+.forja-divindade.saindo { opacity: 0; }
+.forja-divindade-img { max-height: 100%; max-width: min(92vw, 560px); object-fit: contain; filter: drop-shadow(0 0 28px var(--cor)) brightness(1.08); }
+.forja-divindade-texto { text-align: center; }
+.forja-divindade-nome { margin: 0.3rem 0 0; font-family: var(--fonte-titulo); font-size: clamp(1.8rem, 7vw, 2.8rem); color: #fff3cf; text-shadow: 0 0 18px var(--cor); }
+.forja-divindade-grupo { margin: 0; font-family: var(--fonte-titulo); letter-spacing: 0.3em; text-transform: uppercase; color: var(--ouro); font-size: 0.85rem; }
+.forja-divindade-dominio { margin: 0.2rem 0 0; color: var(--marmore-suave); font-style: italic; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .forja-divindade { grid-template-rows: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 16px; align-items: center; }
+  .forja-divindade-img { max-height: 70dvh; }
+}
+
+/* As telas da Forja: juramento, poderes, relíquia, cura e revelação. */
+.forja { position: absolute; inset: 0; z-index: 25; display: grid; place-items: center; background: radial-gradient(circle at 50% 35%, rgba(70, 50, 20, 0.55), rgba(0, 0, 0, 0.92) 70%); overflow-y: auto; }
+.forja[hidden] { display: none; }
+.forja-tela {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.forja-tela.visivel { opacity: 1; transform: none; }
+.forja-tela .btn { min-height: 44px; min-width: 160px; }
+.forja-rotulo { margin: 0; font-family: var(--fonte-titulo); letter-spacing: 0.28em; text-transform: uppercase; color: var(--ouro); font-size: 0.85rem; }
+.forja-voto, .forja-titulo { margin: 0; font-family: var(--fonte-titulo); color: #fff3cf; font-size: clamp(1.2rem, 4.6vw, 1.7rem); line-height: 1.3; }
+.forja-eco { margin: 0; font-style: italic; color: var(--marmore-suave); }
+.forja-fala { margin: 0; color: #f5ead2; font-size: 1.05rem; }
+.forja-texto { margin: 0; color: #f5ead2; }
+.forja-poderes-lista { display: grid; gap: 0.6rem; width: 100%; }
+.forja-poder {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 44px;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: rgba(20, 16, 10, 0.8);
+  color: #f5ead2;
+  text-align: left;
+  cursor: pointer;
+}
+.forja-poder[aria-pressed="true"] { border-color: var(--ouro); box-shadow: 0 0 0 2px rgba(242, 212, 138, 0.45), 0 0 18px rgba(242, 212, 138, 0.25); background: rgba(50, 38, 18, 0.9); }
+.forja-poder-nome { font-family: var(--fonte-titulo); color: var(--ouro-claro); font-size: 1.05rem; }
+.forja-poder-meta { font-size: 0.78rem; color: var(--ouro); letter-spacing: 0.04em; }
+.forja-poder-desc { font-size: 0.88rem; line-height: 1.35; color: var(--marmore-suave); }
+.forja-reliquia-quadro { width: 100%; overflow: hidden; border-radius: 10px; border: 1px solid var(--borda); }
+.forja-reliquia-img { display: block; width: 100%; height: auto; animation: reliquia-zoom 14s ease-out forwards; transform-origin: 50% 55%; }
+@keyframes reliquia-zoom { from { transform: scale(1); } to { transform: scale(1.14); } }
+.animacoes-reduzidas .forja-reliquia-img { animation: none; }
+.forja-pedras { display: flex; gap: 0.9rem; justify-content: center; }
+.forja-pedra { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.25); }
+.forja-pedra.pedra-azul { background: radial-gradient(circle at 35% 30%, #5a6f8c, #1c2638); }
+.forja-pedra.pedra-vermelha { background: radial-gradient(circle at 35% 30%, #7a3b3b, #2a1212); }
+.forja-pedra.brilha { background: radial-gradient(circle at 35% 30%, #a8d4ff, #2f6fd1); box-shadow: 0 0 10px rgba(110, 180, 255, 0.75); animation: pedra-pulsa 2.4s ease-in-out infinite; }
+@keyframes pedra-pulsa { 50% { box-shadow: 0 0 18px rgba(130, 195, 255, 0.95); } }
+.forja-cura-luz { position: relative; display: grid; place-items: center; width: min(260px, 60vw); aspect-ratio: 3 / 4; border-radius: 12px; background: radial-gradient(circle, rgba(255, 220, 140, 0.55), rgba(0, 0, 0, 0) 70%); }
+.forja-cura-heroi { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 18px rgba(255, 215, 120, 0.8)); }
+.forja-faiscas span { position: absolute; left: calc(10% + var(--i) * 5.5%); bottom: 25%; width: 5px; height: 5px; border-radius: 50%; background: #ffe7a6; box-shadow: 0 0 8px #ffd25a; animation: faisca-sobe 1.8s ease-out calc(var(--i) * 0.11s) both; }
+@keyframes faisca-sobe { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-160px); opacity: 0; } }
+.animacoes-reduzidas .forja-faiscas span { animation: none; opacity: 0; }
+.forja-numeros { margin: 0; font-family: var(--fonte-titulo); font-size: 1.5rem; color: var(--ouro-claro); }
+.forja-num { display: inline-block; min-width: 3ch; color: #fff3cf; }
+.forja-busto { max-height: 42dvh; max-width: 80vw; object-fit: contain; filter: drop-shadow(0 0 22px rgba(255, 215, 120, 0.7)); }
+.forja-erga { margin: 0; font-family: var(--fonte-titulo); font-size: clamp(1.6rem, 6.5vw, 2.6rem); color: #fff3cf; text-shadow: 0 0 22px rgba(255, 200, 90, 0.6); }
+.forja-lista { display: grid; gap: 0.5rem; }
+.forja-lista-intro { margin: 0 0 0.6rem; color: var(--marmore-suave); }
+.forja-lista-item { display: grid; gap: 0.2rem; min-height: 44px; padding: 0.6rem 0.8rem; border: 1px solid var(--cor, var(--borda)); border-radius: 10px; background: rgba(20, 16, 10, 0.85); color: #f5ead2; text-align: left; cursor: pointer; }
+.forja-lista-titulo { font-family: var(--fonte-titulo); color: var(--cor, var(--ouro)); }
+.forja-lista-frase { font-style: italic; font-size: 0.9rem; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .forja-tela { gap: 0.5rem; padding: 0.6rem 1rem; }
+  .forja-busto { max-height: 32dvh; }
+  .forja-erga { font-size: clamp(1.2rem, 4.2vw, 1.9rem); }
+  .forja-cura-luz { width: min(170px, 30vw); }
+  .forja-reliquia-quadro { max-width: 70vh; }
+}
+

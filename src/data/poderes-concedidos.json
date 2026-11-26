@@ -1,0 +1,187 @@
+{
+  "_sobre": "Poderes concedidos dos sete deuses do Salão da Forja (Fase 6), extraídos do pack \"poderes-concedidos\" do sistema Icarus (Foundry). Núcleo: 1 poder para o devoto, 2 para o Paladino.",
+  "deuses": {
+    "justar": [
+      {
+        "id": "balanca-da-verdade",
+        "nome": "Balança da Verdade",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "",
+        "descricao": "Você se torna treinado em Intuição (se já for treinado, recebe +2 nessa perícia) e recebe +2 em Diplomacia."
+      },
+      {
+        "id": "contrapeso",
+        "nome": "Contrapeso",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "cena",
+        "descricao": "Na primeira vez em cada cena que um inimigo acerta você ou um aliado em alcance curto, esse inimigo é marcado como agressor. Você recebe +2 nos testes de ataque contra ele até o fim da cena."
+      },
+      {
+        "id": "fogo-da-justica",
+        "nome": "Fogo da Justiça",
+        "custoPM": 1,
+        "acao": "movimento",
+        "frequencia": "",
+        "descricao": "Você pode gastar uma ação de movimento e 1 PM. Até o fim da cena, uma arma corpo a corpo que esteja empunhando causa +1d6 pontos de dano de fogo contra criaturas que tenham causado dano a você ou a um aliado durante a cena."
+      }
+    ],
+    "eternus": [
+      {
+        "id": "caca-da-alcateia",
+        "nome": "Caça da Alcateia",
+        "custoPM": 1,
+        "acao": "movimento",
+        "frequencia": "",
+        "descricao": "Você pode gastar uma ação de movimento e 1 PM para marcar como presa um inimigo que possa ver em alcance curto. Você recebe +1 nos testes de ataque contra ele. Você só pode ter uma presa por vez e não pode marcar outra até que a atual seja reduzida a 0 PV ou a cena termine."
+      },
+      {
+        "id": "corpo-renovado",
+        "nome": "Corpo Renovado",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "",
+        "descricao": "Escolha duas condições. Você fica imune a elas. Sempre que sobe de nível, pode trocar as condições escolhidas."
+      },
+      {
+        "id": "pressagio",
+        "nome": "Presságio",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "cena",
+        "descricao": "Você recebe +2 em iniciativa e não pode ser surpreendido. Além disso, uma vez por cena, quando um aliado em alcance curto for alvo de um ataque, você pode gastar 1 PM como reação para avisá-lo. Ele recebe +2 na Defesa contra esse ataque."
+      }
+    ],
+    "mentis": [
+      {
+        "id": "ciclo-repetido",
+        "nome": "Ciclo Repetido",
+        "custoPM": 2,
+        "acao": "reacao",
+        "frequencia": "cena",
+        "descricao": "Uma vez por cena, quando falha em um teste de resistência, você pode gastar 2 PM para refazê-lo e ficar com o novo resultado."
+      },
+      {
+        "id": "ritmo-do-tempo",
+        "nome": "Ritmo do Tempo",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "",
+        "descricao": "Quando faz um teste de iniciativa, você rola dois d20 e usa o melhor resultado."
+      },
+      {
+        "id": "troca-de-ritmo",
+        "nome": "Troca de Ritmo",
+        "custoPM": 1,
+        "acao": "livre",
+        "frequencia": "cena",
+        "descricao": "Uma vez por cena, no início do seu turno, você pode gastar uma ação livre e 1 PM para trocar de posição na iniciativa com um aliado em alcance curto. Ele age agora, no seu lugar, e você age no turno dele; a nova ordem vale até o fim da cena. Além disso, vocês trocam de lugar no campo de batalha, ocupando instantaneamente o espaço um do outro."
+      }
+    ],
+    "solem": [
+      {
+        "id": "clarao-do-amanhecer",
+        "nome": "Clarão do Amanhecer",
+        "custoPM": 1,
+        "acao": "movimento",
+        "frequencia": "",
+        "descricao": "Você pode gastar uma ação de movimento e 1 PM para emitir um clarão de luz. Inimigos em alcance curto que possam vê-lo sofrem –2 nos testes de ataque até o início do seu próximo turno."
+      },
+      {
+        "id": "muralha-solar",
+        "nome": "Muralha Solar",
+        "custoPM": 1,
+        "acao": "movimento",
+        "frequencia": "",
+        "descricao": "Você pode gastar uma ação de movimento e 1 PM. Seus aliados adjacentes recebem +1 na Defesa, ou +2 se você estiver empunhando um escudo (inclusive o Escudo Acoplado). Este poder é sustentado: para mantê-lo, você deve gastar 1 PM no início de cada um de seus turnos. Se não pagar, ou se ficar inconsciente, o efeito termina."
+      },
+      {
+        "id": "raio-solar",
+        "nome": "Raio Solar",
+        "custoPM": null,
+        "acao": "completa",
+        "frequencia": "",
+        "descricao": "Você pode gastar uma ação completa para invocar o poder de Sólem. Até o fim da cena, você recebe +1 nos testes de ataque e seus ataques causam +1d4 pontos de dano de fogo ou de luz. Você escolhe o tipo de dano ao usar o poder e não pode mudá-lo até o fim da cena. Este poder não custa PM."
+      }
+    ],
+    "irae": [
+      {
+        "id": "entrega-total",
+        "nome": "Entrega Total",
+        "custoPM": 1,
+        "acao": "movimento",
+        "frequencia": "",
+        "descricao": "Você pode gastar uma ação de movimento e 1 PM. Até o fim da cena, você recebe +2 nos testes de ataque e nas rolagens de dano corpo a corpo, mas sofre –2 na Defesa."
+      },
+      {
+        "id": "estrondo-do-trovao",
+        "nome": "Estrondo do Trovão",
+        "custoPM": 2,
+        "acao": "padrao",
+        "frequencia": "",
+        "descricao": "Você pode gastar uma ação padrão e 2 PM. Todas as criaturas em alcance corpo a corpo sofrem 2d6 pontos de dano elétrico (Fortitude CD Con reduz à metade)."
+      },
+      {
+        "id": "voz-que-nao-se-cala",
+        "nome": "Voz que Não se Cala",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "",
+        "descricao": "Você recebe +2 em Intimidação e +5 em testes de resistência contra efeitos de medo."
+      }
+    ],
+    "expiria": [
+      {
+        "id": "filho-das-aguas",
+        "nome": "Filho das Águas",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "",
+        "descricao": "Você pode respirar embaixo d'água e adquire deslocamento de natação igual ao seu deslocamento terrestre. Além disso, não sofre penalidades em combate por estar na água."
+      },
+      {
+        "id": "frio-das-profundezas",
+        "nome": "Frio das Profundezas",
+        "custoPM": 1,
+        "acao": "movimento",
+        "frequencia": "",
+        "descricao": "Você pode gastar uma ação de movimento e 1 PM. Até o fim da cena, seus ataques causam +2 pontos de dano de frio."
+      },
+      {
+        "id": "furia-do-tridente",
+        "nome": "Fúria do Tridente",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "",
+        "descricao": "Você se torna proficiente com tridentes. Para você, o tridente é considerado uma arma Ágil, e você recebe +2 nos testes de ataque e +1 na margem de ameaça com ele. Quando você arremessa um tridente, ele volta automaticamente para sua mão ao fim do ataque, acertando ou não."
+      }
+    ],
+    "ardor": [
+      {
+        "id": "golpe-ambicioso",
+        "nome": "Golpe Ambicioso",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "",
+        "descricao": "O multiplicador de crítico de armas com as quais você é proficiente aumenta em +1."
+      },
+      {
+        "id": "medir-o-desafio",
+        "nome": "Medir o Desafio",
+        "custoPM": 1,
+        "acao": "livre",
+        "frequencia": "",
+        "descricao": "Antes de fazer um teste de perícia (exceto ataque), você pode gastar 1 PM para perguntar ao mestre qual é a CD do teste. Se fizer isso, sofre –2 no resultado do teste."
+      },
+      {
+        "id": "romper-amarras",
+        "nome": "Romper Amarras",
+        "custoPM": null,
+        "acao": "passivo",
+        "frequencia": "cena",
+        "descricao": "Você recebe +2 em Atletismo e Acrobacia para escapar de agarrões, cordas, algemas e grilhões. Além disso, uma vez por cena, você pode gastar uma ação livre e 1 PM para encerrar uma condição de movimento que o esteja prendendo."
+      }
+    ]
+  }
+}

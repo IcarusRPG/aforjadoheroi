@@ -107,3 +107,129 @@
 .animacoes-reduzidas .cena-busto-heroi.aura { animation: none; }
 /* Uma memória: o busto do NPC escurecido e sem cor. */
 .cena-busto.memoria { filter: brightness(0.45) grayscale(0.7) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.6)); }
+
+/* ---------- Fase lateral (Partes 2 a 5) ---------- */
+.tela-lateral { position: relative; height: 100dvh; background: #000; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+.lateral-jogo { position: absolute; inset: 0; }
+.lateral-jogo canvas { display: block; }
+/* Em pé: o nível numa faixa no alto (o chão inteiro visível) e os controles embaixo, fora do caminho. */
+@media (orientation: portrait) {
+  .lateral-jogo {
+    inset: auto 0 auto 0;
+    top: max(64px, calc(env(safe-area-inset-top) + 56px));
+    height: min(calc(100vw * 0.92), 62dvh);
+  }
+}
+.lateral-palco { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.tela-lateral.com-palco .lateral-palco { pointer-events: auto; }
+.tela-lateral .palco-cena.sobre-mapa { background: rgba(0, 0, 0, 0.35); }
+.lateral-pv {
+  position: absolute;
+  z-index: 6;
+  top: max(14px, calc(env(safe-area-inset-top) + 8px));
+  left: max(14px, calc(env(safe-area-inset-left) + 8px));
+  margin: 0;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: rgba(10, 8, 6, 0.6);
+  color: var(--ouro-claro);
+  font-family: var(--fonte-titulo);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+}
+.lateral-nome-laje {
+  position: absolute;
+  z-index: 6;
+  top: max(58px, calc(env(safe-area-inset-top) + 52px));
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.3rem 0.9rem;
+  border-radius: 6px;
+  background: rgba(12, 10, 8, 0.7);
+  color: #f2dca0;
+  font-family: var(--fonte-titulo);
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.lateral-nome-laje[hidden] { display: none; }
+.lateral-busto {
+  position: absolute;
+  z-index: 7;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(190px, calc(env(safe-area-inset-bottom) + 180px));
+  height: clamp(110px, 24dvh, 200px);
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.7));
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.lateral-busto[hidden] { display: none; }
+.lateral-busto.some { opacity: 0; }
+@media (orientation: landscape) and (max-height: 500px) { .lateral-busto { bottom: auto; top: 56px; height: 34dvh; } }
+.btn-pular {
+  position: absolute;
+  z-index: 5;
+  right: max(28px, calc(env(safe-area-inset-right) + 20px));
+  bottom: max(118px, calc(env(safe-area-inset-bottom) + 110px));
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--borda);
+  background: rgba(14, 14, 28, 0.6);
+  color: var(--ouro-claro);
+  font-family: var(--fonte-titulo);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-pular[hidden] { display: none; }
+.btn-pular:active { background: rgba(214, 169, 74, 0.35); }
+.tela-lateral.sem-controle .btn-pular { opacity: 0.4; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .btn-pular { bottom: max(98px, calc(env(safe-area-inset-bottom) + 90px)); }
+}
+/* A porta se abre: fade de luz dourada. */
+.lateral-luz-porta { position: absolute; inset: 0; z-index: 30; background: radial-gradient(circle at 50% 45%, #fff6d8 0, #ffd25a 35%, #b8860b 100%); opacity: 0; transition: opacity 1.4s ease; pointer-events: none; }
+.lateral-luz-porta.ativa { opacity: 1; }
+
+/* ---------- A memória perturbada (narrativa/memoria.ts) ---------- */
+.memoria-fx { display: contents; }
+.memoria-fragmento { transition: none; pointer-events: none; }
+.memoria-fragmento.caco { transition: transform 0.8s cubic-bezier(0.3, 0.1, 0.6, 1), opacity 0.8s ease-in; }
+.palco-cena.memoria-quebrada > .cena-fundo { opacity: 0 !important; transition: opacity 0.05s; }
+.palco-cena.memoria-apaga > .cena-fundo { opacity: 0 !important; transition: opacity 0.8s ease; }
+.memoria-grao, .memoria-cinzas { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+.palco-cena.memoria-ativa .memoria-grao, .palco-cena.memoria-ativa .memoria-cinzas { opacity: 1; }
+.palco-cena.memoria-ativa > .cena-fundo.visivel { animation: memoria-brilho 2.6s steps(1) infinite; }
+@keyframes memoria-brilho {
+  0% { filter: brightness(1) sepia(0.25); }
+  12% { filter: brightness(1.18) sepia(0.25); }
+  15% { filter: brightness(0.9) sepia(0.3); }
+  38% { filter: brightness(1.05) sepia(0.25); }
+  61% { filter: brightness(0.82) sepia(0.32); }
+  64% { filter: brightness(1.12) sepia(0.22); }
+  86% { filter: brightness(0.95) sepia(0.28); }
+}
+.memoria-grao {
+  mix-blend-mode: overlay;
+  background-image:
+    repeating-radial-gradient(circle at 17% 32%, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 3px),
+    repeating-radial-gradient(circle at 73% 61%, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 4px);
+  animation: memoria-grao 0.35s steps(3) infinite;
+}
+@keyframes memoria-grao { 0% { background-position: 0 0, 0 0; } 33% { background-position: 7px 3px, -5px 2px; } 66% { background-position: -3px 6px, 4px -6px; } }
+.memoria-cinzas span {
+  position: absolute;
+  top: -4%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(210, 200, 190, 0.7);
+  box-shadow: 0 0 4px rgba(255, 160, 90, 0.4);
+  animation: memoria-cinza linear infinite;
+}
+@keyframes memoria-cinza { from { transform: translate(0, 0); opacity: 0; } 10% { opacity: 1; } to { transform: translate(40px, 105dvh); opacity: 0.2; } }
