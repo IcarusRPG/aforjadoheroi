@@ -10,7 +10,7 @@ import {
    1. Transição: Fim do Prólogo → cartões → Parte 1
    ====================================================================== */
 
-test('transição: "Fim do Prólogo" → Continuar → cartão "Ato I — Provação Sob a Luz" → "Parte 1 · O alçapão se abre" → C1-01', async ({ page }, info) => {
+test('transição: "Fim do Prólogo" → Continuar → cartão "Ato I — Provação Sob a Luz" → C1-01, sem cartão de "Parte N"', async ({ page }, info) => {
   test.setTimeout(150_000);
   test.setTimeout(240_000);
   await semear(page, { ato: 0, parte: 'templo', cena: 'c02-tragedia', flags: ['chegou_templo', 'nyme_seguindo'] });
@@ -33,13 +33,14 @@ test('transição: "Fim do Prólogo" → Continuar → cartão "Ato I — Prova�
   await expect(ato.locator('.cartao-tela-rotulo')).toHaveText('Ato I');
   await expect(ato.locator('.cartao-tela-titulo')).toHaveText('Provação Sob a Luz');
   if (umAparelho(info) || info.project.name.startsWith('paisagem')) { await page.waitForTimeout(700); await foto(page, info, 'cartao-ato'); }
-  const parte = page.locator('.cartao-tela.cartao-parte');
-  await expect(parte).toBeVisible({ timeout: 10_000 });
-  await expect(parte).toHaveText('Parte 1 · O alçapão se abre');
-  if (umAparelho(info) || info.project.name.startsWith('paisagem')) { await page.waitForTimeout(700); await foto(page, info, 'cartao-parte'); }
   await naCena(page, 'c1-01', 15_000);
+  // Fase 6B: nenhum cartão de "Parte N" (nem texto com "Parte" e número).
+  await expect(page.locator('.cartao-tela.cartao-parte')).toHaveCount(0);
+  expect(await page.evaluate(() => /Parte\s*\d/.test(document.body.innerText))).toBe(false);
   const s = await salvoAuto(page);
   expect(s.jogo.campanha).toMatchObject({ ato: 1, parte: 1 });
+  // O card de save mostra o lugar: "O alçapão".
+  expect(s.meta.local).toBe('O alçapão');
 });
 
 /* ======================================================================
@@ -75,6 +76,11 @@ test('Parte 1: os sons nas frases certas, sem ordem estrangeira, fogo com fade-o
   expect(await textoFala(page)).toContain('Uma mão agarra o seu braço');
   // O fogo distante em loop, baixo.
   await expect.poll(async () => ((await st(page)).loops as { nome: string }[]).map((l) => l.nome)).toContain('fogo-distante');
+  // Fase 6B: a tragédia continua do trecho calmo (34 s), a 35%, por baixo do fogo.
+  await expect.poll(async () => (await st(page)).musica, { timeout: 15_000 }).toMatchObject({ tocando: true, ganho: 0.35 });
+  const m = (await st(page)).musica;
+  expect(m.faixa).toContain('tragedia');
+  expect(m.tempo).toBeGreaterThanOrEqual(33);
   if (umAparelho(info)) await foto(page, info, 'parte1-c1-01');
   await ateFala(page, 'Não! Para dentro! Agora!');
   await ateFala(page, 'alguém grita uma ordem');
@@ -92,8 +98,12 @@ test('Parte 1: os sons nas frases certas, sem ordem estrangeira, fogo com fade-o
   await ateEscolhas(page);
   await page.locator('.cena-escolha').nth(2).click();
   await naCena(page, 'c1-03', 30_000).catch(() => undefined);
+  // A música segue até aqui (ainda tocando antes do alçapão fechar).
+  expect((await st(page)).musica.tocando).toBe(true);
   await ateFala(page, 'O alçapão se fecha sobre a sua cabeça.');
   expect(await efeitosNomes(page)).toContain('alcapao-fecha');
+  // E para com fade de 2 s quando o alçapão fecha (o silêncio depois é de propósito).
+  await expect.poll(async () => (await st(page)).musica.tocando, { timeout: 4000 }).toBe(false);
   // O tremor (ligado nas Opções).
   await expect.poll(() => page.evaluate(() => !!document.querySelector('.tela.tremendo-leve, .tela.tremendo'))).toBe(true);
   if (umAparelho(info)) await foto(page, info, 'parte1-c1-03');

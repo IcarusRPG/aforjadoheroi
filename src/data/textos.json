@@ -203,7 +203,6 @@
   "atos": {
     "prologo": "Prólogo",
     "ato": "Ato {n}",
-    "parte": "Parte {n}",
     "fimDo": "Fim do"
   },
   "forja": {
@@ -220,7 +219,8 @@
       "toleranciaCom": "Você já pisou nesses caminhos.",
       "toleranciaSem": "Você aprendeu, mesmo ferid{o|a}.",
       "coragem": "Você atravessou o sol.",
-      "protecao": "Você seguiu em frente pelos que ficaram lá em cima."
+      "protecao": "Você seguiu em frente pelos que ficaram lá em cima.",
+      "coragemLuz": "Você seguiu a luz sem medo."
     },
     "euJuro": "Eu juro",
     "voce": "Você",
@@ -316,7 +316,8 @@
       "titulo": "Diário",
       "vozes": "Vozes do sonho",
       "semVozes": "Nenhuma voz ouvida.",
-      "semResumo": "Ainda não aconteceu nada digno de nota."
+      "semResumo": "Ainda não aconteceu nada digno de nota.",
+      "testes": "Testes"
     },
     "fim": {
       "fimDo": "Fim do",

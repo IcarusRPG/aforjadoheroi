@@ -187,6 +187,23 @@
   -webkit-tap-highlight-color: transparent;
 }
 .btn-pular[hidden] { display: none; }
+/* No PC: a tecla embaixo do botão (Fase 6B). */
+.btn-pular-tecla {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: rgba(14, 14, 28, 0.75);
+  color: var(--marmore-suave);
+  font-family: var(--fonte-texto, sans-serif);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
 .btn-pular:active { background: rgba(214, 169, 74, 0.35); }
 .tela-lateral.sem-controle .btn-pular { opacity: 0.4; }
 @media (orientation: landscape) and (max-height: 500px) {
@@ -233,3 +250,39 @@
   animation: memoria-cinza linear infinite;
 }
 @keyframes memoria-cinza { from { transform: translate(0, 0); opacity: 0; } 10% { opacity: 1; } to { transform: translate(40px, 105dvh); opacity: 0.2; } }
+
+/* ---------- Fase 6B ---------- */
+/* Sem cartão de "Parte N": a entrada de cada trecho é um fade curto. */
+.tela-lateral .lateral-jogo { transition: opacity 0.6s ease; }
+.tela-lateral.entrando .lateral-jogo { opacity: 0; }
+.animacoes-reduzidas .tela-lateral .lateral-jogo { transition-duration: 0.01s; }
+/* A frase do teste: antes do dado (o que o herói tenta) e depois (o que mudou). */
+.lateral-aviso {
+  position: absolute;
+  z-index: 40;
+  left: 50%;
+  top: max(110px, calc(env(safe-area-inset-top) + 100px));
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 32px));
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(242, 212, 138, 0.55);
+  border-radius: 10px;
+  background: rgba(14, 11, 8, 0.9);
+  color: #f6ead0;
+  font-size: clamp(0.85rem, 2.6vw, 1rem);
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.lateral-aviso[hidden] { display: none; }
+.lateral-aviso.some { opacity: 0; }
+@media (orientation: landscape) and (max-height: 500px) { .lateral-aviso { top: 12px; width: min(520px, calc(100vw - 260px)); } }
+/* O destaque dos nomes depois do teste de Religião. */
+.lateral-nome-laje.destaque { animation: nome-destaque 1.4s ease 2; }
+@keyframes nome-destaque { 50% { color: #fff6d0; box-shadow: 0 0 22px rgba(255, 214, 110, 0.75); transform: translateX(-50%) scale(1.08); } }
+.animacoes-reduzidas .lateral-nome-laje.destaque { animation: none; }
+.diario-subtitulo { margin: 0.6rem 0 0.3rem; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ouro); }
+.diario-testes li { font-size: 0.9rem; color: var(--marmore-suave); }

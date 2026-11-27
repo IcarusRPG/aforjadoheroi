@@ -13,7 +13,6 @@ import { irPara, type Tela } from '../core/telas';
 import { ehToque, textos } from '../core/textos';
 import { abrirModal, botao, esperar, h } from '../core/ui';
 import { dadosDeus, interpolar } from '../narrativa/capitulo';
-import { cartaoParte } from '../narrativa/cartoes';
 import { criarPalco, type Palco } from '../narrativa/palco';
 import type { Controles } from '../exploracao/controles';
 import type { Motor } from '../exploracao/motor';
@@ -42,7 +41,9 @@ export function telaSalao(): Tela {
   const p = getEstado().personagem!;
   const classe = classePorId(p.classe);
   const c0 = getEstado().campanha;
-  const comecoDaParte = !c0.cena || c0.cena === 'inicio';
+  // Começo da parte: cena "inicio" (o fim da Parte 5 marca). Depois da entrada, o save grava cena null
+  // com o Salão como lugar: retomar continua dali (Fase 6B; antes recomeçava).
+  const comecoDaParte = c0.cena === 'inicio' || c0.local.tela !== 'mapa';
 
   const jogoEl = h('div', { class: 'salao-jogo' });
   const baloes = h('div', { class: 'salao-baloes', 'aria-live': 'polite' });
@@ -208,7 +209,7 @@ export function telaSalao(): Tela {
     etapaForja = 'juramento';
     const ecos: Record<string, string> = {
       tolerancia: c.flags.includes('caminho_tolerancia') ? T.ecos.toleranciaCom : T.ecos.toleranciaSem,
-      coragem: T.ecos.coragem,
+      coragem: c.flags.includes('seguiu_a_luz') ? T.ecos.coragemLuz : T.ecos.coragem,
       protecao: T.ecos.protecao,
     };
     for (const [i, voto] of (['tolerancia', 'coragem', 'protecao'] as const).entries()) {
@@ -405,7 +406,8 @@ export function telaSalao(): Tela {
         motor.bloquear(true);
         if (comecoDaParte) {
           audio.pararMusica(600);
-          await cartaoParte(1, 6);
+          // Sem cartão de "Parte N" (Fase 6B): só o fade da troca de tela.
+          await esperar(600);
           if (saiu) return;
           atualizarCampanha({ cena: null, local: { tela: 'mapa', mapa: MAPA.id } });
         }

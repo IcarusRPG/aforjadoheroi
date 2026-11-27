@@ -85,6 +85,9 @@ export function abrirDiario(): void {
       h('h3', {}, `${nomeAto(cap.numero)} · ${cap.titulo}`),
       resumo.length ? h('ul', { class: 'diario-resumo' }, ...resumo.map((l) => h('li', {}, l))) : h('p', { class: 'diario-vazio' }, T.diario.semResumo),
     );
+    // Fase 6B: os testes de perícia do ato, cada um com a frase do resultado.
+    const testes = (c.registro ?? []).filter((r) => r.ato === cap.numero);
+    if (testes.length) corpo.append(h('h4', { class: 'diario-subtitulo' }, T.diario.testes), h('ul', { class: 'diario-testes' }, ...testes.map((r) => h('li', {}, r.texto))));
   }
   abrirModal(T.diario.titulo, corpo, T.fechar);
 }

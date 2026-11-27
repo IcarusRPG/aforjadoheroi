@@ -1,12 +1,10 @@
-import { textos } from '../core/textos';
 import { esperar, h } from '../core/ui';
 import { nomeAto, tituloAto, ATOS } from './capitulo';
 
 /**
- * Cartões de ato e de parte (Fase 6), reutilizáveis em qualquer tela (cenas, fase lateral, mapa):
- * "Ato I — Provação Sob a Luz" no estilo do cartão de abertura do jogo (cerca de 3 s) e, logo depois,
- * "Parte 1 · O alçapão se abre", menor e discreto (cerca de 2 s). Ficam por cima de tudo, num fundo
- * preto, e somem com fade.
+ * Cartão de ato (Fase 6): "Ato I — Provação Sob a Luz", no estilo do cartão de abertura do jogo
+ * (cerca de 3 s), por cima de tudo, num fundo preto, com fade. Fase 6B: não existe mais cartão de
+ * "Parte N"; as partes continuam no save e no código, e a tela mostra só o nome do lugar.
  */
 
 export interface OpcoesCartao {
@@ -38,12 +36,5 @@ export async function mostrarCartao(o: OpcoesCartao): Promise<void> {
 /** Nome da parte de um ato ("O túnel"), dos dados do ato. */
 export const nomeDaParte = (ato: number, parte: number): string => ATOS[ato]?.nomesPartes?.[String(parte)] ?? '';
 
-/** "Parte 2 · O túnel". */
-export const tituloDaParte = (ato: number, parte: number): string =>
-  [textos.atos.parte.replace('{n}', String(parte)), nomeDaParte(ato, parte)].filter(Boolean).join(' · ');
-
 export const cartaoAto = (ato: number): Promise<void> =>
   mostrarCartao({ tipo: 'ato', rotulo: nomeAto(ato), titulo: tituloAto(ato) });
-
-export const cartaoParte = (ato: number, parte: number, semFundo = false): Promise<void> =>
-  mostrarCartao({ tipo: 'parte', titulo: tituloDaParte(ato, parte), semFundo });

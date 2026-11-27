@@ -115,5 +115,11 @@
     "gatilho": "A Nyme se defende no treino",
     "texto": "Ela está se defendendo. A Rasteira não olha a Defesa…",
     "alvo": "[data-comando=\"rasteira\"]"
+  },
+  {
+    "id": "pular",
+    "gatilho": "Primeiro trecho lateral (o túnel)",
+    "texto": "Pule com o botão **PULAR** (ou **Espaço**).",
+    "alvo": ".btn-pular"
   }
 ]

@@ -4,12 +4,12 @@
   "titulo": "Provação Sob a Luz",
   "lugar": "Templo de Sólem",
   "nomesPartes": {
-    "1": "O alçapão se abre",
+    "1": "O alçapão",
     "2": "O túnel",
     "3": "Os símbolos",
     "4": "O corredor de Sólem",
-    "5": "A escuridão e a porta",
-    "6": "O Salão e a Forja"
+    "5": "A escuridão",
+    "6": "O Salão da Forja"
   },
   "totalPartes": 6,
   "inicio": "c1-01",
@@ -49,6 +49,10 @@
       "texto": "Você atravessou o corredor de Sólem."
     },
     {
+      "flag": "seguiu_a_luz",
+      "texto": "No corredor de Sólem, você seguiu a luz sem nenhuma flecha."
+    },
+    {
       "flag": "coragem_escuro",
       "texto": "No escuro total, você não parou."
     },
@@ -85,8 +89,8 @@
         }
       ],
       "visual": "preto",
-      "musica": null,
-      "fadeMusica": 1200,
+      "musica": "tragedia@34*0.35",
+      "fadeMusica": 2000,
       "seguir": {
         "vai_para": "c1-02"
       }
@@ -118,7 +122,7 @@
           "texto": "Desça. Siga o túnel até o fim. Não volte, aconteça o que acontecer."
         }
       ],
-      "musica": null,
+      "musica": "tragedia@34*0.35",
       "escolhas": [
         {
           "texto": "“Venha comigo, Artho!”",
@@ -156,7 +160,7 @@
           "texto": "Meu lugar é aqui. Alguém precisa ganhar tempo."
         }
       ],
-      "musica": null,
+      "musica": "tragedia@34*0.35",
       "seguir": {
         "vai_para": "c1-02-pronto"
       }
@@ -179,7 +183,7 @@
           "texto": "A Nyme escolheu proteger você. Não torne a escolha dela em vão."
         }
       ],
-      "musica": null,
+      "musica": "tragedia@34*0.35",
       "seguir": {
         "vai_para": "c1-02-pronto"
       }
@@ -196,7 +200,7 @@
           "texto": "Bom {menino|menina}."
         }
       ],
-      "musica": null,
+      "musica": "tragedia@34*0.35",
       "seguir": {
         "vai_para": "c1-02-pronto"
       }
@@ -210,7 +214,7 @@
           "texto": "“Quando você estiver {pronto|pronta}”… Lembra? Você está, {nome}. Mais do que imagina."
         }
       ],
-      "musica": null,
+      "musica": "tragedia@34*0.35",
       "seguir": {
         "vai_para": "c1-03"
       }
@@ -224,7 +228,9 @@
         {
           "texto": "O alçapão se fecha sobre a sua cabeça.",
           "som": "alcapao-fecha",
-          "tremor": "leve"
+          "tremor": "leve",
+          "musica": null,
+          "musicaFade": 2000
         },
         {
           "texto": "Você ouve o cadeado.",
@@ -249,7 +255,6 @@
         }
       ],
       "visual": "tocha-pulso",
-      "musica": null,
       "seguir": {
         "fim": true
       }
@@ -361,7 +366,7 @@
       }
     },
     {
-      "id": "s-levante",
+      "id": "s-visao",
       "falas": [
         {
           "texto": "Você está no chão. A dor sobe pela perna. E, por um instante, você se vê, de pé, à sua frente, envolt{o|a} em luz.",
@@ -373,7 +378,22 @@
           "rotulo": "Você (a visão)",
           "expressao": "determinado",
           "aura": true,
-          "texto": "Se você quer ser forte, continue."
+          "texto": "Se você quer ser forte, continue.",
+          "efeitos": {
+            "flag": "visao_vista"
+          }
+        }
+      ],
+      "visual": "preto",
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-levante",
+      "falas": [
+        {
+          "texto": "Seus joelhos cedem. O chão de pedra vem ao seu encontro, e tudo escurece."
         },
         {
           "texto": "Uma voz que não é sua ecoa pelo corredor:"
@@ -388,6 +408,46 @@
         }
       ],
       "visual": "preto",
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-religiao",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Esses símbolos… Artho me fez decorar cada um deles. Você tenta lembrar das aulas."
+        },
+        {
+          "texto": "(Religião CD 10)",
+          "estilo": "teste"
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-religiao-ok",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Sólem, Justar, Ardor, Expiria, Eternus, Mentis, Irae. Você reconhece todos."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "s-religiao-falha",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Os símbolos parecem familiares, mas os nomes fogem da sua memória."
+        }
+      ],
       "seguir": {
         "voltar": true
       }
@@ -458,7 +518,83 @@
       "falas": [
         {
           "quem": "pensamento",
-          "texto": "Só o sol. De um lado ao outro. Não tem como desviar."
+          "texto": "Lá atrás, quem pisava só no sol tropeçava. Mas este corredor é dele. As paredes, as tochas, tudo aqui é de Sólem."
+        },
+        {
+          "quem": "pensamento",
+          "texto": "E se aqui… for o contrário?"
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-primeira",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Na casa de Sólem, quem foge da luz se perde no escuro."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-flecha1",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "A dor veio dos outros caminhos, desta vez. Siga a luz."
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-flecha2",
+      "falas": [
+        {
+          "quem": "artho",
+          "texto": "Respeitar todos os caminhos não é andar em todos eles, {nome}. Às vezes, a coragem é escolher o seu.",
+          "memoria": true
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-solta",
+      "falas": [
+        {
+          "quem": "pensamento",
+          "texto": "Esta laje parece solta…"
+        }
+      ],
+      "seguir": {
+        "voltar": true
+      }
+    },
+    {
+      "id": "c-visao",
+      "falas": [
+        {
+          "texto": "Por um instante, você se vê à sua frente, de pé, envolt{o|a} em luz.",
+          "bustoHeroi": "determinado",
+          "aura": true
+        },
+        {
+          "quem": "heroi",
+          "rotulo": "Você (a visão)",
+          "expressao": "determinado",
+          "aura": true,
+          "texto": "Se você quer ser forte, continue.",
+          "efeitos": {
+            "flag": "visao_vista"
+          }
         }
       ],
       "seguir": {
@@ -493,7 +629,7 @@
       "id": "c-fim",
       "falas": [
         {
-          "texto": "Você desaba do outro lado, ofegante, ferid{o|a}. Mas do outro lado.",
+          "texto": "Você chega ao outro lado, ofegante. Desta vez, a luz não feriu. Guiou.",
           "bustoHeroi": "determinado"
         },
         {

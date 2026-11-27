@@ -42,8 +42,10 @@ async function juramento(page: Page) {
 test('Parte 6: as 7 vozes aparecem ao lado das estátuas certas (Justar e Ardor trocados em relação ao sonho) e falam juntas', async ({ page }, info) => {
   test.setTimeout(240_000);
   await noSalao(page);
-  await expect(page.locator('.cartao-tela.cartao-parte')).toHaveText('Parte 6 · O Salão e a Forja', { timeout: 30_000 });
   await cenaLateral(page, 'f-entrada', 60_000);
+  // Fase 6B: sem cartão de "Parte 6"; o save mostra o lugar.
+  await expect(page.locator('.cartao-tela.cartao-parte')).toHaveCount(0);
+  await expect.poll(async () => (await salvoAuto(page))?.meta?.local, { timeout: 20_000 }).toBe('O Salão da Forja');
   await expect(page.locator('.palco-cena .cena-fundo.visivel')).toHaveAttribute('data-cena', 'cena-salao-forja');
   await fecharFala(page);
   await semFala(page);

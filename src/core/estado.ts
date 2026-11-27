@@ -119,6 +119,8 @@ export interface Campanha {
   local: LocalJogo;
   /** Fase lateral (Fase 6): o estado no início da parte (o Continuar do game over volta para ele). */
   inicioParte?: { parte: number; pv: number | null; flags: string[]; coletados: string[]; contadores: Record<string, number> };
+  /** Fase 6B: os testes de perícia do ato, com a frase do resultado (Diário). */
+  registro?: { ato: number; texto: string }[];
   /** Ato I (Fase 6): a voz escolhida na Forja (id do deus) e os poderes concedidos escolhidos. */
   divindade?: string | null;
   poderes?: string[];

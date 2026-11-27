@@ -1,4 +1,7 @@
 import Phaser from 'phaser';
+import { cantosLaje, centroLaje, colunas, ehQuebrada, lajeEm, linhas, type GradeLajes } from './grade';
+
+export type { GradeLajes } from './grade';
 
 /**
  * Motor de fase em 2D lateral (Fase 6, Ato I, Partes 2 a 5), dirigido por dados (src/data/lateral/*.json).
@@ -8,10 +11,14 @@ import Phaser from 'phaser';
  *   pouco menor no fundo (0,9) e maior na frente (1,0); y-sort com os objetos da faixa.
  * - Camada da frente: peças com parallax 1,25 (já desfocadas no arquivo), por cima do herói.
  * - Pulo em arco, com sombra no chão; pulos roteirizados até um x (o corredor de Sólem).
- * - Escuridão: uma camada escura com o círculo de luz quente da tocha em volta do herói (raio ≈ 30% da
- *   altura da tela, tremulando ±4%), luz ambiente configurável, tochas de parede e brilho das poças.
- * - Grade de lajes desenhada por código (juntas escuras com um fio claro), com os símbolos dos deuses
- *   "deitados" em cada laje e o brilho de cada um refeito por código.
+ * - Escuridão: UMA camada escura (retângulo da vista) com o furo de luz da tocha recortado por uma
+ *   máscara (BitmapMask invertida), raio ≈ 30% da altura da tela, tremulando ±4%; luz ambiente
+ *   configurável, tochas de parede (chama sobre a cuba do candelabro) e brilho das poças. Sem emendas:
+ *   na Fase 6 eram uma imagem com o furo e 4 retângulos sobrepostos, e a sobreposição desenhava um
+ *   quadrado em volta do herói quando a luz ambiente subia.
+ * - Grade de lajes: segue o piso pintado (exploracao/grade.ts); o código só põe os símbolos dos deuses
+ *   "deitados" em cada laje, o brilho de cada um, as rachaduras e os buracos. Com ?editor=1, o contorno
+ *   de cada laje lógica e um marcador em cada tocha, para conferir o alinhamento.
  *
  * O motor não conhece as regras (dados, flechas, falas): a tela (screens/lateral.ts) cuida delas.
  */
@@ -19,7 +26,6 @@ import Phaser from 'phaser';
 export interface PainelLateral { id: string; x: number; w: number; chao: [number, number] }
 export interface PecaFrente { id: string; x: number; lado: 'cima' | 'baixo'; altura: number }
 export interface Poca { x: number; y: number; r: number }
-export interface GradeLajes { x: number; larguraLaje: number; y: number; alturas: number[]; tabuleiro: string[] }
 export interface Tocha { x: number; y: number }
 
 export interface OpcoesLateral {
@@ -35,6 +41,8 @@ export interface OpcoesLateral {
   inicio: { x: number; y: number };
   limites: [number, number];
   reduzidas: boolean;
+  /** Modo de calibração (?editor=1): contornos das lajes e marcadores das tochas. */
+  editor?: boolean;
 }
 
 export interface EstadoLateral {
@@ -48,7 +56,15 @@ export interface EstadoLateral {
   luz: { x: number; y: number; raio: number; ambiente: number; acesa: boolean };
   limites: [number, number];
   tochasAcesas: number;
+  /** Ponto de cada chama (a base dela, na cuba) e se está acesa. */
+  tochas: { x: number; y: number; acesa: boolean }[];
   velocidade: number;
+  /** Camada escura: opacidade e se o furo da tocha está aberto. */
+  escuro: { alfa: number; furo: boolean };
+  /** Símbolo de cada laje (centro em px do mundo) e se já disparou. */
+  lajes: { col: number; lin: number; letra: string; x: number; y: number; disparada: boolean; quebrada: boolean }[];
+  /** Nomes dos deuses à mostra sobre as lajes. */
+  nomesVisiveis: boolean;
 }
 
 export interface MotorLateral {
@@ -79,10 +95,12 @@ export interface MotorLateral {
   grade(g: GradeLajes | null): void;
   /** Casa (coluna, linha) sob os pés do herói, ou null fora da grade. */
   casa(): { col: number; lin: number } | null;
-  /** Dispara a armadilha: a laje afunda 2 px e vira o sol rachado. */
+  /** Dispara a armadilha: a laje afunda 2 px e racha (o sol vira o sol rachado; os outros ganham rachaduras). */
   dispararLaje(col: number, lin: number): void;
-  /** Brilho das lajes seguras por um tempo (dica de tutorial). */
-  brilharSeguras(ms: number): void;
+  /** Brilho das lajes seguras (as que `segura` aceita) por um tempo (dica de tutorial). */
+  brilharSeguras(ms: number, segura: (letra: string) => boolean): void;
+  /** O nome do deus sobre cada laje por um tempo (o destaque do teste de Religião). */
+  mostrarNomes(ms: number, nomes: Record<string, string>): void;
   /** Flechas antigas quebradas perto destas casas (pista). */
   flechasAntigas(casas: { col: number; lin: number }[]): void;
   /** Flecha saindo da fenda da parede até o herói. */
@@ -187,87 +205,132 @@ export function criarMotorLateral(o: OpcoesLateral): Promise<MotorLateral> {
         // ---------- escuridão e luz ----------
         texturaRadial(this, 'luz', 512, [[0, 1], [0.55, 0.92], [0.78, 0.45], [1, 0]]);
         texturaRadial(this, 'luz-quente', 256, [[0, 0.5], [0.6, 0.18], [1, 0]], '255,150,60');
-        // Escuridão: um "furo" de luz (preto nas bordas, transparente no centro) em volta da tocha, e
-        // quatro retângulos pretos cobrindo o resto da vista. Todos com a mesma opacidade (1 − ambiente).
-        if (!this.textures.exists('furo')) {
-          const tam = 512;
-          const c = this.textures.createCanvas('furo', tam, tam)!;
+        // Escuridão: UMA peça por vez, nunca sobrepostas (sem emendas nem moldura):
+        // - com a tocha acesa, uma imagem preta enorme com o furo de luz no centro (o furo tem 1/128 do
+        //   lado da textura: escalada para o raio da tocha, ela cobre a vista inteira);
+        // - sem tocha (escuro total, ou a luz das tochas da parede), um retângulo preto do tamanho da vista.
+        // (Uma máscara BitmapMask faria o mesmo, mas custa duas passadas de render por quadro.)
+        const RAIO_FURO = 8, LADO_FURO = 1024;
+        if (!this.textures.exists('escuro-furo')) {
+          const c = this.textures.createCanvas('escuro-furo', LADO_FURO, LADO_FURO)!;
           const ctx = c.getContext();
-          const g = ctx.createRadialGradient(tam / 2, tam / 2, 0, tam / 2, tam / 2, tam / 2);
-          g.addColorStop(0, 'rgba(0,0,0,0)');
-          g.addColorStop(0.45, 'rgba(0,0,0,0.05)');
-          g.addColorStop(0.72, 'rgba(0,0,0,0.5)');
-          g.addColorStop(0.9, 'rgba(0,0,0,0.9)');
-          g.addColorStop(1, 'rgba(0,0,0,1)');
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, LADO_FURO, LADO_FURO);
+          ctx.globalCompositeOperation = 'destination-out';
+          const m = LADO_FURO / 2;
+          const g = ctx.createRadialGradient(m, m, 0, m, m, RAIO_FURO);
+          for (const [p, a] of [[0, 1], [0.45, 0.95], [0.72, 0.5], [0.9, 0.1], [1, 0]] as const) g.addColorStop(p, `rgba(0,0,0,${a})`);
           ctx.fillStyle = g;
-          ctx.fillRect(0, 0, tam, tam);
+          ctx.fillRect(m - RAIO_FURO, m - RAIO_FURO, RAIO_FURO * 2, RAIO_FURO * 2);
           c.refresh();
         }
-        const furo = this.add.image(0, 0, 'furo').setDepth(PROF.escuro);
-        const bordas = [0, 1, 2, 3].map(() => this.add.rectangle(0, 0, 10, 10, 0x000000, 1).setOrigin(0, 0).setDepth(PROF.escuro));
-        const escuro = { raio: 0 };
+        const escuroRet = this.add.rectangle(0, 0, 10, 10, 0x000000, 1).setOrigin(0, 0).setDepth(PROF.escuro);
+        const fonteFuro = this.add.image(0, 0, 'escuro-furo').setDepth(PROF.escuro).setVisible(false);
+        const escuro = { raio: 0, alfa: 1 };
         const quente = this.add.image(0, 0, 'luz-quente').setBlendMode(Phaser.BlendModes.ADD).setDepth(PROF.luzQuente);
         const silhueta = this.add.sprite(0, 0, 'heroi', 0).setOrigin(0.5, 0.98).setTintFill(0xffd27a).setAlpha(0).setDepth(PROF.silhueta);
         let raioRel = 1, ambiente = 0.08, comSilhueta = false;
         const raioBase = () => 0.3 * o.altura;
-        let tochas: { t: Tocha; acesa: boolean; chama: Phaser.GameObjects.Image; halo: Phaser.GameObjects.Image }[] = [];
-        texturaRadial(this, 'chama', 64, [[0, 1], [0.35, 0.85], [1, 0]], '255,190,90');
+        let tochas: { t: Tocha; acesa: boolean; chama: Phaser.GameObjects.Image; miolo: Phaser.GameObjects.Image; halo: Phaser.GameObjects.Image; marca?: Phaser.GameObjects.Graphics }[] = [];
+        // A chama: uma gota (base redonda, ponta para cima), quente por fora e clara no miolo.
+        if (!this.textures.exists('chama-gota')) {
+          const W = 48, H = 96;
+          const c = this.textures.createCanvas('chama-gota', W, H)!;
+          const ctx = c.getContext();
+          const gota = (esc: number) => {
+            ctx.beginPath();
+            ctx.moveTo(W / 2, H * (1 - esc));
+            ctx.bezierCurveTo(W / 2 + W * 0.48 * esc, H * (1 - esc * 0.45), W / 2 + W * 0.42 * esc, H - 2, W / 2, H - 2);
+            ctx.bezierCurveTo(W / 2 - W * 0.42 * esc, H - 2, W / 2 - W * 0.48 * esc, H * (1 - esc * 0.45), W / 2, H * (1 - esc));
+            ctx.closePath();
+          };
+          const g1 = ctx.createLinearGradient(0, 0, 0, H);
+          g1.addColorStop(0, 'rgba(255,120,30,0)');
+          g1.addColorStop(0.35, 'rgba(255,140,40,0.9)');
+          g1.addColorStop(1, 'rgba(255,200,90,1)');
+          ctx.fillStyle = g1; gota(0.98); ctx.fill();
+          ctx.fillStyle = 'rgba(255,240,180,0.95)'; gota(0.55); ctx.fill();
+          c.refresh();
+        }
 
-        // ---------- grade ----------
+        // ---------- grade (segue o piso pintado) ----------
         let grade: GradeLajes | null = null;
         let gradeObjs: Phaser.GameObjects.GameObject[] = [];
-        let lajes: { col: number; lin: number; letra: string; simbolo: Phaser.GameObjects.Image; brilho: Phaser.GameObjects.Image; fase: number; disparada: boolean }[] = [];
-        const linhaY = (g: GradeLajes, lin: number) => g.y + g.alturas.slice(0, lin).reduce((s, a) => s + a, 0);
+        let lajes: { col: number; lin: number; letra: string; simbolo: Phaser.GameObjects.Image; brilho: Phaser.GameObjects.Image; fase: number; disparada: boolean; quebrada: boolean }[] = [];
         function montarGrade(g: GradeLajes | null) {
           gradeObjs.forEach((x) => x.destroy());
           gradeObjs = [];
           lajes = [];
           grade = g;
           if (!g) return;
-          const cols = g.tabuleiro[0].length;
-          const larg = g.larguraLaje;
           const gr = cena.add.graphics().setDepth(PROF.grade);
           gradeObjs.push(gr);
-          const yFim = linhaY(g, g.alturas.length);
-          // Juntas: escuras, com um fio claro de 1 px embaixo de cada uma.
-          for (let l = 0; l <= g.alturas.length; l++) {
-            const yy = linhaY(g, l);
-            gr.lineStyle(3, 0x0d0a07, 0.75).lineBetween(g.x, yy, g.x + cols * larg, yy);
-            gr.lineStyle(1, 0xd8c7a0, 0.28).lineBetween(g.x, yy + 2, g.x + cols * larg, yy + 2);
-          }
-          for (let c = 0; c <= cols; c++) {
-            const xx = g.x + c * larg;
-            gr.lineStyle(3, 0x0d0a07, 0.75).lineBetween(xx, g.y, xx, yFim);
-            gr.lineStyle(1, 0xd8c7a0, 0.22).lineBetween(xx + 2, g.y, xx + 2, yFim);
-          }
-          for (let lin = 0; lin < g.alturas.length; lin++) {
-            for (let col = 0; col < cols; col++) {
+          for (let lin = 0; lin < linhas(g); lin++) {
+            for (let col = 0; col < colunas(g); col++) {
               const letra = g.tabuleiro[lin][col];
               const id = SIMBOLO_DA_LETRA[letra];
               if (!id) continue;
-              const cx = g.x + col * larg + larg / 2;
-              const cy = linhaY(g, lin) + g.alturas[lin] / 2;
-              const s = cena.add.image(cx, cy, `simbolo-${id}`).setDepth(PROF.simbolo);
-              // "Deitado": ~75% da largura da laje, achatado na proporção da laje; levemente escurecido.
-              const w = larg * 0.75;
-              s.setDisplaySize(w, w * (g.alturas[lin] / larg) * 0.92);
+              const { x: cx, y: cy, largura, altura } = centroLaje(g, col, lin);
+              const quebrada = ehQuebrada(g, col, lin);
+              if (quebrada) {
+                // O buraco: a laje some e fica o escuro, com a borda quebrada (por código).
+                const k = cantosLaje(g, col, lin);
+                const enc = (q: [number, number]): Phaser.Math.Vector2 => new Phaser.Math.Vector2(cx + (q[0] - cx) * 0.86, cy + (q[1] - cy) * 0.8);
+                gr.fillStyle(0x030202, 0.92).fillPoints(k.map(enc), true);
+                gr.lineStyle(2, 0x1a1410, 0.9).strokePoints(k.map(enc), true);
+              }
+              // "Deitado": ~70% da largura da laje, achatado na proporção da fileira; levemente escurecido.
+              const s = cena.add.image(cx, cy, quebrada ? 'simbolo-rachaduras' : `simbolo-${id}`).setDepth(PROF.simbolo);
+              const w = largura * 0.7;
+              s.setDisplaySize(w, Math.min(altura * 0.8, w * (altura / largura) * 1.05));
               s.setTint(letra === 'S' ? 0xf2eadb : 0xc9bfae);
-              s.setAlpha(letra === 'S' ? 0.92 : 0.82);
+              s.setAlpha(quebrada ? 0.55 : letra === 'S' ? 0.92 : 0.82);
               // Justar e Mentis (claros): contorno um pouco mais claro, para não sumirem na pedra.
-              if (letra === 'J' || letra === 'M') {
+              if (!quebrada && (letra === 'J' || letra === 'M')) {
                 const contorno = cena.add.image(cx, cy, `simbolo-${id}`).setDepth(PROF.simbolo - 0.5).setDisplaySize(s.displayWidth * 1.06, s.displayHeight * 1.08).setTintFill(0xfff7e6).setAlpha(0.28);
                 gradeObjs.push(contorno);
               }
               // Brilho refeito por código: o traço desfocado (simbolos/<id>-brilho.png), na cor do deus, aditivo.
-              const temBrilho = cena.textures.exists(`brilho-${id}`);
-              const b = cena.add.image(cx, cy, temBrilho ? `brilho-${id}` : `simbolo-${id}`).setDepth(PROF.brilho).setBlendMode(Phaser.BlendModes.ADD)
+              const chaveBrilho = quebrada ? 'brilho-rachaduras' : `brilho-${id}`;
+              const temBrilho = cena.textures.exists(chaveBrilho);
+              const b = cena.add.image(cx, cy, temBrilho ? chaveBrilho : s.texture.key).setDepth(PROF.brilho).setBlendMode(Phaser.BlendModes.ADD)
                 .setDisplaySize(s.displayWidth * (temBrilho ? 1.37 : 1.12), s.displayHeight * (temBrilho ? 1.4 : 1.16)).setTintFill(COR_DEUS[letra]).setAlpha(0.18);
               gradeObjs.push(s, b);
-              lajes.push({ col, lin, letra, simbolo: s, brilho: b, fase: Math.random() * Math.PI * 2, disparada: false });
+              lajes.push({ col, lin, letra, simbolo: s, brilho: b, fase: Math.random() * Math.PI * 2, disparada: false, quebrada });
+            }
+          }
+          // Modo de calibração: o contorno de cada laje lógica, por cima do piso pintado.
+          if (o.editor) {
+            const ed = cena.add.graphics().setDepth(PROF.texto - 2);
+            gradeObjs.push(ed);
+            const cores = [0x00e5ff, 0xff3df2, 0x9dff00, 0xffb300];
+            for (let lin = 0; lin < linhas(g); lin++) for (let col = 0; col < colunas(g); col++) {
+              ed.lineStyle(2, cores[(col + lin) % 4], 0.95).strokePoints(cantosLaje(g, col, lin).map(([px, py]) => new Phaser.Math.Vector2(px, py)), true);
             }
           }
         }
+        // Rachaduras desenhadas por código (laje de outro deus que disparou, no corredor de Sólem).
+        function rachar(l: (typeof lajes)[number]) {
+          const gr = cena.add.graphics().setDepth(PROF.simbolo + 0.5);
+          gradeObjs.push(gr);
+          const { x: cx, y: cy, largura, altura } = centroLaje(grade!, l.col, l.lin);
+          const semente = l.col * 31 + l.lin * 17;
+          const r = (k: number) => (((semente * 9301 + k * 49297) % 233280) / 233280);
+          gr.lineStyle(2.5, 0x0b0806, 0.95);
+          for (let k = 0; k < 5; k++) {
+            let px = cx + (r(k) - 0.5) * largura * 0.2, py = cy + (r(k + 7) - 0.5) * altura * 0.2;
+            const ang = (k / 5) * Math.PI * 2 + r(k + 3);
+            for (let passo = 0; passo < 3; passo++) {
+              const nx = px + Math.cos(ang + (r(k * 3 + passo) - 0.5) * 0.9) * largura * 0.13;
+              const ny = py + Math.sin(ang + (r(k * 5 + passo) - 0.5) * 0.9) * altura * 0.22;
+              gr.lineBetween(px, py, nx, ny);
+              px = nx; py = ny;
+            }
+          }
+        }
+        let nomesObjs: Phaser.GameObjects.Text[] = [];
         let brilhoSeguras = 0;
+        let seguraFn: (letra: string) => boolean = (l) => l !== 'S';
 
         // ---------- textos flutuantes ----------
         function textoSobre(t: string, cor = '#ffe2a8') {
@@ -332,23 +395,12 @@ export function criarMotorLateral(o: OpcoesLateral): Promise<MotorLateral> {
           const cxL = x, cyL = y - o.alturaHeroi * 0.55 - z;
           escuro.raio = raio;
           const alfa = 1 - ambiente;
-          const vx0 = vista.x - 4, vy0 = vista.y - 4, vx1 = vista.right + 4, vy1 = vista.bottom + 4;
-          if (raio > 2) {
-            // Os retângulos entram 4 px no furo (sem fresta de luz entre eles).
-            const fx0 = cxL - raio + 4, fy0 = cyL - raio + 4, fx1 = cxL + raio - 4, fy1 = cyL + raio - 4;
-            furo.setVisible(true).setPosition(cxL, cyL).setDisplaySize(raio * 2, raio * 2).setAlpha(alfa);
-            const r4: [number, number, number, number][] = [
-              [vx0, vy0, vx1 - vx0, Math.max(0, fy0 - vy0)],
-              [vx0, fy1, vx1 - vx0, Math.max(0, vy1 - fy1)],
-              [vx0, fy0, Math.max(0, fx0 - vx0), fy1 - fy0],
-              [fx1, fy0, Math.max(0, vx1 - fx1), fy1 - fy0],
-            ];
-            r4.forEach(([a1, b1, w1, h1], i) => bordas[i].setPosition(a1, b1).setSize(w1, h1).setAlpha(alfa).setVisible(w1 > 0 && h1 > 0));
-          } else {
-            furo.setVisible(false);
-            bordas[0].setPosition(vx0, vy0).setSize(vx1 - vx0, vy1 - vy0).setAlpha(alfa).setVisible(true);
-            for (let i = 1; i < 4; i++) bordas[i].setVisible(false);
-          }
+          escuro.alfa = alfa;
+          // Com a tocha: só a imagem com o furo (do tamanho certo para cobrir a vista); sem: só o retângulo.
+          const lado = (raio * LADO_FURO) / RAIO_FURO;
+          const cobre = raio > 2 && cxL - lado / 2 <= vista.x - 4 && cxL + lado / 2 >= vista.right + 4 && cyL - lado / 2 <= vista.y - 4 && cyL + lado / 2 >= vista.bottom + 4;
+          fonteFuro.setVisible(cobre && alfa > 0.005).setPosition(cxL, cyL).setDisplaySize(lado, lado).setAlpha(alfa);
+          escuroRet.setPosition(vista.x - 4, vista.y - 4).setSize(vista.width + 8, vista.height + 8).setAlpha(alfa).setVisible(!cobre && alfa > 0.005);
           quente.setPosition(cxL, cyL).setDisplaySize(raio * 2.1, raio * 2.1).setAlpha(raio > 2 ? 0.55 : 0);
           // Poças: brilham dentro da luz.
           pocas.forEach((p, i) => {
@@ -359,10 +411,16 @@ export function criarMotorLateral(o: OpcoesLateral): Promise<MotorLateral> {
           // Silhueta dourada (escuro total).
           silhueta.setVisible(comSilhueta).setPosition(heroi.x, heroi.y).setScale(heroi.scaleX).setFrame(heroi.frame.name).setAlpha(comSilhueta ? 0.22 : 0);
           // Tochas tremulam.
-          for (const [i, t] of tochas.entries()) if (t.acesa && !o.reduzidas) t.chama.setScale(0.9 + 0.12 * Math.sin(tempo * 9 + i), 1.1 + 0.15 * Math.sin(tempo * 11 + i * 2));
+          for (const [i, t] of tochas.entries()) {
+            if (!t.acesa || o.reduzidas) continue;
+            const sx = 1 + 0.1 * Math.sin(tempo * 9 + i), sy = 1 + 0.16 * Math.sin(tempo * 11 + i * 2) + 0.06 * Math.sin(tempo * 23 + i);
+            t.chama.setDisplaySize(26 * sx, 50 * sy);
+            t.miolo.setDisplaySize(14 * sx, 26 * sy);
+            t.halo.setAlpha(0.5 + 0.08 * Math.sin(tempo * 7 + i));
+          }
           // Brilho dos símbolos (período ~3 s, fases diferentes).
           for (const l of lajes) {
-            const seg = brilhoSeguras > 0 && l.letra !== 'S';
+            const seg = brilhoSeguras > 0 && !l.quebrada && seguraFn(l.letra);
             const pulso = o.reduzidas ? 0.5 : 0.5 + 0.5 * Math.sin(tempo * (Math.PI * 2 / 3) + l.fase);
             l.brilho.setAlpha(seg ? 0.75 : l.disparada ? 0.05 : (l.letra === 'S' ? 0.2 : 0.14) + 0.12 * pulso);
           }
@@ -407,53 +465,69 @@ export function criarMotorLateral(o: OpcoesLateral): Promise<MotorLateral> {
           },
           silhueta(sim) { comSilhueta = sim; },
           definirTochas(ts) {
-            tochas.forEach((t) => { t.chama.destroy(); t.halo.destroy(); });
-            tochas = ts.map((t) => ({
-              t, acesa: false,
-              chama: cena.add.image(t.x, t.y, 'chama').setBlendMode(Phaser.BlendModes.ADD).setDepth(PROF.luzQuente).setVisible(false).setDisplaySize(34, 52),
-              halo: cena.add.image(t.x, t.y + 40, 'luz-quente').setBlendMode(Phaser.BlendModes.ADD).setDepth(PROF.luzQuente).setVisible(false).setDisplaySize(380, 380).setAlpha(0.6),
-            }));
+            tochas.forEach((t) => { t.chama.destroy(); t.miolo.destroy(); t.halo.destroy(); t.marca?.destroy(); });
+            // (x, y) = a borda de cima da cuba: a chama nasce ali e sobe; o halo quente fica atrás.
+            tochas = ts.map((t) => {
+              const halo = cena.add.image(t.x, t.y - 18, 'luz-quente').setBlendMode(Phaser.BlendModes.ADD).setDepth(PROF.luzQuente).setVisible(false).setDisplaySize(340, 340).setAlpha(0.55);
+              const chama = cena.add.image(t.x, t.y + 4, 'chama-gota').setOrigin(0.5, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(PROF.luzQuente + 0.2).setVisible(false).setDisplaySize(26, 50);
+              const miolo = cena.add.image(t.x, t.y + 2, 'chama-gota').setOrigin(0.5, 1).setDepth(PROF.luzQuente + 0.3).setVisible(false).setDisplaySize(14, 26).setTint(0xfff2c0).setAlpha(0.9);
+              let marca: Phaser.GameObjects.Graphics | undefined;
+              if (o.editor) {
+                marca = cena.add.graphics().setDepth(PROF.texto - 1);
+                marca.lineStyle(2, 0x00ffd0, 1).strokeCircle(t.x, t.y, 10).lineBetween(t.x - 16, t.y, t.x + 16, t.y).lineBetween(t.x, t.y - 16, t.x, t.y + 16);
+              }
+              return { t, acesa: false, chama, miolo, halo, marca };
+            });
           },
           async acenderTochas(intervalo, aoAcender) {
             for (const [i, t] of tochas.entries()) {
               if (destruido) return;
               t.acesa = true;
               t.chama.setVisible(true);
+              t.miolo.setVisible(true);
               t.halo.setVisible(true).setAlpha(0);
-              cena.tweens.add({ targets: t.halo, alpha: 0.6, duration: 380 });
+              cena.tweens.add({ targets: t.halo, alpha: 0.55, duration: 380 });
               aoAcender?.(i);
-              await new Promise((r) => cena.time.delayedCall(intervalo, r));
+              if (intervalo > 0) await new Promise((r) => cena.time.delayedCall(intervalo, r));
             }
           },
           grade: montarGrade,
           casa() {
             if (!grade || z > 0 || roteiro) return null;
-            const g: GradeLajes = grade;
-            const col = Math.floor((x - g.x) / g.larguraLaje);
-            if (col < 0 || col >= g.tabuleiro[0].length) return null;
-            let lin = -1;
-            for (let l = 0; l < g.alturas.length; l++) if (y >= linhaY(g, l) && y < linhaY(g, l + 1)) lin = l;
-            if (lin < 0) lin = y < g.y ? 0 : g.alturas.length - 1;
-            return { col, lin };
+            return lajeEm(grade, x, y);
           },
           dispararLaje(col, lin) {
             const l = lajes.find((q) => q.col === col && q.lin === lin);
             if (!l || l.disparada) return;
             l.disparada = true;
-            l.simbolo.setTexture('simbolo-solem-rachado');
             l.simbolo.y += 2;
-            l.brilho.setTexture(cena.textures.exists('brilho-solem-rachado') ? 'brilho-solem-rachado' : 'simbolo-solem-rachado');
             l.brilho.y += 2;
+            if (l.letra === 'S') {
+              l.simbolo.setTexture('simbolo-solem-rachado');
+              l.brilho.setTexture(cena.textures.exists('brilho-solem-rachado') ? 'brilho-solem-rachado' : 'simbolo-solem-rachado');
+            } else rachar(l);
           },
-          brilharSeguras(ms) { brilhoSeguras = ms; },
+          brilharSeguras(ms, segura) { brilhoSeguras = ms; seguraFn = segura; },
+          mostrarNomes(ms, nomes) {
+            nomesObjs.forEach((t) => t.destroy());
+            nomesObjs = lajes.filter((l) => !l.quebrada).map((l) => {
+              const t = cena.add.text(l.simbolo.x, l.simbolo.y - 4, nomes[l.letra] ?? '', {
+                fontFamily: 'Cinzel, serif', fontSize: '22px', color: '#ffe9b0', stroke: '#000', strokeThickness: 5,
+              }).setOrigin(0.5, 1).setDepth(PROF.texto - 3).setAlpha(0);
+              cena.tweens.add({ targets: t, alpha: 1, y: t.y - 10, duration: 280 });
+              cena.tweens.add({ targets: t, alpha: 0, delay: Math.max(300, ms - 400), duration: 400, onComplete: () => { t.destroy(); nomesObjs = nomesObjs.filter((q) => q !== t); } });
+              return t;
+            });
+          },
           flechasAntigas(casas) {
             if (!grade) return;
             const g: GradeLajes = grade;
             const gr = cena.add.graphics().setDepth(PROF.simbolo + 1);
             gradeObjs.push(gr);
             for (const c of casas) {
-              const cx = g.x + c.col * g.larguraLaje + g.larguraLaje * (0.2 + 0.5 * ((c.col * 7 + c.lin * 3) % 5) / 5);
-              const cy = linhaY(g, c.lin) + g.alturas[c.lin] * 0.75;
+              const ct = centroLaje(g, c.col, c.lin);
+              const cx = ct.x - ct.largura / 2 + ct.largura * (0.2 + 0.5 * ((c.col * 7 + c.lin * 3) % 5) / 5);
+              const cy = ct.y + ct.altura * 0.25;
               const ang = ((c.col * 13 + c.lin * 5) % 7 - 3) * 0.12;
               const dx = Math.cos(ang) * 26, dy = Math.sin(ang) * 26;
               gr.lineStyle(3, 0x6b4a2a, 0.9).lineBetween(cx - dx, cy - dy, cx + dx * 0.4, cy + dy * 0.4);
@@ -463,7 +537,7 @@ export function criarMotorLateral(o: OpcoesLateral): Promise<MotorLateral> {
           },
           flecha() {
             return new Promise<void>((ok) => {
-              const deX = x + 520, deY = (grade ? (grade as GradeLajes).y : 520) - 90;
+              const deX = x + 520, deY = (grade ? (grade as GradeLajes).fileiras[0] : 520) - 90;
               const alvoX = x + 6, alvoY = y - o.alturaHeroi * 0.45;
               const f = cena.add.rectangle(deX, deY, 56, 4, 0xd8c8a4).setDepth(PROF.texto - 1);
               f.setRotation(Math.atan2(alvoY - deY, alvoX - deX));
@@ -482,7 +556,11 @@ export function criarMotorLateral(o: OpcoesLateral): Promise<MotorLateral> {
               luz: { x: Math.round(x), y: Math.round(y - o.alturaHeroi * 0.55 - z), raio: Math.round(escuro.raio), ambiente: Math.round(ambiente * 100) / 100, acesa: raioRel >= 0.5 },
               limites: [...lim] as [number, number],
               tochasAcesas: tochas.filter((t) => t.acesa).length,
+              tochas: tochas.map((t) => ({ x: t.t.x, y: t.t.y, acesa: t.acesa })),
               velocidade: fatorVel,
+              escuro: { alfa: Math.round(escuro.alfa * 1000) / 1000, furo: fonteFuro.visible },
+              lajes: lajes.map((l) => ({ col: l.col, lin: l.lin, letra: l.letra, x: Math.round(l.simbolo.x), y: Math.round(l.simbolo.y), disparada: l.disparada, quebrada: l.quebrada })),
+              nomesVisiveis: nomesObjs.length > 0,
             };
           },
           aoMover(fn) { aoMover = fn; },

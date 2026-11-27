@@ -11,7 +11,7 @@
     "assets": "node scripts/prepare-assets.mjs",
     "sfx": "node scripts/generate-sfx.mjs",
     "sprites": "node scripts/build-sprites.mjs && node scripts/build-battle-sprites.mjs && node scripts/build-items.mjs && node scripts/build-objetos.mjs && node scripts/build-dados.mjs && node scripts/build-icones.mjs",
-    "test:unit": "node --test scripts/manter-assets.test.mjs scripts/mapas.test.mjs",
+    "test:unit": "node --test scripts/manter-assets.test.mjs scripts/mapas.test.mjs scripts/lajes.test.mjs",
     "test:mobile": "playwright test"
   },
   "dependencies": {

@@ -14,9 +14,11 @@ export interface OpcoesControles {
   rotuloPausa: string;
   aoInteragir: () => void;
   aoPausar: () => void;
-  /** Fase lateral (Fase 6): Espaço pula (E interage) e aparece o botão PULAR no celular. */
+  /** Fase lateral (Fase 6): Espaço pula (E interage) e aparece o botão PULAR (Fase 6B: também no PC). */
   aoPular?: () => void;
   rotuloPular?: string;
+  /** Dica da tecla embaixo do botão PULAR no PC ("Espaço"). */
+  teclaPular?: string;
 }
 
 const TECLAS: Record<string, [number, number]> = {
@@ -47,15 +49,16 @@ export class Controles {
     this.botaoPausa = botaoMenu();
     o.raiz.append(this.joystick, this.botaoInteragir, this.botaoPausa);
     if (o.aoPular) {
-      this.botaoPular = h('button', { type: 'button', class: 'btn-pular', 'aria-label': o.rotuloPular ?? 'Pular', hidden: !o.toque },
-        h('span', { class: 'btn-pular-texto' }, o.rotuloPular ?? 'PULAR'));
+      // Fase 6B: o botão aparece sempre (no PC, clicável, com a tecla embaixo).
+      this.botaoPular = h('button', { type: 'button', class: 'btn-pular', 'aria-label': o.rotuloPular ?? 'Pular' },
+        h('span', { class: 'btn-pular-texto' }, o.rotuloPular ?? 'PULAR'),
+        o.toque || !o.teclaPular ? null : h('span', { class: 'btn-pular-tecla', 'aria-hidden': 'true' }, o.teclaPular));
       o.raiz.append(this.botaoPular);
       this.ouvir(this.botaoPular, 'pointerdown', (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
         if (this.habilitado) o.aoPular?.();
       });
-      this.ouvir(window, 'touchstart', () => { if (this.botaoPular) this.botaoPular.hidden = false; }, { passive: true, once: true });
     }
 
     this.ouvir(window, 'keydown', (e: KeyboardEvent) => this.teclaDesce(e));

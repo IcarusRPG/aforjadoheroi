@@ -1,83 +1,421 @@
 {
-  "_sobre": "Fase lateral do Ato I (Partes 2 a 5). Coordenadas do mundo em px dos painéis (altura 887). Cada painel começa onde o anterior termina (os painéis já vêm emendados com crossfade de 24 px, scripts/prepare-ato1.mjs). chao = [yMin, yMax] andáveis (os pés do herói). Tabuleiro: S Sólem, J Justar, A Ardor, X Expiria, E Eternus, M Mentis, I Irae; linha 0 = fundo, 3 = frente.",
+  "_sobre": "Fase lateral do Ato I (Partes 2 a 5). Coordenadas do mundo em px dos painéis (altura 887). Cada painel começa onde o anterior termina (os painéis já vêm emendados com crossfade de 24 px, scripts/prepare-ato1.mjs). chao = [yMin, yMax] andáveis (os pés do herói). Tabuleiro: S Sólem, J Justar, A Ardor, X Expiria, E Eternus, M Mentis, I Irae; linha 0 = fundo, 3 = frente. Fase 6B: a grade segue o piso pintado (scripts/calibrar-lajes.mjs): `fileiras` são os y das 5 juntas horizontais e `juntas` o x de cada junta vertical [no topo, na base] (as juntas convergem em perspectiva); cada laje lógica é uma laje pintada. Tochas: o ponto é a borda de cima da cuba de cada candelabro pintado.",
   "altura": 887,
   "alturaHeroi": 213,
   "velocidade": 320,
   "paineis": [
-    { "id": "tunel-1", "x": 0, "w": 1774, "chao": [585, 790] },
-    { "id": "tunel-2", "x": 1774, "w": 1750, "chao": [585, 790] },
-    { "id": "tunel-3", "x": 3524, "w": 1750, "chao": [575, 790] },
-    { "id": "corredor-1", "x": 5274, "w": 1750, "chao": [545, 795] },
-    { "id": "corredor-2", "x": 7024, "w": 1750, "chao": [545, 795] },
-    { "id": "tochas-1", "x": 8774, "w": 1750, "chao": [545, 795] },
-    { "id": "tochas-2", "x": 10524, "w": 1750, "chao": [545, 795] }
+    {
+      "id": "tunel-1",
+      "x": 0,
+      "w": 1774,
+      "chao": [
+        585,
+        790
+      ]
+    },
+    {
+      "id": "tunel-2",
+      "x": 1774,
+      "w": 1750,
+      "chao": [
+        585,
+        790
+      ]
+    },
+    {
+      "id": "tunel-3",
+      "x": 3524,
+      "w": 1750,
+      "chao": [
+        575,
+        790
+      ]
+    },
+    {
+      "id": "corredor-1",
+      "x": 5274,
+      "w": 1750,
+      "chao": [
+        512,
+        786
+      ]
+    },
+    {
+      "id": "corredor-2",
+      "x": 7024,
+      "w": 1750,
+      "chao": [
+        512,
+        786
+      ]
+    },
+    {
+      "id": "tochas-1",
+      "x": 8774,
+      "w": 1750,
+      "chao": [
+        545,
+        795
+      ]
+    },
+    {
+      "id": "tochas-2",
+      "x": 10524,
+      "w": 1750,
+      "chao": [
+        545,
+        795
+      ]
+    }
   ],
   "frente": [
-    { "id": "estalactites", "x": 760, "lado": "cima", "altura": 330 },
-    { "id": "pedras", "x": 1420, "lado": "baixo", "altura": 230 },
-    { "id": "raizes", "x": 2330, "lado": "cima", "altura": 360 },
-    { "id": "teias", "x": 2980, "lado": "cima", "altura": 300 },
-    { "id": "estalagmite", "x": 3380, "lado": "baixo", "altura": 300 },
-    { "id": "musgo", "x": 3960, "lado": "cima", "altura": 330 },
-    { "id": "borda", "x": 4560, "lado": "baixo", "altura": 240 },
-    { "id": "coluna", "x": 7040, "lado": "baixo", "altura": 330 },
-    { "id": "pilar", "x": 8760, "lado": "baixo", "altura": 360 },
-    { "id": "pedras", "x": 9900, "lado": "baixo", "altura": 220 },
-    { "id": "coluna", "x": 11420, "lado": "baixo", "altura": 320 }
+    {
+      "id": "estalactites",
+      "x": 760,
+      "lado": "cima",
+      "altura": 330
+    },
+    {
+      "id": "pedras",
+      "x": 1420,
+      "lado": "baixo",
+      "altura": 230
+    },
+    {
+      "id": "raizes",
+      "x": 2330,
+      "lado": "cima",
+      "altura": 360
+    },
+    {
+      "id": "teias",
+      "x": 2980,
+      "lado": "cima",
+      "altura": 300
+    },
+    {
+      "id": "estalagmite",
+      "x": 3380,
+      "lado": "baixo",
+      "altura": 300
+    },
+    {
+      "id": "musgo",
+      "x": 3960,
+      "lado": "cima",
+      "altura": 330
+    },
+    {
+      "id": "borda",
+      "x": 4560,
+      "lado": "baixo",
+      "altura": 240
+    },
+    {
+      "id": "coluna",
+      "x": 7040,
+      "lado": "baixo",
+      "altura": 330
+    },
+    {
+      "id": "pilar",
+      "x": 8760,
+      "lado": "baixo",
+      "altura": 360
+    },
+    {
+      "id": "pedras",
+      "x": 9900,
+      "lado": "baixo",
+      "altura": 220
+    },
+    {
+      "id": "coluna",
+      "x": 11420,
+      "lado": "baixo",
+      "altura": 320
+    }
   ],
   "pocas": [
-    { "x": 1000, "y": 555, "r": 70 },
-    { "x": 2464, "y": 690, "r": 60 },
-    { "x": 2474, "y": 585, "r": 90 },
-    { "x": 3784, "y": 600, "r": 70 }
+    {
+      "x": 1000,
+      "y": 555,
+      "r": 70
+    },
+    {
+      "x": 2464,
+      "y": 690,
+      "r": 60
+    },
+    {
+      "x": 2474,
+      "y": 585,
+      "r": 90
+    },
+    {
+      "x": 3784,
+      "y": 600,
+      "r": 70
+    }
   ],
   "partes": {
     "2": {
-      "x0": 150, "x1": 5274, "inicio": { "x": 330, "y": 700 }, "fim": 5160,
-      "musica": "tunel", "ambiente": 0.08,
-      "tetoBaixo": [[2074, 2774]],
+      "x0": 150,
+      "x1": 5274,
+      "inicio": {
+        "x": 330,
+        "y": 700
+      },
+      "fim": 5160,
+      "musica": "tunel",
+      "ambiente": 0.08,
+      "tetoBaixo": [
+        [
+          2074,
+          2774
+        ]
+      ],
       "gatilhos": [
-        { "id": "inicio", "x": 0, "cena": "t-inicio" },
-        { "id": "poca", "x": 980, "cena": "t-poca" },
-        { "id": "teto", "x": 2074, "cena": "t-teto" },
-        { "id": "memoria", "x": 3000, "cena": "t-memoria" },
-        { "id": "laje", "x": 4500, "cena": "t-laje" }
+        {
+          "id": "inicio",
+          "x": 0,
+          "cena": "t-inicio"
+        },
+        {
+          "id": "poca",
+          "x": 980,
+          "cena": "t-poca"
+        },
+        {
+          "id": "teto",
+          "x": 2074,
+          "cena": "t-teto"
+        },
+        {
+          "id": "memoria",
+          "x": 3000,
+          "cena": "t-memoria"
+        },
+        {
+          "id": "laje",
+          "x": 4500,
+          "cena": "t-laje"
+        }
       ]
     },
     "3": {
-      "x0": 5274, "x1": 7024, "inicio": { "x": 5345, "y": 680 }, "fim": 6970,
-      "musica": "tunel", "ambiente": 0.08,
-      "gatilhos": [{ "id": "inscricao", "x": 0, "cena": "s-inscricao" }],
+      "x0": 5150,
+      "x1": 7024,
+      "inicio": {
+        "x": 5200,
+        "y": 700
+      },
+      "musica": "tunel",
+      "ambiente": 0.08,
+      "gatilhos": [
+        {
+          "id": "inscricao",
+          "x": 0,
+          "cena": "s-inscricao"
+        }
+      ],
       "grade": {
-        "x": 5450, "larguraLaje": 125, "y": 540, "alturas": [56, 62, 68, 74],
+        "fileiras": [
+          504,
+          551,
+          609,
+          695,
+          790
+        ],
+        "juntas": [
+          [
+            5433,
+            5276
+          ],
+          [
+            5549,
+            5431
+          ],
+          [
+            5683,
+            5584
+          ],
+          [
+            5813,
+            5756
+          ],
+          [
+            5947,
+            5922
+          ],
+          [
+            6074,
+            6103
+          ],
+          [
+            6208,
+            6284
+          ],
+          [
+            6348,
+            6477
+          ],
+          [
+            6489,
+            6678
+          ],
+          [
+            6636,
+            6873
+          ]
+        ],
         "tabuleiro": [
-          "SASMISSSEJXS",
-          "SEJSSSMAISEM",
-          "SSXAJSISSMSJ",
-          "SMSSEAXSJISE"
+          "MSSIJSASS",
+          "SXEMASSXE",
+          "JASSXSJAS",
+          "SSISEMISS"
         ]
       }
     },
     "4": {
-      "x0": 7024, "x1": 8774, "inicio": { "x": 7110, "y": 680 }, "fim": 8640,
-      "musica": "tunel", "ambiente": 0.08,
-      "gatilhos": [{ "id": "chegada", "x": 0, "cena": "c-chegada" }],
-      "audicao": { "x": 7400, "cd": 14 },
+      "x0": 6900,
+      "x1": 8950,
+      "inicio": {
+        "x": 6960,
+        "y": 680
+      },
+      "musica": "tunel",
+      "ambiente": 0.08,
+      "gatilhos": [
+        {
+          "id": "chegada",
+          "x": 0,
+          "cena": "c-chegada"
+        }
+      ],
+      "audicao": {
+        "x": 6900,
+        "cd": 14
+      },
       "grade": {
-        "x": 7560, "larguraLaje": 125, "y": 540, "alturas": [56, 62, 68, 74],
-        "tabuleiro": ["SSSSSS", "SSSSSS", "SSSSSS", "SSSSSS"]
+        "fileiras": [
+          503,
+          549,
+          608,
+          693,
+          788
+        ],
+        "juntas": [
+          [
+            7139,
+            7070
+          ],
+          [
+            7282,
+            7238
+          ],
+          [
+            7432,
+            7424
+          ],
+          [
+            7570,
+            7608
+          ],
+          [
+            7714,
+            7792
+          ],
+          [
+            7855,
+            7983
+          ],
+          [
+            8003,
+            8174
+          ],
+          [
+            8152,
+            8356
+          ],
+          [
+            8302,
+            8547
+          ],
+          [
+            8452,
+            8738
+          ]
+        ],
+        "tabuleiro": [
+          "JAXEMIJSS",
+          "SSSSAXESM",
+          "EMISJSSSA",
+          "AXJSSSMIX"
+        ],
+        "quebradas": [
+          [
+            2,
+            1
+          ],
+          [
+            6,
+            2
+          ]
+        ],
+        "_sobre": "O corredor de Sólem (o inverso do primeiro): o caminho certo é o de Sólem; as lajes dos outros deuses disparam a flecha. Duas lajes de Sólem do caminho estão quebradas (col, lin): é preciso pular. A última junta (x 8452/8738) foi estimada pelo espaçamento das outras: o fim do painel é escuro e a calibração não a enxerga."
       }
     },
     "5": {
-      "x0": 8774, "x1": 12274, "inicio": { "x": 9020, "y": 680 },
-      "musica": "tunel", "ambiente": 0.08,
-      "parede": 8880, "avisoVoltar": 8950,
+      "x0": 8774,
+      "x1": 12274,
+      "inicio": {
+        "x": 9020,
+        "y": 680
+      },
+      "musica": "tunel",
+      "ambiente": 0.08,
+      "parede": 8880,
+      "avisoVoltar": 8950,
       "acenderEm": 9420,
       "tochas": [
-        { "x": 8854, "y": 268 }, { "x": 9434, "y": 268 }, { "x": 9984, "y": 268 }, { "x": 10506, "y": 268 },
-        { "x": 10599, "y": 268 }, { "x": 11184, "y": 268 }, { "x": 11704, "y": 268 }, { "x": 12189, "y": 268 }
+        {
+          "x": 8858,
+          "y": 226
+        },
+        {
+          "x": 9442,
+          "y": 226
+        },
+        {
+          "x": 9996,
+          "y": 226
+        },
+        {
+          "x": 10501,
+          "y": 226
+        },
+        {
+          "x": 10608,
+          "y": 226
+        },
+        {
+          "x": 11192,
+          "y": 226
+        },
+        {
+          "x": 11705,
+          "y": 226
+        },
+        {
+          "x": 12185,
+          "y": 226
+        }
       ],
-      "porta": { "x": 11944, "raio": 260 }
+      "porta": {
+        "x": 11944,
+        "raio": 260
+      }
     }
   }
 }

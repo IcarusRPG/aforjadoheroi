@@ -11,9 +11,11 @@ import { bonusPericia, pvAntesDaForjaDe, type IdPericia } from '../core/pericias
 import { nivelRelacao, relacao } from '../core/progresso';
 import { irPara, type Tela } from '../core/telas';
 import { ehToque, textos } from '../core/textos';
+import { dica } from '../core/tutorial';
 import { esperar, h } from '../core/ui';
-import { cartaoParte } from '../narrativa/cartoes';
-import { criarPalco, type Palco } from '../narrativa/palco';
+import { editorPedido } from '../exploracao/editor';
+import { centroLaje, colunaEm, depoisDaGrade, ehQuebrada, fileiraDoY, juntaX, linhas } from '../exploracao/grade';
+import { criarPalco, precisaEspelhar, type Palco } from '../narrativa/palco';
 import { mostrarRolagem } from '../narrativa/rolagem';
 import { estadoMemoria } from '../narrativa/memoria';
 import type { GradeLajes, MotorLateral, Tocha } from '../exploracao/lateral';
@@ -23,7 +25,20 @@ import { abrirMenuPausa } from './pausa';
 /**
  * Fase lateral do Ato I (Partes 2 a 5): o túnel, os símbolos, o corredor de Sólem e a escuridão.
  * O motor (exploracao/lateral.ts) desenha e move; esta tela cuida das regras: gatilhos de fala, testes,
- * flechas, a regra do LEVANTE, o save a cada painel e a passagem de uma parte para a outra.
+ * flechas, a visão, a regra do LEVANTE, o save a cada painel e a passagem de uma parte para a outra.
+ *
+ * Fase 6B:
+ * - Primeiro tabuleiro (Parte 3, a tolerância): o caminho seguro evita Sólem e começa já na primeira
+ *   coluna; as lajes de Sólem disparam a flecha.
+ * - Segundo tabuleiro (Parte 4, o corredor de Sólem): o inverso. O caminho certo é o de Sólem; as lajes
+ *   dos outros deuses disparam a flecha; duas lajes de Sólem estão quebradas e é preciso pular
+ *   (Atletismo CD 12). A voz interior é a pista.
+ * - A visão ("Se você quer ser forte, continue.") vem na primeira flecha que acerta, em qualquer
+ *   tabuleiro; sem nenhuma flecha nos dois, ela vem no fim do segundo, como recompensa. O LEVANTE só
+ *   acontece a 0 PV de verdade.
+ * - Todo teste diz antes o que o herói tenta e, depois, o que mudou (e vai para o Diário). Teste
+ *   passivo que falha não mostra nada.
+ * - Sem cartão de "Parte N": a passagem de um trecho para o outro é só um fade curto.
  */
 
 interface DadosParte {
@@ -57,14 +72,18 @@ export function telaLateral(): Tela {
   const c0 = getEstado().campanha;
   const parte = typeof c0.parte === 'number' ? c0.parte : 2;
   const dp = D.partes[String(parte)];
-  const comecoDaParte = !c0.cena || c0.cena === 'inicio' || c0.local.tela !== 'lateral' || c0.local.x === undefined;
+  // Começo da parte: só quando o fim da anterior (ou o Continuar do game over) marcou cena "inicio".
+  // O save de cada painel grava cena null com a posição: retomar continua dali (Fase 6B; antes recomeçava).
+  const comecoDaParte = c0.cena === 'inicio' || c0.local.tela !== 'lateral' || c0.local.x === undefined;
 
   const jogoEl = h('div', { class: 'lateral-jogo' });
   const palcoEl = h('div', { class: 'lateral-palco' });
   const pv = h('p', { class: 'lateral-pv', 'aria-live': 'polite' });
   const busto = h('img', { class: 'lateral-busto', alt: '', hidden: true, draggable: 'false' });
   const nomeLaje = h('p', { class: 'lateral-nome-laje', hidden: true });
-  const el = h('div', { class: `tela-lateral parte-${parte}` }, jogoEl, pv, busto, nomeLaje, palcoEl);
+  /** A frase de um teste: antes do dado (o que o herói tenta) e depois (o que mudou). */
+  const aviso = h('p', { class: 'lateral-aviso', hidden: true, 'aria-live': 'polite' });
+  const el = h('div', { class: `tela-lateral parte-${parte} entrando` }, jogoEl, pv, busto, nomeLaje, aviso, palcoEl);
 
   let motor: MotorLateral | null = null;
   let palco: Palco | null = null;
@@ -129,12 +148,43 @@ export function telaLateral(): Tela {
 
   /* ------------------------------------------------------------ testes, dano e LEVANTE */
 
-  async function teste(pericia: IdPericia, cd: number, extra = 0) {
+  const NOME_PERICIA: Partial<Record<IdPericia, string>> = {
+    audicao: 'Audição', visao: 'Visão', vontade: 'Vontade', atletismo: 'Atletismo', reflexos: 'Reflexos', religiao: 'Religião',
+  };
+  let timerAviso = 0;
+  function avisar(texto: string, ms = 2800) {
+    window.clearTimeout(timerAviso);
+    aviso.textContent = texto;
+    aviso.hidden = false;
+    aviso.classList.remove('some');
+    if (ms > 0) timerAviso = window.setTimeout(() => { aviso.classList.add('some'); timerAviso = window.setTimeout(() => { aviso.hidden = true; }, 350); }, ms);
+  }
+  function registrar(texto: string) {
+    const c = getEstado().campanha;
+    atualizarCampanha({ registro: [...(c.registro ?? []), { ato: c.ato, texto }] });
+  }
+
+  /**
+   * Um teste de perícia: a frase de antes (o que o herói tenta), o dado (o selo mostra a perícia, a CD e
+   * o bônus) e a frase de depois (o que mudou), que também vai para o Diário. Sem `depois`, a frase
+   * de depois é a fala que a tela abre em seguida. Passivo: rola em silêncio e, na falha, não mostra nada.
+   */
+  async function teste(pericia: IdPericia, cd: number, extra = 0, f: { antes?: string; sucesso?: string; falha?: string; passivo?: boolean } = {}) {
     const b = bonusPericia(p, pericia, extra);
-    const titulo = pericia === 'audicao' ? 'Audição' : pericia === 'visao' ? 'Visão' : pericia === 'vontade' ? 'Vontade'
-      : pericia === 'atletismo' ? 'Atletismo' : pericia === 'reflexos' ? 'Reflexos' : pericia === 'religiao' ? 'Religião' : pericia;
+    const titulo = NOME_PERICIA[pericia] ?? pericia;
     const d20 = rolarD20();
+    const total = d20 + b.total;
+    const passou = d20 === 20 || (d20 !== 1 && total >= cd);
+    if (f.passivo && !passou) {
+      registrar(`${titulo} (CD ${cd}): ${f.falha ?? 'você não percebeu nada.'}`);
+      return { sucesso: false, d20 };
+    }
+    if (f.antes) avisar(f.antes, 0);
     const r = await mostrarRolagem(el, { titulo, d20, partes: b.partes, alvo: cd, esperarToque: false, giroMs: modoTeste() ? 200 : 700 });
+    const depois = r.sucesso ? f.sucesso : f.falha;
+    if (depois) avisar(depois);
+    else if (f.antes) aviso.hidden = true;
+    registrar(`${titulo} (CD ${cd}): ${depois ?? (r.sucesso ? 'sucesso' : 'falha')}`);
     return { ...r, d20 };
   }
 
@@ -144,6 +194,8 @@ export function telaLateral(): Tela {
     busto.onerror = () => { busto.onerror = null; busto.src = src(normal); };
     busto.src = src(com);
     busto.dataset.expressao = expressao;
+    // O busto do herói fica à direita, olhando para dentro da tela (retratos.json).
+    busto.classList.toggle('espelhado', precisaEspelhar(com, 'heroi'));
     busto.hidden = false;
     busto.classList.remove('some');
     window.setTimeout(() => busto.classList.add('some'), ms);
@@ -159,7 +211,11 @@ export function telaLateral(): Tela {
     await motor.flecha();
     let dano = rolarDano(4);
     const bonus = parte === 4 && temFlag('ouviu_mecanismo') ? 2 : 0;
-    const r = await teste('reflexos', 12, bonus);
+    const r = await teste('reflexos', 12, bonus, {
+      antes: 'Uma flecha sai da fenda da parede! Você tenta se esquivar.',
+      sucesso: 'Você gira o corpo a tempo: a flecha só raspa (dano pela metade).',
+      falha: 'Você não consegue desviar: a flecha acerta em cheio.',
+    });
     if (r.sucesso) dano = Math.max(1, Math.floor(dano / 2));
     const novo = pvAtual() - dano;
     atualizarCampanha({ pvAtual: Math.max(0, novo) });
@@ -170,6 +226,15 @@ export function telaLateral(): Tela {
     somar('flechas');
     mostrarPv();
     return dano;
+  }
+
+  /** Depois de uma flecha: a visão (só na primeira que acerta, em qualquer tabuleiro) e a regra do LEVANTE. */
+  async function depoisDaFlecha(): Promise<boolean> {
+    if (!temFlag('visao_vista')) {
+      await falar('s-visao');
+      marcarFlag('visao_vista');
+    }
+    return verificarQueda();
   }
 
   /** Regra do LEVANTE (Partes 2 a 5): a primeira queda levanta com 1 PV; a segunda é game over. */
@@ -203,6 +268,7 @@ export function telaLateral(): Tela {
   let parado = 0;
   let ultimoX = 0;
   let emAcao = false;
+  let dicaPulo = false;
 
   async function aoMover(x: number, y: number) {
     if (!motor || ocupado || emAcao || saiu) return;
@@ -224,6 +290,8 @@ export function telaLateral(): Tela {
         return;
       }
     }
+    // Primeiro trecho lateral, já com o controle (sem fala aberta): a dica do pulo (opção de dicas do tutorial).
+    if (pronto && !dicaPulo) { dicaPulo = true; void dica('pular'); }
     // Teto baixo: metade da velocidade.
     const baixo = (dp.tetoBaixo ?? []).some(([a, b]) => x >= a && x <= b);
     motor.velocidade(baixo ? 0.5 : 1);
@@ -242,21 +310,37 @@ export function telaLateral(): Tela {
     proximaParteDoAto();
   }
 
-  /* ---------- Parte 3: os símbolos ---------- */
-  const tab = dp.grade?.tabuleiro;
+  /* ---------- Parte 3: os símbolos (a tolerância) ---------- */
+  const g = dp.grade;
+  const tab = g?.tabuleiro;
   const letra = (col: number, lin: number) => tab?.[lin]?.[col] ?? '';
-
-  async function regrasSimbolos(x: number) {
-    if (!motor || !dp.grade) return;
-    const casa = motor.casa();
-    const chave = casa ? `${casa.col},${casa.lin}` : null;
-    // Parado ao lado de uma laje: o nome dela (e os testes de pista na primeira vez).
+  /** A laje à frente do herói: a da coluna seguinte, na fileira dele (antes da grade, a da primeira coluna). */
+  function lajeAFrente(x: number, y: number): { col: number; lin: number } | null {
+    if (!g) return null;
+    const lin = Math.max(0, Math.min(linhas(g) - 1, fileiraDoY(g, y)));
+    const col = colunaEm(g, x, y);
+    // Antes da grade, só bem perto da primeira coluna (não no ponto de partida).
+    if (col < 0 && x < juntaX(g, 0, y) - 120) return null;
+    const alvo = col < 0 ? 0 : col + 1;
+    return alvo < g.juntas.length - 1 ? { col: alvo, lin } : null;
+  }
+  function contaParado(x: number) {
     const moveu = Math.abs(x - ultimoX) > 0.5;
     ultimoX = x;
     parado = moveu ? 0 : parado + 1;
-    const frente = casa ? { col: casa.col + 1, lin: casa.lin } : (x < dp.grade.x ? { col: 0, lin: linhaDoY(motor.posicao().y) } : null);
-    if (parado === 20 && frente && letra(frente.col, frente.lin)) { emAcao = true; await pistas(frente); emAcao = false; }
     if (moveu && !nomeLaje.hidden) nomeLaje.hidden = true;
+    return moveu;
+  }
+
+  async function regrasSimbolos(x: number) {
+    if (!motor || !g) return;
+    const { y } = motor.posicao();
+    const casa = motor.casa();
+    const chave = casa ? `${casa.col},${casa.lin}` : null;
+    contaParado(x);
+    // Parado ao lado de uma laje: o nome dela (e os testes de pista na primeira vez).
+    const frente = lajeAFrente(x, y);
+    if (parado === 20 && frente && letra(frente.col, frente.lin)) { emAcao = true; await pistas(frente); emAcao = false; }
     if (chave && chave !== ultimaCasa && casa) {
       ultimaCasa = chave;
       if (letra(casa.col, casa.lin) === 'S' && !feito(`p3:laje:${chave}`)) {
@@ -267,23 +351,15 @@ export function telaLateral(): Tela {
         return;
       }
     } else if (!chave) ultimaCasa = null;
-    const fimGrade = dp.grade.x + dp.grade.larguraLaje * dp.grade.tabuleiro[0].length;
-    if (x >= Math.max(dp.fim ?? 0, fimGrade + 20)) {
+    if (depoisDaGrade(g, x, y, 20)) {
       emAcao = true;
-      // A tolerância: nenhuma flecha além da primeira.
-      if (contador('flechas_p3') <= 1) marcarFlag('caminho_tolerancia');
+      // A tolerância: atravessou sem nenhuma flecha.
+      if (contador('flechas_p3') === 0) marcarFlag('caminho_tolerancia');
       await falar('s-fim');
       emAcao = false;
       return terminar();
     }
   }
-
-  const linhaDoY = (y: number) => {
-    const g = dp.grade!;
-    let acc = g.y;
-    for (let l = 0; l < g.alturas.length; l++) { acc += g.alturas[l]; if (y < acc) return l; }
-    return g.alturas.length - 1;
-  };
 
   async function armadilhaSimbolos(casa: { col: number; lin: number }) {
     if (!motor) return;
@@ -292,17 +368,11 @@ export function telaLateral(): Tela {
     await flecha();
     somar('flechas_p3');
     const n = contador('flechas_p3');
-    if (n === 1 && !temFlag('levantou')) {
-      // A primeira flecha (roteiro): o herói cai e se vê de pé, envolto em luz. Conta como o primeiro LEVANTE.
-      await falar('s-levante');
-      marcarFlag('levantou');
-      atualizarCampanha({ pvAtual: Math.max(1, pvAtual()) });
-      mostrarPv();
-    } else if (await verificarQueda()) return;
+    if (await depoisDaFlecha()) return;
     if (n === 2) await falar('s-flecha2');
     if (n === 3) {
       await falar('s-flecha3');
-      if (getEstado().config.tutorial) motor.brilharSeguras(3000);
+      if (getEstado().config.tutorial) motor.brilharSeguras(3000, (l) => l !== 'S');
     }
     motor.bloquear(false);
   }
@@ -315,83 +385,183 @@ export function telaLateral(): Tela {
       marcar('p3:passivo');
       const aud = bonusPericia(p, 'audicao').total, vis = bonusPericia(p, 'visao').total;
       const pericia: IdPericia = aud > vis ? 'audicao' : 'visao';
-      const r = await teste(pericia, 12);
+      const r = await teste(pericia, 12, 0, {
+        passivo: true,
+        sucesso: pericia === 'visao' ? 'Você percebe que a laje de Sólem está solta.' : 'Você ouve um estalo metálico sob a laje de Sólem.',
+        falha: 'você não percebeu nada.',
+      });
       if (r.sucesso) await falar(pericia === 'visao' ? 's-solta-visao' : 's-solta-audicao');
     }
     // O nome da laje: se o herói abriu a página do deus no Caderno, ou passou em Religião CD 10.
     const deus = ID_DEUS[l];
     let conhece = paginaLida(deus) || temFlag('nomes_lajes');
+    let destaque = false;
     if (!conhece && !feito('p3:religiao')) {
       marcar('p3:religiao');
-      const r = await teste('religiao', 10);
-      if (r.sucesso) { marcarFlag('nomes_lajes'); conhece = true; }
+      await falar('s-religiao');
+      const r = await teste('religiao', 10, 0, {
+        sucesso: 'Você reconhece os sete deuses: o nome de cada um aparece quando você para ao lado da laje.',
+        falha: 'Os nomes fogem da sua memória.',
+      });
+      if (r.sucesso) { marcarFlag('nomes_lajes'); conhece = true; destaque = true; await falar('s-religiao-ok'); }
+      else await falar('s-religiao-falha');
     }
     if (conhece) {
       nomeLaje.textContent = `Laje de ${NOMES_DEUS[l]}`;
       nomeLaje.hidden = false;
+      // O que o herói ganhou: os nomes aparecem sobre as lajes por um instante e o rótulo pisca.
+      if (destaque) {
+        motor?.mostrarNomes(2600, NOMES_DEUS);
+        nomeLaje.classList.remove('destaque');
+        void nomeLaje.offsetWidth;
+        nomeLaje.classList.add('destaque');
+      }
     }
   }
 
-  /* ---------- Parte 4: o corredor de Sólem ---------- */
+  /* ---------- Parte 4: o corredor de Sólem (o inverso) ---------- */
   async function regrasCorredor(x: number) {
-    if (!motor || !dp.grade) return;
-    const g = dp.grade;
-    const fimGrade = g.x + g.larguraLaje * g.tabuleiro[0].length;
+    if (!motor || !g) return;
+    const { y } = motor.posicao();
     // Audição opcional, pelo botão de interação, antes de atravessar.
     const pertoAudicao = !!dp.audicao && Math.abs(x - dp.audicao.x) < 160 && !feito('p4:audicao');
     controles.c?.mostrarInteracao(pertoAudicao);
+    contaParado(x);
     const casa = motor.casa();
-    const chave = casa ? `${casa.col},${casa.lin}` : null;
-    if (chave && chave !== ultimaCasa && casa) {
-      // Andando: cada laje é um pouso.
-      ultimaCasa = chave;
+    // Parado diante da primeira laje (uma vez só): a voz interior.
+    if (parado >= 20 && !casa && x < juntaX(g, 0, y) && x > juntaX(g, 0, y) - 120 && !feito('p4:primeira')) {
+      marcar('p4:primeira');
+      emAcao = true; await falar('c-primeira'); emAcao = false;
+      return;
+    }
+    // Teste passivo de Visão CD 12, parado diante de uma laje errada (de outro deus), uma vez.
+    const frente = lajeAFrente(x, y);
+    if (parado >= 30 && frente && letra(frente.col, frente.lin) && letra(frente.col, frente.lin) !== 'S' && !feito('p4:visao')) {
+      marcar('p4:visao');
       emAcao = true;
-      await flechaCorredor();
+      const r = await teste('visao', 12, 0, { passivo: true, sucesso: 'Você percebe que a laje de outro deus está solta.' });
+      if (r.sucesso) await falar('c-solta');
       emAcao = false;
       return;
+    }
+    const chave = casa ? `${casa.col},${casa.lin}` : null;
+    if (chave && chave !== ultimaCasa && casa) {
+      const anterior = ultimaCasa;
+      ultimaCasa = chave;
+      // Laje quebrada: o herói tropeça na beira do buraco (sem pular) e volta para a laje de trás.
+      if (ehQuebrada(g, casa.col, casa.lin)) {
+        emAcao = true;
+        await quedaNoBuraco(casa, anterior);
+        emAcao = false;
+        return;
+      }
+      // Laje de outro deus: a armadilha (uma vez por laje).
+      if (letra(casa.col, casa.lin) !== 'S' && !feito(`p4:laje:${chave}`)) {
+        marcar(`p4:laje:${chave}`);
+        emAcao = true;
+        await armadilhaCorredor(casa);
+        emAcao = false;
+        return;
+      }
     } else if (!chave) ultimaCasa = null;
-    // Do outro lado das lajes (andando ou no pouso do pulo).
-    if (x >= fimGrade + 40) {
+    // Do outro lado das lajes.
+    if (depoisDaGrade(g, x, y, 30)) {
       emAcao = true;
+      motor.bloquear(true);
+      if (contador('flechas_p4') === 0) marcarFlag('seguiu_a_luz');
       await falar('c-fim');
+      // Nenhuma flecha nos dois tabuleiros: a visão vem agora, sem queda, como recompensa.
+      if (!temFlag('visao_vista') && contador('flechas_p3') === 0 && contador('flechas_p4') === 0) {
+        await falar('c-visao');
+        marcarFlag('visao_vista');
+      }
       emAcao = false;
       return terminar();
     }
   }
 
-  async function flechaCorredor() {
+  async function armadilhaCorredor(casa: { col: number; lin: number }) {
     if (!motor) return;
     motor.bloquear(true);
+    motor.dispararLaje(casa.col, casa.lin);
     const i = contador('flechas_p4');
     await flecha(ACERTOS[i % ACERTOS.length]);
     somar('flechas_p4');
+    const n = contador('flechas_p4');
+    if (await depoisDaFlecha()) return;
+    if (n === 1) await falar('c-flecha1');
+    if (n === 2) {
+      await falar('c-flecha2');
+      // Com as dicas ligadas, as lajes de Sólem do caminho brilham por 3 s.
+      if (getEstado().config.tutorial) motor.brilharSeguras(3000, (l) => l === 'S');
+    }
+    motor.bloquear(false);
+  }
+
+  /** Centro de uma laje, com os pés do herói na fileira dela. */
+  const pe = (col: number, lin: number) => { const c = centroLaje(g!, col, lin); return { x: c.x, y: c.y }; };
+
+  async function quedaNoBuraco(buraco: { col: number; lin: number }, anterior: string | null) {
+    if (!motor) return;
+    motor.bloquear(true);
+    const [ac, al] = anterior ? anterior.split(',').map(Number) : [buraco.col - 1, buraco.lin];
+    const volta = ac >= 0 ? pe(ac, al) : { x: juntaX(g!, 0, motor.posicao().y) - 40, y: motor.posicao().y };
+    await perderNaBeira(volta, 'Você tropeça na beira do buraco. É preciso pular.');
+  }
+
+  /** Cai na beira do buraco: 1d4 PV e volta para a laje de trás. */
+  async function perderNaBeira(volta: { x: number; y: number }, texto: string) {
+    if (!motor) return;
+    const dano = rolarDano(4);
+    atualizarCampanha({ pvAtual: Math.max(0, pvAtual() - dano) });
+    audio.sfx('fall', { ganho: 0.6 });
+    audio.sfx('coracao-menos');
+    if (tremoresLigados()) motor.tremer();
+    bustoRapido('dor');
+    motor.textoSobre(`${texto}  −${dano} PV`, '#ffb3a1');
+    mostrarPv();
+    await esperar(500);
+    motor.teleportar(volta.x, volta.y);
+    const casa = motor.casa();
+    ultimaCasa = casa ? `${casa.col},${casa.lin}` : null;
     if (await verificarQueda()) return;
     motor.bloquear(false);
   }
 
-  /** Pulo no corredor: Atletismo CD 12 (sucesso: 3 lajes; falha: 2; 20 natural: atravessa tudo). */
-  async function puloCorredor(): Promise<boolean> {
-    if (!motor || !dp.grade || emAcao || ocupado) return false;
-    const g = dp.grade;
-    const { x } = motor.posicao();
-    const n = g.tabuleiro[0].length;
-    const fimGrade = g.x + g.larguraLaje * n;
-    if (x < g.x - 300 || x >= fimGrade) return false;
+  /** O buraco à frente do herói (mesma fileira, coluna seguinte), se houver. */
+  function buracoAFrente(): { col: number; lin: number } | null {
+    if (!motor || !g) return null;
+    const { x, y } = motor.posicao();
+    const f = lajeAFrente(x, y);
+    return f && ehQuebrada(g, f.col, f.lin) ? f : null;
+  }
+
+  /** Pulo sobre a laje quebrada: Atletismo CD 12 (sucesso: a laje de Sólem seguinte; falha: a beira). */
+  async function puloBuraco(buraco: { col: number; lin: number }): Promise<void> {
+    if (!motor || !g) return;
     emAcao = true;
     motor.bloquear(true);
-    const r = await teste('atletismo', 12);
-    const atual = x < g.x ? -1 : Math.floor((x - g.x) / g.larguraLaje);
-    const lajes = r.d20 === 20 ? n + 1 : r.sucesso ? 3 : 2;
-    const destino = atual + lajes;
-    const alvoX = destino >= n ? fimGrade + 70 : g.x + destino * g.larguraLaje + g.larguraLaje / 2;
+    const r = await teste('atletismo', 12, 0, {
+      antes: 'Você toma impulso para pular o buraco.',
+      sucesso: 'Você cai do outro lado, na laje de Sólem.',
+      falha: 'O pé escorrega na beira do buraco.',
+    });
+    const { x } = motor.posicao();
+    const destino = pe(buraco.col + 1, buraco.lin);
+    // Os pés na fileira do buraco, para o pulo cair na laje certa.
+    motor.teleportar(x, destino.y);
     audio.sfx('kick', { ganho: 0.5 });
-    await motor.pularAte(alvoX, 520 + lajes * 40);
-    const casa = motor.casa();
-    ultimaCasa = casa ? `${casa.col},${casa.lin}` : null;
-    if (casa) await flechaCorredor();
-    else motor.bloquear(false);
+    if (r.sucesso) {
+      await motor.pularAte(destino.x, 620);
+      ultimaCasa = `${buraco.col + 1},${buraco.lin}`;
+      if (r.d20 === 20) { motor.textoSobre('Você nem sentiu o vão.', '#ffe2a8'); avisar('Você nem sentiu o vão.'); }
+      motor.bloquear(false);
+    } else {
+      const beira = centroLaje(g, buraco.col, buraco.lin);
+      await motor.pularAte(beira.x - beira.largura * 0.25, 420);
+      await perderNaBeira(pe(buraco.col - 1, buraco.lin), 'Você cai na beira do buraco.');
+    }
     emAcao = false;
-    return true;
   }
 
   /* ---------- Parte 5: a escuridão e a porta ---------- */
@@ -406,7 +576,11 @@ export function telaLateral(): Tela {
       marcar('p5:vontade');
       emAcao = true;
       motor.bloquear(true);
-      const r = await teste('vontade', 12);
+      const r = await teste('vontade', 12, 0, {
+        antes: 'O escuro aperta o peito. Você tenta não entrar em pânico.',
+        sucesso: 'Você domina o medo e segue em frente.',
+        falha: 'O medo trava as pernas por um momento.',
+      });
       if (r.sucesso) { marcarFlag('coragem_escuro'); await falar('e-vontade-ok'); }
       else await falar('e-vontade-falha');
       if (nivelRelacao(relacao('nyme')) === 'leal') await falar('e-nyme');
@@ -424,7 +598,9 @@ export function telaLateral(): Tela {
   async function acenderTochas() {
     if (!motor) return;
     audio.sfx('tochas-acendendo');
-    void motor.luz({ ambiente: 0.6, ms: 4200 });
+    // A luz das tochas toma o lugar da tocha do herói (apagada): o furo dela fecha (raio 0) e a camada
+    // escura fica uniforme, cada vez mais clara. A silhueta do escuro total sai.
+    void motor.luz({ raio: 0, ambiente: 0.6, ms: 4200 });
     motor.silhueta(false);
     await motor.acenderTochas(animacoesReduzidas() ? 250 : 520);
     marcarFlag('tochas_acenderam');
@@ -453,7 +629,11 @@ export function telaLateral(): Tela {
       marcar('p4:audicao');
       emAcao = true;
       controles.c?.mostrarInteracao(false);
-      const r = await teste('audicao', dp.audicao.cd);
+      const r = await teste('audicao', dp.audicao.cd, 0, {
+        antes: 'Você encosta o ouvido na parede e presta atenção ao mecanismo.',
+        sucesso: 'Você entende o ritmo das flechas: +2 em Reflexos neste corredor.',
+        falha: 'Você não consegue ouvir o mecanismo.',
+      });
       if (r.sucesso) { marcarFlag('ouviu_mecanismo'); await falar('c-audicao'); } else await falar('c-audicao-falha');
       emAcao = false;
       return;
@@ -462,9 +642,12 @@ export function telaLateral(): Tela {
   }
 
   function pular() {
-    if (!motor || ocupado) return;
-    if (parte === 4) { void puloCorredor().then((ok) => { if (!ok && !emAcao) { motor?.pular() && audio.sfx('kick', { ganho: 0.35 }); } }); return; }
-    if (emAcao) return;
+    if (!motor || ocupado || emAcao) return;
+    // No corredor de Sólem, diante de uma laje quebrada: o pulo com Atletismo.
+    if (parte === 4) {
+      const b = buracoAFrente();
+      if (b && !motor.noAr()) { void puloBuraco(b); return; }
+    }
     if (motor.pular()) audio.sfx('kick', { ganho: 0.35 });
   }
 
@@ -481,6 +664,7 @@ export function telaLateral(): Tela {
     avancar: () => palco?.tocar(),
     teleportar: (x: number, y?: number) => motor?.teleportar(x, y ?? motor.posicao().y),
     pular: () => pular(),
+    andarAte: (x: number, y?: number) => motor?.teleportar(x, y ?? motor.posicao().y),
     interagir: () => void interagir(),
     forceDano: (v: number[]) => { danosForcados = [...v]; },
     forceRoll: (v: number[]) => forcarD20(v),
@@ -501,6 +685,8 @@ export function telaLateral(): Tela {
       busto: busto.hidden ? null : busto.dataset.expressao,
       interacao: controles.c ? !controles.c.botaoInteragir.hidden : false,
       botaoPular: controles.c?.botaoPular ? { visivel: !controles.c.botaoPular.hidden } : null,
+      aviso: aviso.hidden ? null : aviso.textContent,
+      registro: getEstado().campanha.registro ?? [],
     }),
   });
 
@@ -522,7 +708,7 @@ export function telaLateral(): Tela {
         const { Controles } = await importar(() => import('../exploracao/controles'));
         controles.c = new Controles({
           raiz: el, toque: ehToque(), rotuloInteragir: textos.cenas.continuar, rotuloPausa: textos.cenas.pausa,
-          aoInteragir: () => void interagir(), aoPausar: abrirPausa, aoPular: pular, rotuloPular: 'PULAR',
+          aoInteragir: () => void interagir(), aoPausar: abrirPausa, aoPular: pular, rotuloPular: 'PULAR', teclaPular: 'Espaço',
         });
         controles.c.habilitar(false);
         const pac = await importar(() => import('../exploracao/pacote'));
@@ -535,7 +721,7 @@ export function telaLateral(): Tela {
         const ini = !comecoDaParte && l.x !== undefined ? { x: l.x, y: l.y ?? dp.inicio.y } : dp.inicio;
         motor = await pac.criarMotorLateral({
           container: jogoEl, paineis: D.paineis, urls, altura: D.altura, alturaHeroi: D.alturaHeroi, velocidade: D.velocidade,
-          frente: D.frente, pocas: D.pocas, inicio: ini, limites: [dp.x0, dp.x1], reduzidas: animacoesReduzidas(),
+          frente: D.frente, pocas: D.pocas, inicio: ini, limites: [dp.x0, dp.x1], reduzidas: animacoesReduzidas(), editor: editorPedido(),
         });
         if (saiu) { motor.destruir(); return; }
         ultimoX = ini.x;
@@ -549,13 +735,17 @@ export function telaLateral(): Tela {
           const casas: { col: number; lin: number }[] = [];
           dp.grade.tabuleiro.forEach((linha, lin) => [...linha].forEach((ch, col) => { if (ch === 'S' && col > 0 && (col + lin) % 2 === 0) casas.push({ col, lin }); }));
           motor.flechasAntigas(casas);
-          for (const ch of getEstado().campanha.coletados) {
-            const m = ch.match(/^lateral:p3:laje:(\d+),(\d+)$/);
-            if (m) motor.dispararLaje(Number(m[1]), Number(m[2]));
-          }
+        }
+        if (parte === 4) motor.alcancePulo(0.35);
+        // Lajes que já dispararam (retomando o save): continuam rachadas.
+        for (const ch of getEstado().campanha.coletados) {
+          const m = ch.match(new RegExp(`^lateral:p${parte}:laje:(\\d+),(\\d+)$`));
+          if (m) motor.dispararLaje(Number(m[1]), Number(m[2]));
         }
         if (dp.tochas) motor.definirTochas(dp.tochas);
         if (dp.parede) motor.paredeEsquerda(dp.parede);
+        // Modo de calibração (?editor=1): tudo aceso, para conferir a grade e as tochas contra o painel.
+        if (editorPedido()) motor.luz({ raio: 0, ambiente: 1 });
         audio.tocarMusica(ASSETS.musica(dp.musica), 2000);
         const escuroTotal = parte === 5 && !temFlag('tochas_acenderam');
         if (parte <= 4 || escuroTotal) loopTocha = audio.loopAmbiente('tocha', 0.22, 800);
@@ -568,8 +758,10 @@ export function telaLateral(): Tela {
           motor.luz({ raio: 0.2, ambiente: 0.03 });
           motor.silhueta(true);
         }
+        // Sem cartão de "Parte N": só o fade curto da entrada (CSS .entrando).
+        requestAnimationFrame(() => el.classList.remove('entrando'));
         if (comecoDaParte) {
-          await cartaoParte(1, parte);
+          await esperar(modoTeste() ? 150 : 600);
           if (saiu) return;
           atualizarCampanha({ cena: null });
           salvarPosicao();

@@ -1,7 +1,7 @@
 import { verificarCaderno } from '../core/caderno';
 import { etapaDoCapitulo, garantirEtapa } from '../core/etapas';
 import { SFX_ATO1_PARTE1, SFX_CAPITULO, SFX_FASE4 } from '../core/assets';
-import { cartaoAto, cartaoParte } from '../narrativa/cartoes';
+import { cartaoAto } from '../narrativa/cartoes';
 import { audio } from '../core/audio';
 import { atualizarCampanha, getEstado, marcarFlag } from '../core/estado';
 import { terminarParte } from './fimCapitulo';
@@ -114,13 +114,11 @@ export function telaCapitulo(params?: unknown): Tela {
         const c = getEstado().campanha;
         if (prm.cena) return palco.entrar(prm.cena, 'falas');
         if ((!c.cena || c.cena === 'inicio') && c.ato >= 1) {
-          // Ato I: o cartão do ato (só na primeira parte) e o da parte, e a primeira cena.
+          // Ato I: o cartão do ato (só na primeira parte) e a primeira cena. Sem cartão de "Parte N" (Fase 6B).
           audio.pararMusica(1200);
           if (p && c.pvAtual === null) atualizarCampanha({ pvAtual: pvAntesDaForjaDe(p) });
           const parte = typeof c.parte === 'number' ? c.parte : 1;
           if (parte === 1) await cartaoAto(c.ato);
-          if (saiu) return;
-          await cartaoParte(c.ato, parte);
           if (saiu) return;
           return palco.entrar(cap.inicio, 'falas');
         }
