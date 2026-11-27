@@ -21,7 +21,7 @@ async function comprar(page: Page, compras: Record<string, number>) {
     for (let i = 0; i < vezes; i++) await page.getByRole('button', { name: `Aumentar ${atributo}` }).click();
 }
 
-test('criação completa: Azakar mulher, Sombra, Curandeiro, Paladina', async ({ page }, info) => {
+test('criação completa: Azakar mulher, Sombra, Curandeiro, Paladina', { tag: ['@layout', '@criacao'] }, async ({ page }, info) => {
   await irAteMenu(page);
   await novoJogo(page);
 
@@ -153,7 +153,7 @@ test('criação completa: Azakar mulher, Sombra, Curandeiro, Paladina', async ({
   });
 });
 
-test('Araké homem Mago: o +1 de Araké em INT entra no PM', async ({ page }, info) => {
+test('Araké homem Mago: o +1 de Araké em INT entra no PM', { tag: ['@layout', '@criacao'] }, async ({ page }, info) => {
   await irAteMenu(page);
   await novoJogo(page);
   await page.locator('.card-genero', { hasText: 'Homem' }).click();
@@ -191,7 +191,7 @@ test('Araké homem Mago: o +1 de Araké em INT entra no PM', async ({ page }, in
   await foto(page, info, 'mago-revisao');
 });
 
-test('save antigo sem classe: Continuar retoma no passo Classe', async ({ page }) => {
+test('save antigo sem classe: Continuar retoma no passo Classe', { tag: ['@criacao'] }, async ({ page }) => {
   await page.addInitScript(() => {
     if (sessionStorage.getItem('semeado')) return;
     sessionStorage.setItem('semeado', '1');
@@ -246,7 +246,7 @@ async function pularPrologoAteOSonho(page: Page, foto?: () => Promise<void>) {
   await expect(page.locator('.tela-sonho.pronto canvas')).toBeVisible({ timeout: 30_000 });
 }
 
-test('raças: Nyashi e Ayoran jogáveis; as outras quatro continuam indisponíveis', async ({ page }) => {
+test('raças: Nyashi e Ayoran jogáveis; as outras quatro continuam indisponíveis', { tag: ['@criacao'] }, async ({ page }) => {
   await irAteMenu(page);
   await novoJogo(page);
   await page.locator('.card-genero', { hasText: 'Homem' }).click();
@@ -257,7 +257,7 @@ test('raças: Nyashi e Ayoran jogáveis; as outras quatro continuam indisponíve
     .toEqual(['Dorun', 'Ogbari', "Ara'Maku", 'Kirai']);
 });
 
-test('criação: Nyashi mulher Ladina e, depois do prólogo, o sonho', async ({ page }, info) => {
+test('criação: Nyashi mulher Ladina e, depois do prólogo, o sonho', { tag: ['@criacao'] }, async ({ page }, info) => {
   await irAteMenu(page);
   await novoJogo(page);
   await page.locator('.card-genero', { hasText: 'Mulher' }).click();
@@ -316,7 +316,7 @@ test('criação: Nyashi mulher Ladina e, depois do prólogo, o sonho', async ({ 
   expect(estado.sonho).toEqual({ concluido: false, ouvidas: [] });
 });
 
-test('criação: Ayoran homem Arcanista recebe +1 PM (Sangue dos Primevos)', async ({ page }, info) => {
+test('criação: Ayoran homem Arcanista recebe +1 PM (Sangue dos Primevos)', { tag: ['@layout', '@criacao'] }, async ({ page }, info) => {
   await irAteMenu(page);
   await novoJogo(page);
   await page.locator('.card-genero', { hasText: 'Homem' }).click();

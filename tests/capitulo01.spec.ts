@@ -93,7 +93,7 @@ async function vencerNaBicuda(page: Page) {
 
 const ALTERNADO = (heroi: number, porco: number, n = 30) => Array.from({ length: n }, (_, i) => (i % 2 ? porco : heroi));
 
-test('quarto: Estudioso vê a pista do sonho; as escolhas "uma vez" somem e a cena volta às restantes', async ({ page }, info) => {
+test('quarto: Estudioso vê a pista do sonho; as escolhas "uma vez" somem e a cena volta às restantes', { tag: ['@layout', '@cap01'] }, async ({ page }, info) => {
   await semear(page, { origem: 'estudioso' });
   await irAteMenu(page, './?test=1');
   await page.getByRole('button', { name: 'Continuar' }).click();
@@ -135,7 +135,7 @@ test('quarto: Estudioso vê a pista do sonho; as escolhas "uma vez" somem e a ce
   await ateTexto(page, 'Um sonho antes da guerra');
 });
 
-test('quarto: Religioso faz a prece e ganha +1 no teste seguinte', async ({ page }) => {
+test('quarto: Religioso faz a prece e ganha +1 no teste seguinte', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, { origem: 'religioso' });
   await entrarNoCapitulo(page);
   await ateEscolhas(page);
@@ -157,7 +157,7 @@ test('quarto: Religioso faz a prece e ganha +1 no teste seguinte', async ({ page
   await expect.poll(async () => (await estado(page)).cena).toBe('c01-intimidou');
 });
 
-test('Mirtilo: intimidar com sucesso espanta o porco, toca a vitória e volta a Füllmun', async ({ page }, info) => {
+test('Mirtilo: intimidar com sucesso espanta o porco, toca a vitória e volta a Füllmun', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'falas' } });
   await entrarNoCapitulo(page, 'c01-grito');
   // Grito: cartão de ameaça
@@ -190,7 +190,7 @@ test('Mirtilo: intimidar com sucesso espanta o porco, toca a vitória e volta a 
   await expect.poll(async () => (await estado(page)).cena).toBe('c01-aylin');
 });
 
-test('Mirtilo: intimidar falha → batalha contra o enfurecido (sem Intimidar/Acalmar, sem fugir) e vitória', async ({ page }, info) => {
+test('Mirtilo: intimidar falha → batalha contra o enfurecido (sem Intimidar/Acalmar, sem fugir) e vitória', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas' } });
   await entrarNoCapitulo(page, 'c01-grito');
   await fdg(page, 'forceRoll', [2]);
@@ -225,7 +225,7 @@ test('Mirtilo: intimidar falha → batalha contra o enfurecido (sem Intimidar/Ac
   await expect.poll(async () => (await estado(page)).cena, { timeout: 15_000 }).toBe('c01-aylin');
 });
 
-test('Mirtilo: acalmar com sucesso e Gerulf se espanta', async ({ page }) => {
+test('Mirtilo: acalmar com sucesso e Gerulf se espanta', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas' } });
   await entrarNoCapitulo(page, 'c01-grito');
   await fdg(page, 'forceRoll', [10]);
@@ -240,7 +240,7 @@ test('Mirtilo: acalmar com sucesso e Gerulf se espanta', async ({ page }) => {
   await ateTexto(page, 'Você acalmou o Mirtilo? Nem eu consigo isso!');
 });
 
-test('Mirtilo: acalmar falha → batalha contra o enfurecido; a Investida pode derrubar o herói', async ({ page }, info) => {
+test('Mirtilo: acalmar falha → batalha contra o enfurecido; a Investida pode derrubar o herói', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas' } });
   await entrarNoCapitulo(page, 'c01-grito');
   await fdg(page, 'forceRoll', [1]);
@@ -272,7 +272,7 @@ test('Mirtilo: acalmar falha → batalha contra o enfurecido; a Investida pode d
   await expect.poll(async () => (await estado(page)).heroiCaido, { timeout: 10_000 }).toBe(false);
 });
 
-test('Mirtilo: lutar → batalha contra o normal, com dano, ajoelhado e vitória', async ({ page }, info) => {
+test('Mirtilo: lutar → batalha contra o normal, com dano, ajoelhado e vitória', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas' } });
   await entrarNoCapitulo(page, 'c01-grito');
   await escolher(page, 'enfrentá-lo');
@@ -316,7 +316,7 @@ test('Mirtilo: lutar → batalha contra o normal, com dano, ajoelhado e vitória
   await expect.poll(async () => (await estado(page)).cena, { timeout: 15_000 }).toBe('c01-aylin');
 });
 
-test('batalha: Aguardar resolve a Bicuda antes do ataque do porco', async ({ page }) => {
+test('batalha: Aguardar resolve a Bicuda antes do ataque do porco', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas' } });
   await entrarNoCapitulo(page, 'c01-grito');
   await escolher(page, 'enfrentá-lo');
@@ -333,7 +333,7 @@ test('batalha: Aguardar resolve a Bicuda antes do ataque do porco', async ({ pag
   expect(log.some((l) => /se prepara para revidar/.test(l))).toBe(true);
 });
 
-test('derrota: Gerulf salva o herói, que fica com 1 PV e machucado; a Aylin comenta a lama e o sangue', async ({ page }, info) => {
+test('derrota: Gerulf salva o herói, que fica com 1 PV e machucado; a Aylin comenta a lama e o sangue', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas' } });
   await entrarNoCapitulo(page, 'c01-grito');
   await escolher(page, 'enfrentá-lo');
@@ -365,7 +365,7 @@ test('derrota: Gerulf salva o herói, que fica com 1 PV e machucado; a Aylin com
   await ateTexto(page, 'Você tá todo sujo de lama… e sangrando! A Nyme vai brigar com você.');
 });
 
-test('Guarda: vê o trinco arrebentado e Gerulf reage', async ({ page }) => {
+test('Guarda: vê o trinco arrebentado e Gerulf reage', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, { origem: 'guarda', campanha: { cena: 'c01-grito', modo: 'falas' } });
   await entrarNoCapitulo(page, 'c01-grito');
   await ateTexto(page, 'o trinco não foi esquecido aberto. Foi arrebentado.');
@@ -387,7 +387,7 @@ test('Guarda: vê o trinco arrebentado e Gerulf reage', async ({ page }) => {
   expect((await estado(page)).escolhas).toEqual(['Levar a Aylin para casa']);
 });
 
-test('música: a playlist de Füllmun alterna 01 e 02, troca para a tensão no grito e volta depois', async ({ page }) => {
+test('música: a playlist de Füllmun alterna 01 e 02, troca para a tensão no grito e volta depois', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page);
   await entrarNoCapitulo(page);
   await expect.poll(async () => (await estado(page)).musica.faixa).toBe('music/fullmun-01.mp3');
@@ -412,7 +412,7 @@ test('música: a playlist de Füllmun alterna 01 e 02, troca para a tensão no g
   expect(h.slice(-4)).toEqual(['music/fullmun-02.mp3', 'music/fullmun-01.mp3', 'music/tensao-porco.mp3', 'music/fullmun-01.mp3']);
 });
 
-test('game over: ?tela=gameover mostra a tela com a música e os botões', async ({ page }, info) => {
+test('game over: ?tela=gameover mostra a tela com a música e os botões', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas', cenaAntesDaBatalha: 'c01-grito' } });
   await page.goto('./?tela=gameover&test=1');
   await page.locator('.loading-comecar').click({ timeout: 90_000 });

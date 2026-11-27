@@ -111,7 +111,7 @@ async function vezDoHeroi(page: Page, cmd = 'bicuda') {
   }, { timeout: 40_000, intervals: [200] }).toBe(true);
 }
 
-test('Füllmun: câmera segue o herói, marcadores, relógio do atraso e subida bloqueada antes da Aylin', async ({ page }, info) => {
+test('Füllmun: câmera segue o herói, marcadores, relógio do atraso e subida bloqueada antes da Aylin', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, MAPA('fullmun'));
   await noMapa(page, 'fullmun');
   const s0 = await st(page);
@@ -142,7 +142,7 @@ test('Füllmun: câmera segue o herói, marcadores, relógio do atraso e subida 
   expect((await st(page)).heroi.y).toBeGreaterThan(M(220));
 });
 
-test('conversa no mapa e missão "Roupas ao vento": busto, as 3 peças, Atletismo e a camisa dobrada', async ({ page }, info) => {
+test('conversa no mapa e missão "Roupas ao vento": busto, as 3 peças, Atletismo e a camisa dobrada', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, MAPA('fullmun'));
   await noMapa(page, 'fullmun');
   await falarCom(page, 'npc:vo-hulda');
@@ -191,7 +191,7 @@ test('conversa no mapa e missão "Roupas ao vento": busto, as 3 peças, Atletism
   await expect(page.locator('.relogio-bolinhas .cheia')).toHaveCount(1);
 });
 
-test('camisa: Atletismo falha e o herói desce rápido demais (−1 PV)', async ({ page }) => {
+test('camisa: Atletismo falha e o herói desce rápido demais (−1 PV)', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, MAPA('fullmun', { missoes: { hulda: 'aceita' }, flags: ['falou_hulda'], pvAtual: 8 }));
   await noMapa(page, 'fullmun');
   await f(page, 'forceRoll', [2]);
@@ -211,7 +211,7 @@ for (const [nome, escolha, roll, reais, relacao, flag] of [
   ['Barganha com sucesso', 'vale dez', 15, 10, 1, null],
   ['Barganha com falha', 'vale dez', 2, 5, 1, null],
 ] as const) {
-  test(`Osric: ${nome}`, async ({ page }) => {
+  test(`Osric: ${nome}`, { tag: ['@cap01'] }, async ({ page }) => {
     await semear(page, MAPA('fullmun', { missoes: { osric: 'aceita' }, flags: ['falou_osric'], inventario: { repolho: 5 } }));
     await noMapa(page, 'fullmun');
     expect((await st(page)).npcs.find((n: { id: string }) => n.id === 'osric').marcador).toBe('?');
@@ -233,7 +233,7 @@ for (const [nome, escolha, roll, reais, relacao, flag] of [
   });
 }
 
-test('Kobanu: zombar dá −2 (Ressentido); ratazanas com 3 inimigos, alvo, dicas e nenhuma abóbora quebrada', async ({ page }, info) => {
+test('Kobanu: zombar dá −2 (Ressentido); ratazanas com 3 inimigos, alvo, dicas e nenhuma abóbora quebrada', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, MAPA('fullmun'), { config: soDicas('batalha-turnos', 'batalha-atacar', 'batalha-aguardar') });
   await noMapa(page, 'fullmun');
   await falarCom(page, 'npc:kobanu');
@@ -294,7 +294,7 @@ test('Kobanu: zombar dá −2 (Ressentido); ratazanas com 3 inimigos, alvo, dica
   expect(s.compendio.vistos.kobanu).toBe(2);
 });
 
-test('Kobanu: derrota nas ratazanas (1 PV, bandagem dada, sem abóbora para o Artho)', async ({ page }) => {
+test('Kobanu: derrota nas ratazanas (1 PV, bandagem dada, sem abóbora para o Artho)', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, MAPA('fullmun', { flags: ['falou_kobanu'], pvAtual: 1 }));
   await noMapa(page, 'fullmun');
   // Herói por último; a primeira ratazana acerta.
@@ -316,7 +316,7 @@ test('Kobanu: derrota nas ratazanas (1 PV, bandagem dada, sem abóbora para o Ar
   expect(s.atraso).toBe(1);
 });
 
-test('Tobias: o cesto de pães; comer um pão (com confirmação) quebra o cesto e tira 1 de relação; sem atraso', async ({ page }) => {
+test('Tobias: o cesto de pães; comer um pão (com confirmação) quebra o cesto e tira 1 de relação; sem atraso', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, MAPA('fullmun', { pvAtual: 6 }));
   await noMapa(page, 'fullmun');
   await falarCom(page, 'npc:tobias');
@@ -341,7 +341,7 @@ test('Tobias: o cesto de pães; comer um pão (com confirmação) quebra o cesto
   expect(s.toasts).toContain('Tobias Miolo ♡ −1');
 });
 
-test('inventário: cura fora da batalha (sem passar do máximo) e o comando Item gasta o turno', async ({ page }) => {
+test('inventário: cura fora da batalha (sem passar do máximo) e o comando Item gasta o turno', { tag: ['@interface'] }, async ({ page }) => {
   await semear(page, { cena: 'c01-grito', modo: 'escolhas', pvAtual: 11, inventario: { unguento: 1, 'pao-de-mel': 1 }, local: { tela: 'capitulo' } });
   await continuar(page);
   await expect.poll(async () => (await st(page)).cena, { timeout: 20_000 }).toBe('c01-grito');
@@ -373,7 +373,7 @@ test('inventário: cura fora da batalha (sem passar do máximo) e o comando Item
   }, { timeout: 10_000 }).toBe(true);
 });
 
-test('Mirtilo no mapa: soma 1 marca, Gerulf +2 (acalmou), a Aylin segue o herói até em casa e o capítulo segue para o 02', async ({ page }, info) => {
+test('Mirtilo no mapa: soma 1 marca, Gerulf +2 (acalmou), a Aylin segue o herói até em casa e o capítulo segue para o 02', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(420_000);
   await semear(page, MAPA('fullmun'));
   await noMapa(page, 'fullmun');
@@ -420,7 +420,7 @@ test('Mirtilo no mapa: soma 1 marca, Gerulf +2 (acalmou), a Aylin segue o herói
   expect(s.flags).toContain('acalmou');
 });
 
-test('subida com missão aceita e não concluída pergunta antes de seguir', async ({ page }) => {
+test('subida com missão aceita e não concluída pergunta antes de seguir', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, MAPA('fullmun', { flags: ['aylin_em_casa', 'evento_mirtilo', 'evento_mirtilo_fim'], missoes: { osric: 'aceita' } }));
   await noMapa(page, 'fullmun');
   await f(page, 'teleport', M(850), M(176));
@@ -430,7 +430,7 @@ test('subida com missão aceita e não concluída pergunta antes de seguir', asy
   await expect.poll(async () => (await st(page)).palco, { timeout: 10_000 }).toBe(false);
 });
 
-test('Compêndio: abas, fichas, silhuetas, bestiário e vozes; pausa (ponto de novidade) e menu inicial', async ({ page }, info) => {
+test('Compêndio: abas, fichas, silhuetas, bestiário e vozes; pausa (ponto de novidade) e menu inicial', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   await semear(page, MAPA('fullmun', {
     compendio: { conhecidos: ['kobanu', 'vo-hulda'], bestiario: { mirtilo: { sabe: true }, ratazana: { sabe: false } }, vistos: { kobanu: 1, 'vo-hulda': 1 }, novidade: true },
     relacoes: { artho: 2, nyme: 2, aylin: 1, 'vo-hulda': 3, osric: 0, kobanu: -2, gerulf: 0, tobias: 0, selene: 0, dagna: 0 },
@@ -478,7 +478,7 @@ for (const [atraso, cesto, final, fala, castigo, manchas] of [
   [2, false, 2, 'O sol andou demais no céu, Thaelion. Demais.', 'Hoje você vai esfregar o piso do salão principal.', 6],
   [4, false, 4, 'Eu já ia mandar a guarda inteira atrás de você.', 'polir o altar de Sólem', 10],
 ] as const) {
-  test(`sermão: atrasoFinal ${final} (${cesto ? 'cesto intacto' : 'sem cesto'}): fala, castigo e ${manchas} manchas`, async ({ page }, info) => {
+  test(`sermão: atrasoFinal ${final} (${cesto ? 'cesto intacto' : 'sem cesto'}): fala, castigo e ${manchas} manchas`, { tag: ['@cap01'] }, async ({ page }, info) => {
     await semear(page, {
       capitulo: 2, cena: 'c02-artho', modo: 'falas', atraso, inventario: cesto ? { 'cesto-paes': 6 } : {},
       flags: ['missao_hulda', 'acalmou', 'abobora_artho', 'gentileza_osric', 'salvou_aylin', 'venceu_treino'], local: { tela: 'capitulo' },
@@ -524,7 +524,7 @@ for (const [atraso, cesto, final, fala, castigo, manchas] of [
   });
 }
 
-test('treino com Nyme: a Rasteira vence o teste oposto e encerra o treino; os PV voltam ao valor de antes', async ({ page }, info) => {
+test('treino com Nyme: a Rasteira vence o teste oposto e encerra o treino; os PV voltam ao valor de antes', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, { capitulo: 2, cena: 'c02-nyme', modo: 'falas', pvAtual: 1, flags: ['machucado'], local: { tela: 'capitulo' } }, { config: soDicas('rasteira') });
   await continuar(page);
   await escolher(page, 'Vamos lá');
@@ -552,7 +552,7 @@ test('treino com Nyme: a Rasteira vence o teste oposto e encerra o treino; os PV
   await ateTexto(page, 'Nem só de força se vencem as batalhas.');
 });
 
-test('treino com Nyme: vencer pelos PV e perder pelos PV', async ({ page }) => {
+test('treino com Nyme: vencer pelos PV e perder pelos PV', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, { capitulo: 2, cena: 'c02-nyme', modo: 'falas', pvAtual: 9, local: { tela: 'capitulo' } });
   await continuar(page);
   await escolher(page, 'Vamos lá');
@@ -588,7 +588,7 @@ test('treino com Nyme: vencer pelos PV e perder pelos PV', async ({ page }) => {
   await ateTexto(page, 'você vai ao chão, com ela por cima');
 });
 
-test('biblioteca: falas da Nyme na ordem, os 3 livros (Artho +1), pista do sonho e o frame do alçapão', async ({ page }, info) => {
+test('biblioteca: falas da Nyme na ordem, os 3 livros (Artho +1), pista do sonho e o frame do alçapão', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(420_000);
   await semear(page, MAPA('templo-biblioteca', { capitulo: 2, cena: 'c02-artho', atraso: 1, flags: ['nyme_seguindo', 'pista_sonho', 'sem_reclamar', 'venceu_treino'] }));
   await noMapa(page, 'templo-biblioteca');
@@ -641,7 +641,7 @@ test('biblioteca: falas da Nyme na ordem, os 3 livros (Artho +1), pista do sonho
   await foto(page, info.project.name, 'alcapao');
 });
 
-test('biblioteca: a escolha da pista do sonho só aparece com a flag', async ({ page }) => {
+test('biblioteca: a escolha da pista do sonho só aparece com a flag', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, MAPA('templo-biblioteca', { capitulo: 2, cena: 'c02-artho', atraso: 1, flags: ['nyme_seguindo'] }));
   await noMapa(page, 'templo-biblioteca');
   await f(page, 'goto', 't-estante-3');
@@ -651,7 +651,7 @@ test('biblioteca: a escolha da pista do sonho só aparece com a flag', async ({ 
 
 // A tragédia da Fase 4 (gritos sintetizados, sem flechas) foi substituída pela da Fase 5C: tests/fase5c.spec.ts.
 
-test('fluxo: Continuar retoma no meio do mapa, na posição salva', async ({ page }) => {
+test('fluxo: Continuar retoma no meio do mapa, na posição salva', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, MAPA('templo-salao', { capitulo: 2, cena: 'c02-artho', atraso: 2, flags: ['nyme_seguindo'] }));
   await noMapa(page, 'templo-salao');
   await f(page, 'interactWith', 'obj:mancha-1');
@@ -666,7 +666,7 @@ test('fluxo: Continuar retoma no meio do mapa, na posição salva', async ({ pag
   expect(s.objetos).not.toContain('mancha-1');
 });
 
-test('save antigo da Fase 3 (parado em "Capítulo 02 · Em breve") migra para o começo do templo (Capítulo 01, parte 2)', async ({ page }) => {
+test('save antigo da Fase 3 (parado em "Capítulo 02 · Em breve") migra para o começo do templo (Capítulo 01, parte 2)', { tag: ['@cap01'] }, async ({ page }) => {
   await semear(page, { capitulo: 2, cena: 'inicio', flags: ['intimidou', 'salvou_aylin'], pvAtual: 12 }, { versaoSave: null });
   await continuar(page);
   await expect(page.locator('.cena-cartao-titulo.cartao-local.visivel')).toContainText('Templo de Sólem', { timeout: 15_000 });
@@ -681,7 +681,7 @@ test('save antigo da Fase 3 (parado em "Capítulo 02 · Em breve") migra para o 
   expect(salvo.versaoSave).toBe(7);
 });
 
-test('modo de ajuste (F2) nos três mapas novos', async ({ page }, info) => {
+test('modo de ajuste (F2) nos três mapas novos', { tag: ['@cap01'] }, async ({ page }, info) => {
   await semear(page, MAPA('fullmun'));
   await noMapa(page, 'fullmun', '?test=1&debug=1');
   await page.waitForTimeout(800);

@@ -97,7 +97,7 @@ const card = (page: Page, s: Slot) => page.locator(`.save-card[data-slot="${s}"]
 
 /* ------------------------------------------------ bustos ------------------------------------------------ */
 
-test('bustos: a fala do herói mostra o busto certo nas 8 combinações de raça e gênero', async ({ page }) => {
+test('bustos: a fala do herói mostra o busto certo nas 8 combinações de raça e gênero', { tag: ['@interface'] }, async ({ page }) => {
   test.setTimeout(420_000);
   await semear(page, { cena: 'c01-aylin', modo: 'falas' });
   // Troca o herói no slot automático antes do jogo carregar (a página anterior pode gravar ao sair).
@@ -126,7 +126,7 @@ test('bustos: a fala do herói mostra o busto certo nas 8 combinações de raça
   }
 });
 
-test('conversa: NPC à esquerda escurecido quando o herói fala, herói à direita; pausa com o busto do herói', async ({ page }, info) => {
+test('conversa: NPC à esquerda escurecido quando o herói fala, herói à direita; pausa com o busto do herói', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   await semear(page, { capitulo: 2, cena: 'c02-artho', modo: 'escolhas', flags: ['nyme_seguindo'], local: { tela: 'mapa', mapa: 'templo-biblioteca' } });
   await continuar(page);
   await noMapa(page, 'templo-biblioteca');
@@ -153,7 +153,7 @@ test('conversa: NPC à esquerda escurecido quando o herói fala, herói à direi
   }
 });
 
-test('menu de pausa: busto pequeno, nome, raça, classe e PV', async ({ page }, info) => {
+test('menu de pausa: busto pequeno, nome, raça, classe e PV', { tag: ['@interface'] }, async ({ page }, info) => {
   await semear(page, { cena: 'c01-aylin', modo: 'falas', pvAtual: 9 });
   await continuar(page);
   await expect.poll(async () => (await st(page)).cena, { timeout: 20_000 }).toBe('c01-aylin');
@@ -172,7 +172,7 @@ test('menu de pausa: busto pequeno, nome, raça, classe e PV', async ({ page }, 
 
 /* ------------------------------------------------ expressões ------------------------------------------------ */
 
-test('expressão: a Aylin chora em C01-05 e em C01-07, volta ao normal (crossfade) e chora de novo no "É poeira"', async ({ page }, info) => {
+test('expressão: a Aylin chora em C01-05 e em C01-07, volta ao normal (crossfade) e chora de novo no "É poeira"', { tag: ['@interface'] }, async ({ page }, info) => {
   // "machucado": a fala do "sangrando!" vem logo depois do choro (troca direta de expressão).
   await semear(page, { cena: 'c01-grito', modo: 'falas', flags: ['machucado'] });
   await continuar(page);
@@ -198,7 +198,7 @@ test('expressão: a Aylin chora em C01-05 e em C01-07, volta ao normal (crossfad
   await expect(page.locator('.compendio-ficha .ficha-busto')).toHaveAttribute('data-retrato', /npc-aylin\.webp$/);
 });
 
-test('expressão inexistente cai no busto normal, sem erro', async ({ page }) => {
+test('expressão inexistente cai no busto normal, sem erro', { tag: ['@interface'] }, async ({ page }) => {
   await page.route('**/img/retratos/npc-aylin-chorando.webp', (r) => r.fulfill({ status: 404, body: '' }));
   await semear(page, { cena: 'c01-grito', modo: 'falas' });
   await continuar(page);
@@ -209,7 +209,7 @@ test('expressão inexistente cai no busto normal, sem erro', async ({ page }) =>
 
 /* ------------------------------------------------ saves ------------------------------------------------ */
 
-test('salvar manual no mapa: Manual 1 guarda a posição exata; o autosave segue sem mexer nos manuais', async ({ page }, info) => {
+test('salvar manual no mapa: Manual 1 guarda a posição exata; o autosave segue sem mexer nos manuais', { tag: ['@saves'] }, async ({ page }, info) => {
   await semear(page, { cena: 'c01-soleira', modo: 'escolhas', local: { tela: 'mapa', mapa: 'fullmun' } });
   await continuar(page);
   await noMapa(page, 'fullmun');
@@ -255,7 +255,7 @@ test('salvar manual no mapa: Manual 1 guarda a posição exata; o autosave segue
   expect(s.flags).not.toContain('depois_do_save');
 });
 
-test('salvar manual numa cena: volta ao início da cena, sem repetir os efeitos de entrada', async ({ page }) => {
+test('salvar manual numa cena: volta ao início da cena, sem repetir os efeitos de entrada', { tag: ['@saves'] }, async ({ page }) => {
   await semear(page, { cena: 'c01-pensamentos', modo: 'falas' });
   await continuar(page);
   await expect.poll(async () => (await st(page)).cena, { timeout: 20_000 }).toBe('c01-pensamentos');
@@ -279,7 +279,7 @@ test('salvar manual numa cena: volta ao início da cena, sem repetir os efeitos 
   expect((await st(page)).relacoes.aylin).toBe(3);
 });
 
-test('substituir: salvar por cima de um slot ocupado pede confirmação', async ({ page }, info) => {
+test('substituir: salvar por cima de um slot ocupado pede confirmação', { tag: ['@saves'] }, async ({ page }, info) => {
   await semearSlots(page, {
     manual1: registro({ nome: 'Thaelion', salvoEm: diasAtras(2), local: 'Füllmun — Praça do mercado', campanha: { local: { tela: 'mapa', mapa: 'fullmun', x: 640, y: 520 } } }),
   });
@@ -302,7 +302,7 @@ test('substituir: salvar por cima de um slot ocupado pede confirmação', async 
   await expect(card(page, 'manual1')).toContainText('hoje');
 });
 
-test('batalha: o botão Salvar fica desabilitado, com a dica', async ({ page }) => {
+test('batalha: o botão Salvar fica desabilitado, com a dica', { tag: ['@layout', '@saves'] }, async ({ page }) => {
   await semear(page, { cena: 'c01-grito', modo: 'escolhas' });
   await continuar(page);
   await f(page, 'forceRoll', [15, 1]);
@@ -314,7 +314,7 @@ test('batalha: o botão Salvar fica desabilitado, com a dica', async ({ page }) 
   expect((await page.locator('.batalha-btn-pausa').boundingBox())!.height).toBeGreaterThanOrEqual(44);
 });
 
-test('Continuar carrega sempre o save mais recente; o menu mostra Continuar e Carregar', async ({ page }, info) => {
+test('Continuar carrega sempre o save mais recente; o menu mostra Continuar e Carregar', { tag: ['@saves'] }, async ({ page }, info) => {
   await semearSlots(page, {
     auto: registro({ nome: 'Auto', tipo: 'auto', salvoEm: diasAtras(5) }),
     manual1: registro({ nome: 'Velho', salvoEm: diasAtras(9) }),
@@ -342,7 +342,7 @@ test('Continuar carrega sempre o save mais recente; o menu mostra Continuar e Ca
   expect((await st(page)).parte).toBe('templo');
 });
 
-test('novo jogo: aviso, desistir mantém o automático, e só o primeiro autosave da aventura nova troca o automático', async ({ page }, info) => {
+test('novo jogo: aviso, desistir mantém o automático, e só o primeiro autosave da aventura nova troca o automático', { tag: ['@saves'] }, async ({ page }, info) => {
   test.setTimeout(420_000);
   const auto = registro({ nome: 'Antigo', tipo: 'auto', salvoEm: diasAtras(1) });
   const manual = registro({ nome: 'Guardado', salvoEm: diasAtras(4) });
@@ -391,7 +391,7 @@ test('novo jogo: aviso, desistir mantém o automático, e só o primeiro autosav
   expect(lista.find((s) => s.slot === 'auto')).toMatchObject({ tipo: 'auto', ato: 0, local: 'O sonho dos deuses' });
 });
 
-test('persistência: recarregar e abrir um navegador novo com o mesmo armazenamento mantêm os 3 saves', async ({ page, browser }, info) => {
+test('persistência: recarregar e abrir um navegador novo com o mesmo armazenamento mantêm os 3 saves', { tag: ['@saves'] }, async ({ page, browser }, info) => {
   await semearSlots(page, {
     auto: registro({ nome: 'Um', tipo: 'auto', salvoEm: diasAtras(0) }),
     manual1: registro({ nome: 'Dois', salvoEm: diasAtras(1) }),
@@ -413,7 +413,7 @@ test('persistência: recarregar e abrir um navegador novo com o mesmo armazename
   await ctx.close();
 });
 
-test('save corrompido aparece como "Save danificado", pode ser apagado e não trava o menu', async ({ page }) => {
+test('save corrompido aparece como "Save danificado", pode ser apagado e não trava o menu', { tag: ['@saves'] }, async ({ page }) => {
   await semearSlots(page, { manual1: '{"formato": "forja-do-heroi-save", quebrado', manual2: registro({ nome: 'Inteiro', salvoEm: diasAtras(1) }) });
   await irAteMenu(page, './?test=1');
   await expect(page.locator('.menu-continuar-info')).toContainText('Inteiro');
@@ -431,7 +431,7 @@ test('save corrompido aparece como "Save danificado", pode ser apagado e não tr
   await expect(page.locator('.modal')).toBeVisible();
 });
 
-test('cópia de segurança: exportar os 3 slots e importar num navegador limpo (e recusar arquivo inválido)', async ({ page, browser }, info) => {
+test('cópia de segurança: exportar os 3 slots e importar num navegador limpo (e recusar arquivo inválido)', { tag: ['@saves'] }, async ({ page, browser }, info) => {
   await semearSlots(page, {
     auto: registro({ nome: 'Um', tipo: 'auto', salvoEm: diasAtras(0) }),
     manual1: registro({ nome: 'Dois', salvoEm: diasAtras(1) }),
@@ -467,7 +467,7 @@ test('cópia de segurança: exportar os 3 slots e importar num navegador limpo (
   await ctx.close();
 });
 
-test('migração: o save único antigo vira o slot automático; os manuais começam vazios', async ({ page }) => {
+test('migração: o save único antigo vira o slot automático; os manuais começam vazios', { tag: ['@saves'] }, async ({ page }) => {
   await semear(page, { capitulo: 1, cena: 'c01-soleira', modo: 'escolhas', flags: ['salvou_aylin'] });
   await irAteMenu(page, './?test=1');
   const lista = await saves(page);

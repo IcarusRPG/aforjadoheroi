@@ -2,9 +2,11 @@ import { audio } from './audio';
 import type { Tela } from './telas';
 import { ehToque, textos } from './textos';
 import { h } from './ui';
+import { turbo } from './turbo';
 
 /** Segundos até liberar o "pular". */
 export const SEGUNDOS_PARA_PULAR = 5;
+const segundosParaPular = (): number => (turbo() ? 0.3 : SEGUNDOS_PARA_PULAR);
 
 /**
  * Regra de pular compartilhada: antes de `liberar()`, cliques e teclas não fazem nada;
@@ -64,7 +66,7 @@ export function telaVideo(opcoes: OpcoesVideo): Tela {
   el.append(pulo.dica);
 
   const tempo = () => {
-    if (video.currentTime >= SEGUNDOS_PARA_PULAR) pulo.liberar();
+    if (video.currentTime >= segundosParaPular()) pulo.liberar();
   };
   const fim = () => encerrar();
   const erro = () => {
@@ -133,7 +135,7 @@ export function telaSequenciaTexto(opcoes: OpcoesSequencia): Tela {
   return {
     el,
     aoEntrar() {
-      timers.push(window.setTimeout(() => pulo.liberar(), SEGUNDOS_PARA_PULAR * 1000));
+      timers.push(window.setTimeout(() => pulo.liberar(), segundosParaPular() * 1000));
       linhas.forEach((texto, i) => {
         timers.push(window.setTimeout(() => {
           const linha = h('p', { class: 'sequencia-linha' }, texto);

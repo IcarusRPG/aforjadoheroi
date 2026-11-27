@@ -10,7 +10,7 @@ import {
    1. Transição: Fim do Prólogo → cartões → Parte 1
    ====================================================================== */
 
-test('transição: "Fim do Prólogo" → Continuar → cartão "Ato I — Provação Sob a Luz" → C1-01, sem cartão de "Parte N"', async ({ page }, info) => {
+test('transição: "Fim do Prólogo" → Continuar → cartão "Ato I — Provação Sob a Luz" → C1-01, sem cartão de "Parte N"', { tag: ['@ato1-p1'] }, async ({ page }, info) => {
   test.setTimeout(150_000);
   test.setTimeout(240_000);
   await semear(page, { ato: 0, parte: 'templo', cena: 'c02-tragedia', flags: ['chegou_templo', 'nyme_seguindo'] });
@@ -52,7 +52,7 @@ for (const escolha of [
   { idx: 1, flag: 'quis_lutar', resposta: 'A Nyme escolheu proteger você. Não torne a escolha dela em vão.' },
   { idx: 2, flag: 'obedeceu_artho', resposta: 'Bom menino.' },
 ]) {
-  test(`Parte 1: a escolha ${escolha.idx + 1} grava ${escolha.flag} e Artho responde certo`, async ({ page }, info) => {
+  test(`Parte 1: a escolha ${escolha.idx + 1} grava ${escolha.flag} e Artho responde certo`, { tag: ['@ato1-p1'] }, async ({ page }, info) => {
     test.setTimeout(150_000);
     await semear(page, { cena: 'c1-02', modo: 'falas' });
     await continuar(page);
@@ -67,7 +67,7 @@ for (const escolha of [
   });
 }
 
-test('Parte 1: os sons nas frases certas, sem ordem estrangeira, fogo com fade-out; termina com o save ato 1 / parte 2, anota no Caderno e muda a pergunta', async ({ page }, info) => {
+test('Parte 1: os sons nas frases certas, sem ordem estrangeira, fogo com fade-out; termina com o save ato 1 / parte 2, anota no Caderno e muda a pergunta', { tag: ['@ato1-p1'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, {}, { config: { tremores: true, animacoesReduzidas: false } });
   await continuar(page);
@@ -127,7 +127,7 @@ test('Parte 1: os sons nas frases certas, sem ordem estrangeira, fogo com fade-o
   expect((await salvoAuto(page)).jogo.campanha.ato).toBe(1);
 });
 
-test('Parte 1: sem tremor com "Tremores" desligados', async ({ page }) => {
+test('Parte 1: sem tremor com "Tremores" desligados', { tag: ['@ato1-p1'] }, async ({ page }) => {
   test.setTimeout(150_000);
   await semear(page, { cena: 'c1-03' }, { config: { tremores: false } });
   await continuar(page);

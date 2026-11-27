@@ -65,7 +65,7 @@ async function textoDaAba(page: Page): Promise<string> {
   return texto;
 }
 
-test('início do jogo: o caderno está nos Itens e no atalho do menu, com a abertura e os 7 deuses e nada da guerra', async ({ page }, info) => {
+test('início do jogo: o caderno está nos Itens e no atalho do menu, com a abertura e os 7 deuses e nada da guerra', { tag: ['@caderno'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { cena: 'c01-quarto', modo: 'escolhas', local: { tela: 'capitulo' } });
   await continuar(page);
@@ -111,7 +111,7 @@ test('início do jogo: o caderno está nos Itens e no atalho do menu, com a aber
   await foto(page, info.project.name, 'perguntas');
 });
 
-test('no quarto: "Olhar as anotações sobre os deuses" abre o caderno em "Alfars e Baldurs" e, ao fechar, volta à cena com a flag', async ({ page }) => {
+test('no quarto: "Olhar as anotações sobre os deuses" abre o caderno em "Alfars e Baldurs" e, ao fechar, volta à cena com a flag', { tag: ['@caderno'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await semear(page, { cena: 'c01-quarto', modo: 'escolhas', local: { tela: 'capitulo' } });
   await continuar(page);
@@ -126,7 +126,7 @@ test('no quarto: "Olhar as anotações sobre os deuses" abre o caderno em "Alfar
   await expect.poll(async () => (await st(page)).escolhas ?? [], { timeout: 10_000 }).toContain('Sair de casa');
 });
 
-test('Nyashi: a página de Eternus ganha a linha extra (e só para Nyashi)', async ({ page }, info) => {
+test('Nyashi: a página de Eternus ganha a linha extra (e só para Nyashi)', { tag: ['@caderno'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { cena: 'c01-quarto', modo: 'escolhas', local: { tela: 'capitulo' } }, { raca: 'nyashi', genero: 'f', nome: 'Ilka' });
   await continuar(page);
@@ -146,7 +146,7 @@ test('Nyashi: a página de Eternus ganha a linha extra (e só para Nyashi)', asy
   await expect(page.locator('.caderno-imagem-cheia')).toHaveCount(0);
 });
 
-test('herói não Nyashi não vê a linha de Eternus; a anotação do trinco aparece só com pista_trinco', async ({ page }) => {
+test('herói não Nyashi não vê a linha de Eternus; a anotação do trinco aparece só com pista_trinco', { tag: ['@caderno'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await semear(page, { cena: 'c01-quarto', modo: 'escolhas', local: { tela: 'capitulo' } });
   await continuar(page);
@@ -166,7 +166,7 @@ test('herói não Nyashi não vê a linha de Eternus; a anotação do trinco apa
   expect(s.caderno.perguntas).toContain('trinco');
 });
 
-test('biblioteca: os três livros com os textos novos liberam deuses, anotações e perguntas, com o aviso; Odincia sem imagem', async ({ page }, info) => {
+test('biblioteca: os três livros com os textos novos liberam deuses, anotações e perguntas, com o aviso; Odincia sem imagem', { tag: ['@caderno'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, { capitulo: 2, cena: 'c02-artho', modo: 'escolhas', atraso: 1, flags: ['nyme_seguindo'], local: { tela: 'mapa', mapa: 'templo-biblioteca' } });
   await continuar(page);
@@ -204,7 +204,7 @@ test('biblioteca: os três livros com os textos novos liberam deuses, anotaçõe
   expect((await st(page)).caderno.novidade).toBe(false);
 });
 
-test('fim do Capítulo 02: a anotação final (sozinha) e a pergunta "Quem atacou Füllmun?"', async ({ page }) => {
+test('fim do Capítulo 02: a anotação final (sozinha) e a pergunta "Quem atacou Füllmun?"', { tag: ['@caderno'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await semear(page, { capitulo: 2, cena: 't-alcapao-artho', modo: 'falas', flags: ['nyme_seguindo', 'leu_livro_guerra'], local: { tela: 'capitulo' } });
   await continuar(page);
@@ -226,7 +226,7 @@ test('fim do Capítulo 02: a anotação final (sozinha) e a pergunta "Quem ataco
   await expect(page.locator('.caderno-lista-perguntas')).toContainText('Quem atacou Füllmun?');
 });
 
-test('visual: no celular, deslizar troca de página; no desktop, duas páginas lado a lado', async ({ page }, info) => {
+test('visual: no celular, deslizar troca de página; no desktop, duas páginas lado a lado', { tag: ['@layout', '@caderno'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { cena: 'c01-quarto', modo: 'escolhas', local: { tela: 'capitulo' } });
   await continuar(page);
@@ -266,7 +266,7 @@ test('visual: no celular, deslizar troca de página; no desktop, duas páginas l
   }
 });
 
-test('save antigo: recebe o caderno coerente com o progresso, sem avisos do que já existia', async ({ page }) => {
+test('save antigo: recebe o caderno coerente com o progresso, sem avisos do que já existia', { tag: ['@caderno'] }, async ({ page }) => {
   test.setTimeout(240_000);
   // Save da Fase 4D (sem "caderno"), no Capítulo 02, com a pista do trinco.
   await semear(page, { capitulo: 2, cena: 'c02-artho', modo: 'escolhas', atraso: 1, flags: ['pista_trinco', 'lutou'], local: { tela: 'capitulo' } }, {}, 5);

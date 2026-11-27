@@ -3,6 +3,7 @@ import { src } from '../core/assets';
 import { audio } from '../core/audio';
 import { animacoesReduzidas, getEstado } from '../core/estado';
 import { h } from '../core/ui';
+import { turbo } from '../core/turbo';
 
 /**
  * O d20 animado (Fase 5), com a imagem do dado escolhido (Opções → Dado; padrão azul). O resultado é
@@ -98,6 +99,7 @@ export function criarDado(o: { tamanho?: number; cinza?: boolean; dado?: DefDado
     el.classList.remove('parado', 'dado-critico', 'dado-falha');
     destaque.hidden = true;
     el.dataset.valor = '';
+    if (turbo()) { finalizar(valor); return; }
     if (animacoesReduzidas()) {
       numero.textContent = '';
       el.classList.add('rolando');

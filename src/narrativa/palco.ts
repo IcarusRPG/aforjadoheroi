@@ -18,6 +18,7 @@ import RETRATOS from '../data/retratos.json';
 import { efeitoMemoria, type ModoMemoria } from './memoria';
 import { atende, cenaGlobal, interpolar, type Cena, type Efeitos, type Escolha, type Fala, type Seguir } from './capitulo';
 import { mostrarRolagem } from './rolagem';
+import { turbo } from '../core/turbo';
 
 /**
  * Palco de cena: fundo ilustrado (ou o mapa escurecido por trás), falas com digitação (um toque completa,
@@ -361,13 +362,14 @@ export function criarPalco(o: OpcoesPalco): Palco {
       digitando = true;
       caixa.classList.remove('completa');
       let i = 0;
+      const rapido = turbo();
       window.clearInterval(timerFala);
       const timer = window.setInterval(() => {
-        i++;
+        i = rapido ? cheio.length : i + 1;
         texto.textContent = cheio.slice(0, i);
         if (i % 3 === 0 && cheio[i - 1] !== ' ') audio.sfx('text-blip', { ganho: 0.5 });
         if (i >= cheio.length) terminar();
-      }, f.velocidade ?? 22);
+      }, rapido ? 0 : f.velocidade ?? 22);
       timerFala = timer;
       const terminar = () => {
         window.clearInterval(timer);

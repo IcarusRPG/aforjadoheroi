@@ -4,7 +4,7 @@ import { ateEscolhas, ateFala, continuar, f, foto, naCena, semear, st, umAparelh
 
 /* Fase 6: expressões do herói e bustos de frente um para o outro. */
 
-test('retratos.json: os 40 bustos do herói (8 × 5, conferidos um a um) olham para a direita e são espelhados para olhar o NPC; os NPCs olham para a direita', () => {
+test('retratos.json: os 40 bustos do herói (8 × 5, conferidos um a um) olham para a direita e são espelhados para olhar o NPC; os NPCs olham para a direita', { tag: ['@interface'] }, () => {
   const b = (RETRATOS as any).bustos as Record<string, { olhaPara: string }>;
   const herois = Object.keys(b).filter((k) => k.startsWith('heroi-'));
   expect(herois.length).toBe(40);
@@ -15,7 +15,7 @@ test('retratos.json: os 40 bustos do herói (8 × 5, conferidos um a um) olham p
   for (const k of Object.keys(b).filter((x) => x.startsWith('npc-'))) expect(b[k].olhaPara).toBe('direita');
 });
 
-test('expressões: choque na mão de Artho, raiva no "Eu vou lutar!", e o NPC à esquerda de frente para o herói à direita', async ({ page }, info) => {
+test('expressões: choque na mão de Artho, raiva no "Eu vou lutar!", e o NPC à esquerda de frente para o herói à direita', { tag: ['@layout', '@ato1-p1'] }, async ({ page }, info) => {
   test.setTimeout(180_000);
   await semear(page, { cena: 'c1-01', modo: 'falas' });
   await continuar(page);

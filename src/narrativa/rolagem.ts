@@ -4,6 +4,7 @@ import type { ParteBonus } from '../core/pericias';
 import { textos } from '../core/textos';
 import { botao, esperar, h } from '../core/ui';
 import { criarDado } from './dado';
+import { turbo } from '../core/turbo';
 
 /**
  * O d20 na tela (o dado escolhido, animado: ver dado.ts), para no resultado, mostra a conta
@@ -85,10 +86,10 @@ export async function mostrarRolagem(raiz: HTMLElement, o: OpcoesRolagem): Promi
       fundo.addEventListener('click', (e) => { if (e.target === fundo) ok(); });
     });
   } else {
-    await esperar(1300);
+    await esperar(turbo() ? 400 : 1300);
   }
   fundo.classList.remove('visivel');
-  await esperar(200);
+  await esperar(turbo() ? 20 : 200);
   fundo.remove();
   return r;
 }

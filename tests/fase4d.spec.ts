@@ -105,7 +105,7 @@ async function vezDoHeroi(page: Page, cmd = 'bicuda') {
    1. Pedaço dinâmico que não veio (404 depois de um deploy)
    ====================================================================== */
 
-test('pedaço que não veio: tenta de novo, recarrega uma vez e mostra a tela amigável; o erro cru nunca aparece', async ({ page }, info) => {
+test('pedaço que não veio: tenta de novo, recarrega uma vez e mostra a tela amigável; o erro cru nunca aparece', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, { sonhoConcluido: false });
   const pedidos: string[] = [];
@@ -142,7 +142,7 @@ test('pedaço que não veio: tenta de novo, recarrega uma vez e mostra a tela am
    2. Registro de erros
    ====================================================================== */
 
-test('registro de erros: no máximo 5 por sessão, sem dados pessoais; sem endereço do PocketBase, nada sai', async ({ page }) => {
+test('registro de erros: no máximo 5 por sessão, sem dados pessoais; sem endereço do PocketBase, nada sai', { tag: ['@interface'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await semear(page, { campanha: MAPA() });
   const corpos: Record<string, unknown>[] = [];
@@ -170,7 +170,7 @@ test('registro de erros: no máximo 5 por sessão, sem dados pessoais; sem ender
   expect(tudo).not.toMatch(/personagem|campanha|fdg\.save/);
 });
 
-test('sem VITE_PB_URL (build local), um erro não sai do navegador', async ({ page, baseURL }) => {
+test('sem VITE_PB_URL (build local), um erro não sai do navegador', { tag: ['@interface'] }, async ({ page, baseURL }) => {
   await semear(page, { campanha: MAPA() });
   const fora: string[] = [];
   page.on('request', (r) => { if (/^https?:/.test(r.url()) && new URL(r.url()).origin !== new URL(baseURL!).origin) fora.push(r.url()); });
@@ -233,7 +233,7 @@ const CAMINHOS: Record<string, (page: Page) => Promise<void>> = {
 };
 
 for (const [nome, caminho] of Object.entries(CAMINHOS)) {
-  test(`Aylin (${nome}): a escolta termina com o herói no controle, a câmera seguindo e a subida liberada`, async ({ page }, info) => {
+  test(`Aylin (${nome}): a escolta termina com o herói no controle, a câmera seguindo e a subida liberada`, { tag: ['@cap01'] }, async ({ page }, info) => {
     test.setTimeout(420_000);
     await semear(page, { campanha: MAPA() });
     await noMapa(page);
@@ -282,7 +282,7 @@ for (const [nome, caminho] of Object.entries(CAMINHOS)) {
   });
 }
 
-test('vigia: herói jogado para fora do mapa volta sozinho; "Destravar personagem" tira o herói de dentro de uma casa', async ({ page }) => {
+test('vigia: herói jogado para fora do mapa volta sozinho; "Destravar personagem" tira o herói de dentro de uma casa', { tag: ['@cap01'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await semear(page, { campanha: MAPA({ flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa'] }) });
   await noMapa(page);
@@ -334,7 +334,7 @@ async function irParaFrase(page: Page, n: number) {
   await expect.poll(async () => (await st(page)).completa, { timeout: 10_000 }).toBe(true);
 }
 
-test('intro: 11 passos, nome e gênero, nomes em dourado, bustos, Compêndio sem aviso e texto centralizado', async ({ page }, info) => {
+test('intro: 11 passos, nome e gênero, nomes em dourado, bustos, Compêndio sem aviso e texto centralizado', { tag: ['@layout', '@intro'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { sonhoConcluido: false, heroi: { nome: 'Mirena', genero: 'f', origem: 'religioso' } });
   await abrirIntro(page);
@@ -397,7 +397,7 @@ test('intro: 11 passos, nome e gênero, nomes em dourado, bustos, Compêndio sem
 });
 
 for (const [origem, linha] of Object.entries(ORIGENS)) {
-  test(`intro: a frase 7 traz a linha da origem ${origem}`, async ({ page }) => {
+  test(`intro: a frase 7 traz a linha da origem ${origem}`, { tag: ['@intro'] }, async ({ page }) => {
     test.setTimeout(180_000);
     await semear(page, { sonhoConcluido: false, heroi: { origem } });
     await abrirIntro(page);
@@ -408,7 +408,7 @@ for (const [origem, linha] of Object.entries(ORIGENS)) {
   });
 }
 
-test('intro no computador (1366×768): bloco 1 e bloco 2 com o busto ao lado do texto', async ({ page }, info) => {
+test('intro no computador (1366×768): bloco 1 e bloco 2 com o busto ao lado do texto', { tag: ['@layout', '@intro'] }, async ({ page }, info) => {
   test.skip(info.project.name !== 'pixel-7', 'uma vez só, em tela de computador');
   test.setTimeout(180_000);
   await page.setViewportSize({ width: 1366, height: 768 });
@@ -428,7 +428,7 @@ test('intro no computador (1366×768): bloco 1 e bloco 2 com o busto ao lado do 
    5. Tutorial
    ====================================================================== */
 
-test('tutorial: a pergunta só aparece no primeiro Novo Jogo; com "Sim" a dica da criação aparece uma vez', async ({ page }, info) => {
+test('tutorial: a pergunta só aparece no primeiro Novo Jogo; com "Sim" a dica da criação aparece uma vez', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.setTimeout(180_000);
   await irAteMenu(page, './?test=1');
   await page.getByRole('button', { name: 'Novo Jogo' }).click();
@@ -454,7 +454,7 @@ test('tutorial: a pergunta só aparece no primeiro Novo Jogo; com "Sim" a dica d
   await expect(page.locator('.dica-tutorial')).toHaveCount(0);
 });
 
-test('tutorial: com "Não", nenhuma dica aparece', async ({ page }) => {
+test('tutorial: com "Não", nenhuma dica aparece', { tag: ['@interface'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await irAteMenu(page, './?test=1');
   await novoJogo(page, false);
@@ -463,7 +463,7 @@ test('tutorial: com "Não", nenhuma dica aparece', async ({ page }) => {
   await expect(page.locator('.dica-tutorial')).toHaveCount(0);
 });
 
-test('tutorial: no mapa as dicas vêm uma por vez, em fila, com o jogo parado, e não voltam', async ({ page }, info) => {
+test('tutorial: no mapa as dicas vêm uma por vez, em fila, com o jogo parado, e não voltam', { tag: ['@interface'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { campanha: MAPA({ flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa'] }), config: { tutorial: true, ajudaFullmunVista: true, dicasVistas: [] } });
   await noMapa(page);
@@ -501,7 +501,7 @@ test('tutorial: no mapa as dicas vêm uma por vez, em fila, com o jogo parado, e
   for (const id of ['menu', 'salvar']) await expect(page.locator(`.dica-tutorial[data-dica="${id}"]`)).toHaveCount(0);
 });
 
-test('tutorial: "Pular todas as dicas" desliga o tutorial', async ({ page }) => {
+test('tutorial: "Pular todas as dicas" desliga o tutorial', { tag: ['@interface'] }, async ({ page }) => {
   test.setTimeout(180_000);
   await semear(page, { campanha: MAPA({ flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa'] }), config: { tutorial: true, ajudaFullmunVista: true, dicasVistas: [] } });
   await noMapa(page);
@@ -514,7 +514,7 @@ test('tutorial: "Pular todas as dicas" desliga o tutorial', async ({ page }) => 
   expect((await st(page)).controle).toBe(true);
 });
 
-test('tutorial: Opções têm o interruptor de dicas, "Rever todas as dicas" e a versão do jogo', async ({ page }) => {
+test('tutorial: Opções têm o interruptor de dicas, "Rever todas as dicas" e a versão do jogo', { tag: ['@interface'] }, async ({ page }) => {
   await semear(page, { config: { tutorial: true, ajudaFullmunVista: true, dicasVistas: ['menu', 'salvar', 'andar'] } });
   await irAteMenu(page, './?test=1');
   await page.getByRole('button', { name: 'Opções' }).click();
@@ -527,7 +527,7 @@ test('tutorial: Opções têm o interruptor de dicas, "Rever todas as dicas" e a
   expect((await opcoes(page)).tutorial).toBe(false);
 });
 
-test('tutorial: dica de andar no sonho, com seta para o controle', async ({ page }, info) => {
+test('tutorial: dica de andar no sonho, com seta para o controle', { tag: ['@interface'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { sonhoConcluido: false, config: soDicas('andar') });
   await continuar(page);
@@ -539,7 +539,7 @@ test('tutorial: dica de andar no sonho, com seta para o controle', async ({ page
   await expect(page.locator('.dica-tutorial')).toHaveCount(0);
 });
 
-test('tutorial: dicas do primeiro teste e da primeira batalha', async ({ page }, info) => {
+test('tutorial: dicas do primeiro teste e da primeira batalha', { tag: ['@interface'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas', local: { tela: 'capitulo' } }, config: soDicas('teste', 'batalha-turnos') });
   await continuar(page);
@@ -561,7 +561,7 @@ test('tutorial: dicas do primeiro teste e da primeira batalha', async ({ page },
   await page.locator('.dica-ok').click();
 });
 
-test('batalha: segurar um comando mostra a ajuda de uma linha e não executa o comando', async ({ page }) => {
+test('batalha: segurar um comando mostra a ajuda de uma linha e não executa o comando', { tag: ['@interface'] }, async ({ page }) => {
   test.setTimeout(180_000);
   await semear(page, { campanha: { cena: 'c01-grito', modo: 'escolhas', local: { tela: 'capitulo' } } });
   await continuar(page);
@@ -585,7 +585,7 @@ test('batalha: segurar um comando mostra a ajuda de uma linha e não executa o c
    ====================================================================== */
 
 for (const tutorial of [true, false]) {
-  test(`ajuda de Füllmun (dicas ${tutorial ? 'ligadas' : 'desligadas'}): aparece na primeira entrada, não na segunda e volta pelo menu`, async ({ page }, info) => {
+  test(`ajuda de Füllmun (dicas ${tutorial ? 'ligadas' : 'desligadas'}): aparece na primeira entrada, não na segunda e volta pelo menu`, { tag: ['@layout', '@cap01'] }, async ({ page }, info) => {
     test.setTimeout(240_000);
     await semear(page, { campanha: MAPA({ flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa'] }), config: { tutorial, ajudaFullmunVista: false, dicasVistas: [] } });
     await noMapa(page);

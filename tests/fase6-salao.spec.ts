@@ -39,7 +39,7 @@ async function juramento(page: Page) {
   await forja.getByRole('button', { name: 'Continuar' }).click();
 }
 
-test('Parte 6: as 7 vozes aparecem ao lado das estátuas certas (Justar e Ardor trocados em relação ao sonho) e falam juntas', async ({ page }, info) => {
+test('Parte 6: as 7 vozes aparecem ao lado das estátuas certas (Justar e Ardor trocados em relação ao sonho) e falam juntas', { tag: ['@ato1-p6'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await noSalao(page);
   await cenaLateral(page, 'f-entrada', 60_000);
@@ -71,7 +71,7 @@ test('Parte 6: as 7 vozes aparecem ao lado das estátuas certas (Justar e Ardor 
   await fecharFala(page);
 });
 
-test('Parte 6: a escolha pela estátua ("Ouvir as outras" volta), a divindade se apresenta, juramento com ecos, 1 poder, relíquia com a Tolerância, PV e PM da classe, "Erga-se" e o Fim do Ato I', async ({ page }, info) => {
+test('Parte 6: a escolha pela estátua ("Ouvir as outras" volta), a divindade se apresenta, juramento com ecos, 1 poder, relíquia com a Tolerância, PV e PM da classe, "Erga-se" e o Fim do Ato I', { tag: ['@ato1-p6'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await noSalao(page, { flags: ['fim_capitulo_02', 'nyme_caiu', 'levantou', 'caminho_tolerancia', 'coragem_escuro', 'atravessou_solem', 'desceu_alcapao'] });
   await ouvirAsVozes(page);
@@ -162,7 +162,7 @@ test('Parte 6: a escolha pela estátua ("Ouvir as outras" volta), a divindade se
   await expect(page.locator('.tela-embreve .embreve-breve')).toHaveText('Em breve');
 });
 
-test('Parte 6: a escolha pela lista do menu; o Paladino recebe 2 poderes; sem a tolerância, o eco muda e a pedra não brilha; o Compêndio ganha os nomes', async ({ page }) => {
+test('Parte 6: a escolha pela lista do menu; o Paladino recebe 2 poderes; sem a tolerância, o eco muda e a pedra não brilha; o Compêndio ganha os nomes', { tag: ['@ato1-p6'] }, async ({ page }) => {
   test.setTimeout(300_000);
   await noSalao(page, {}, { classe: 'paladino' });
   await ouvirAsVozes(page);
@@ -203,7 +203,7 @@ test('Parte 6: a escolha pela lista do menu; o Paladino recebe 2 poderes; sem a 
 });
 
 for (const classe of ['guerreiro', 'ladino', 'monge']) {
-  test(`Parte 6: a relíquia do ${classe}`, async ({ page }) => {
+  test(`Parte 6: a relíquia do ${classe}`, { tag: ['@ato1-p6'] }, async ({ page }) => {
     test.setTimeout(200_000);
     // Retomando com a voz já escolhida: a Forja começa no juramento.
     await noSalao(page, { divindade: 'mentis', flags: ['fim_capitulo_02', 'nyme_caiu', 'escolheu_voz'], coletados: ['salao:entrada', 'salao:vozes'], cena: null }, { classe });

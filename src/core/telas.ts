@@ -3,6 +3,7 @@ import { esperar } from './ui';
 import { contarTempo, limparInicioCena } from './estado';
 import { registrarGanchosBase } from './ganchos';
 import { definirTelaAtual } from './erros';
+import { turbo } from './turbo';
 
 /** Máquina de telas: uma tela visível por vez, com fade entre elas. */
 
@@ -43,7 +44,8 @@ const SEM_TEMPO_DE_JOGO: NomeTela[] = ['loading', 'intro', 'menu', 'criacao'];
 export async function irPara(nome: NomeTela, params?: unknown, opcoes: OpcoesTroca = {}): Promise<void> {
   if (trocando) return;
   trocando = true;
-  const { som = true, duracao = 450 } = opcoes;
+  const { som = true } = opcoes;
+  const duracao = turbo() ? Math.min(opcoes.duracao ?? 450, 30) : opcoes.duracao ?? 450;
   const raiz = document.getElementById('app')!;
   try {
     if (som) audio.sfx('transition');

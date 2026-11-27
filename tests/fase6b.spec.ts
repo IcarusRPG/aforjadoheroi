@@ -7,7 +7,7 @@ import { cenaLateral, f, fecharFala, lat, livre, naLateral, st } from './fase6-a
 test.describe('PC (mouse e teclado)', () => {
   test.use({ viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false });
 
-  test('o botão PULAR aparece no PC, clicável, com "Espaço" embaixo; a interação mostra "E"', async ({ page }, info) => {
+  test('o botão PULAR aparece no PC, clicável, com "Espaço" embaixo; a interação mostra "E"', { tag: ['@layout', '@ato1-p4'] }, async ({ page }, info) => {
     test.skip(info.project.name !== 'pixel-7', 'um navegador de PC basta');
     test.setTimeout(180_000);
     await naLateral(page, 4, { cena: null, local: { tela: 'lateral', x: 6880, y: 700 }, coletados: ['lateral:p4:chegada'] });
@@ -29,7 +29,7 @@ test.describe('PC (mouse e teclado)', () => {
   });
 });
 
-test('primeiro trecho lateral: a dica "Pule com o botão PULAR (ou Espaço)." com as dicas ligadas', async ({ page }, info) => {
+test('primeiro trecho lateral: a dica "Pule com o botão PULAR (ou Espaço)." com as dicas ligadas', { tag: ['@ato1-p2'] }, async ({ page }, info) => {
   test.skip(info.project.name !== 'pixel-7' && info.project.name !== 'paisagem-844x390', 'dois aparelhos bastam');
   test.setTimeout(180_000);
   const vistas = (DICAS as { id: string }[]).map((d) => d.id).filter((id) => id !== 'pular');

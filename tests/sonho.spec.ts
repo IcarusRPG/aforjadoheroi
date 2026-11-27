@@ -83,14 +83,14 @@ async function ouvir(page: Page, id: string) {
   await fdg(page, 'fecharFala');
 }
 
-test('sprites: as 8 folhas existem com 192 × 192 px', async () => {
+test('sprites: as 8 folhas existem com 192 × 192 px', { tag: ['@sonho'] }, async () => {
   for (const r of ['arake', 'azakar', 'nyashi', 'ayoran']) for (const g of ['m', 'f']) {
     const m = await sharp(`public/assets/sprites/chibi-${r}-${g}.png`).metadata();
     expect([m.width, m.height, m.hasAlpha], `chibi-${r}-${g}`).toEqual([192, 192, true]);
   }
 });
 
-test('sprites: cada raça e gênero carrega a própria folha (não o boneco provisório)', async ({ page }, info) => {
+test('sprites: cada raça e gênero carrega a própria folha (não o boneco provisório)', { tag: ['@sonho'] }, async ({ page }, info) => {
   test.skip(info.project.name !== 'pixel-7', 'não depende do tamanho da tela: roda uma vez só');
   const combinacoes: [Raca, Genero][] = [['arake', 'm'], ['arake', 'f'], ['azakar', 'm'], ['azakar', 'f'], ['nyashi', 'm'], ['nyashi', 'f'], ['ayoran', 'm'], ['ayoran', 'f']];
   await semearHeroi(page);
@@ -108,7 +108,7 @@ test('sprites: cada raça e gênero carrega a própria folha (não o boneco prov
   }
 });
 
-test('sonho dos deuses: andar, ouvir as sete vozes, caminhada sozinho até o altar, clímax e despertar', async ({ page }, info) => {
+test('sonho dos deuses: andar, ouvir as sete vozes, caminhada sozinho até o altar, clímax e despertar', { tag: ['@layout', '@sonho'] }, async ({ page }, info) => {
   test.setTimeout(420_000);
   const toque = info.project.use.hasTouch === true;
   await semearHeroi(page);
@@ -224,7 +224,7 @@ test('sonho dos deuses: andar, ouvir as sete vozes, caminhada sozinho até o alt
   await foto(page, 'sonho-fim-capitulo01', info.project.name);
 });
 
-test('mapa: percorre o anel, as 4 pontes e a escada e ouve as 7 estátuas', async ({ page }) => {
+test('mapa: percorre o anel, as 4 pontes e a escada e ouve as 7 estátuas', { tag: ['@sonho'] }, async ({ page }) => {
   test.setTimeout(420_000);
   await semearHeroi(page);
   await entrarNoSonho(page);
@@ -255,7 +255,7 @@ test('mapa: percorre o anel, as 4 pontes e a escada e ouve as 7 estátuas', asyn
   await marco(page, 'climax');
 });
 
-test('profundidade: o herói fica atrás da estátua ao passar por trás e na frente ao passar pela frente', async ({ page }, info) => {
+test('profundidade: o herói fica atrás da estátua ao passar por trás e na frente ao passar pela frente', { tag: ['@sonho'] }, async ({ page }, info) => {
   await semearHeroi(page);
   await entrarNoSonho(page);
   // Atrás de Justar: os pés acima da base, o corpo coberto pelo recorte da estátua
@@ -274,7 +274,7 @@ test('profundidade: o herói fica atrás da estátua ao passar por trás e na fr
   expect((await estado(page)).atrasDe).toBe('balaustrada-esquerda');
 });
 
-test('altar: recarregar com as sete vozes faz o herói ir sozinho até o altar', async ({ page }) => {
+test('altar: recarregar com as sete vozes faz o herói ir sozinho até o altar', { tag: ['@sonho'] }, async ({ page }) => {
   await semearHeroi(page, { concluido: false, ouvidas: ESTATUAS });
   await entrarNoSonho(page);
   await expect(page.locator('.sonho-contador')).toHaveText('Vozes ouvidas: 7 / 7');
@@ -285,7 +285,7 @@ test('altar: recarregar com as sete vozes faz o herói ir sozinho até o altar',
   await marco(page, 'climax');
 });
 
-test('clima: neblina em camadas e tremores que podem ser desligados nas Opções', async ({ page }, info) => {
+test('clima: neblina em camadas e tremores que podem ser desligados nas Opções', { tag: ['@sonho'] }, async ({ page }, info) => {
   await semearHeroi(page);
   await entrarNoSonho(page);
   await fdg(page, 'teleport', '200,700');
@@ -320,7 +320,7 @@ test('clima: neblina em camadas e tremores que podem ser desligados nas Opções
   expect((await estado(page)).neblina).toEqual({ camadas: 1, nivel: 1 });
 });
 
-test('clima: com prefers-reduced-motion, os tremores de tela começam desligados', async ({ page }) => {
+test('clima: com prefers-reduced-motion, os tremores de tela começam desligados', { tag: ['@sonho'] }, async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await semearHeroi(page);
   await entrarNoSonho(page);
@@ -328,7 +328,7 @@ test('clima: com prefers-reduced-motion, os tremores de tela começam desligados
   expect((await estado(page)).tremorCamera).toBe(false);
 });
 
-test('sonho: Continuar retoma com as vozes já ouvidas; modo de ajuste mostra as colisões', async ({ page }, info) => {
+test('sonho: Continuar retoma com as vozes já ouvidas; modo de ajuste mostra as colisões', { tag: ['@sonho'] }, async ({ page }, info) => {
   await semearHeroi(page, { concluido: false, ouvidas: ['solem', 'irae'] });
   await entrarNoSonho(page, '?test=1&debug=1');
   await expect(page.locator('.sonho-contador')).toHaveText('Vozes ouvidas: 2 / 7');
@@ -338,7 +338,7 @@ test('sonho: Continuar retoma com as vozes já ouvidas; modo de ajuste mostra as
   await foto(page, 'sonho-debug-colisoes', info.project.name);
 });
 
-test('sonho concluído: Continuar abre o Capítulo 01', async ({ page }) => {
+test('sonho concluído: Continuar abre o Capítulo 01', { tag: ['@sonho'] }, async ({ page }) => {
   await semearHeroi(page, { concluido: true, ouvidas: ESTATUAS });
   await irAteMenu(page);
   await page.getByRole('button', { name: 'Continuar' }).click();

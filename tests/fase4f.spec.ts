@@ -63,7 +63,7 @@ async function noMapa(page: Page, id: string) {
    1. Intro: busto nunca vazio, nunca no passo errado (rede lenta, avançando rápido)
    ====================================================================== */
 
-test('intro (Fast 3G): a moldura do busto nunca aparece vazia e o busto nunca aparece no passo errado', async ({ page }, info) => {
+test('intro (Fast 3G): a moldura do busto nunca aparece vazia e o busto nunca aparece no passo errado', { tag: ['@intro'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page);
   await page.goto('./?test=1&tela=intro-fullmun');
@@ -96,7 +96,7 @@ test('intro (Fast 3G): a moldura do busto nunca aparece vazia e o busto nunca ap
    2. Mapa: tela de carregamento e depois o mapa completo; nunca a tela vazia com o joystick
    ====================================================================== */
 
-test('mapa (Fast 3G): aparece a tela de carregamento e depois o mapa completo, nunca o joystick sobre a tela vazia', async ({ page }, info) => {
+test('mapa (Fast 3G): aparece a tela de carregamento e depois o mapa completo, nunca o joystick sobre a tela vazia', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(420_000);
   await semear(page, { campanha: MAPA('fullmun') });
   await irAteMenu(page, './?test=1');
@@ -132,7 +132,7 @@ test('mapa (Fast 3G): aparece a tela de carregamento e depois o mapa completo, n
    3. Cenas: a imagem nova só aparece carregada
    ====================================================================== */
 
-test('cenas (Fast 3G): ao trocar de cena, o fundo novo só aparece carregado', async ({ page }, info) => {
+test('cenas (Fast 3G): ao trocar de cena, o fundo novo só aparece carregado', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(420_000);
   await semear(page, { campanha: { cena: 'c01-quarto', modo: 'falas', local: { tela: 'capitulo' } } });
   await irAteMenu(page, './?test=1');
@@ -164,7 +164,7 @@ test('cenas (Fast 3G): ao trocar de cena, o fundo novo só aparece carregado', a
 
 // A profundidade e o modo F2 de Füllmun passaram para fase5.spec.ts (mapa de chão + objetos).
 
-test('Füllmun: depois do Mirtilo, o "!" vermelho pula sobre a casa da Aylin, a seta de borda aparece e tudo some quando ela entra', async ({ page }, info) => {
+test('Füllmun: depois do Mirtilo, o "!" vermelho pula sobre a casa da Aylin, a seta de borda aparece e tudo some quando ela entra', { tag: ['@layout', '@cap01'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, { campanha: MAPA('fullmun', { flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_seguindo'] }) });
   await continuar(page);
@@ -214,7 +214,7 @@ const MAPA_JSON = (id: string) => JSON.parse(readFileSync(`src/data/mapas/${id}.
 const PORTAS: Record<string, number> = { 'templo-salao': 175, 'templo-biblioteca': 310 };
 
 for (const id of ['templo-salao', 'templo-biblioteca']) {
-  test(`templo (${id}): o herói tem entre 55% e 65% da altura da porta e todas as interações são alcançáveis`, async ({ page }, info) => {
+  test(`templo (${id}): o herói tem entre 55% e 65% da altura da porta e todas as interações são alcançáveis`, { tag: ['@layout', '@cap01'] }, async ({ page }, info) => {
     test.setTimeout(600_000);
     await semear(page, { campanha: MAPA(id, { capitulo: 2, cena: 'c02-artho', atraso: 2, flags: ['nyme_seguindo'] }) });
     await continuar(page);
@@ -243,7 +243,7 @@ for (const id of ['templo-salao', 'templo-biblioteca']) {
    6. Tabela de pesos (antes e depois) como imagem
    ====================================================================== */
 
-test('pesos dos assets: tabela antes e depois', async ({ page }) => {
+test('pesos dos assets: tabela antes e depois', { tag: ['@layout', '@cap01'] }, async ({ page }) => {
   test.skip(test.info().project.name !== 'pixel-7', 'uma imagem basta');
   const md = readFileSync('docs/pesos-assets.md', 'utf8');
   const linhas = md.split('\n').filter((l) => l.startsWith('|') && !l.startsWith('| ---'));

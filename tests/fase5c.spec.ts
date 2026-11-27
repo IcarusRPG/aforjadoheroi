@@ -63,7 +63,7 @@ async function falaCompleta(page: Page) {
    1. Um capítulo só: Füllmun → cartão de local → Templo
    ====================================================================== */
 
-test('capítulo único: o fim de Füllmun vira o cartão "Templo de Sólem", sem "Fim do Capítulo" nem cartão de capítulo; salva e anota no Caderno', async ({ page }, info) => {
+test('capítulo único: o fim de Füllmun vira o cartão "Templo de Sólem", sem "Fim do Capítulo" nem cartão de capítulo; salva e anota no Caderno', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { cena: 'c01-caminho', modo: 'falas', flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa', 'salvou_aylin'] });
   await continuar(page);
@@ -110,7 +110,7 @@ const FLAGS_JOGO = [
   'leu_tres_livros', 'perguntou_alcapao', 'artho_alcapao', 'chegou_templo', 'carinho_nyme',
 ];
 
-test('fim: "Fim do Capítulo 01 — Amanhecer Tardio" com um resumo único (até 8 linhas, a Nyme por último) e depois "Capítulo 02 — Provação Sob a Luz · Em breve"', async ({ page }, info) => {
+test('fim: "Fim do Capítulo 01 — Amanhecer Tardio" com um resumo único (até 8 linhas, a Nyme por último) e depois "Capítulo 02 — Provação Sob a Luz · Em breve"', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { parte: 'templo', cena: 'c02-tragedia', modo: 'falas', flags: FLAGS_JOGO });
   await continuar(page);
@@ -166,7 +166,7 @@ test('fim: "Fim do Capítulo 01 — Amanhecer Tardio" com um resumo único (até
    3. Saves: cards e migração dos antigos
    ====================================================================== */
 
-test('saves antigos: o antigo Capítulo 02 vira "Capítulo 01 · Templo de Sólem", o antigo 03 vira o Capítulo 02; os cards mostram a numeração nova', async ({ page }, info) => {
+test('saves antigos: o antigo Capítulo 02 vira "Capítulo 01 · Templo de Sólem", o antigo 03 vira o Capítulo 02; os cards mostram a numeração nova', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   const agora = Date.now();
   await page.addInitScript(([a, b, cf]) => {
@@ -197,7 +197,7 @@ test('saves antigos: o antigo Capítulo 02 vira "Capítulo 01 · Templo de Sóle
   expect(s.caderno.anotacoes).toContain('fim-cap01');
 });
 
-test('migração: um save antigo em "Capítulo 03 · Em breve" abre o Ato I, Parte 1 (Fase 6)', async ({ page }) => {
+test('migração: um save antigo em "Capítulo 03 · Em breve" abre o Ato I, Parte 1 (Fase 6)', { tag: ['@cap01'] }, async ({ page }) => {
   test.setTimeout(180_000);
   test.skip(!umAparelho(test.info()), 'um aparelho basta');
   await page.addInitScript(([a, cf]) => {
@@ -321,7 +321,7 @@ const ALCAPAO = {
   flags: ['nyme_seguindo', 'alcapao_liberado', 'perguntou_alcapao', 'carinho_nyme', 'chegou_templo'],
 };
 
-test('tragédia: música do templo corta, gritos reais (≥3 s antes de avançar), porta → flecha1 → flecha2 → espada → flecha2 → preto, flechas e clang; nada carrega durante a sequência', async ({ page }, info) => {
+test('tragédia: música do templo corta, gritos reais (≥3 s antes de avançar), porta → flecha1 → flecha2 → espada → flecha2 → preto, flechas e clang; nada carrega durante a sequência', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, ALCAPAO);
   await continuar(page);
@@ -335,7 +335,7 @@ test('tragédia: música do templo corta, gritos reais (≥3 s antes de avançar
   expect(hist.some((x) => x.includes('tragedia'))).toBe(true);
 });
 
-test('tragédia sem tragedia.mp3 e com animações reduzidas: só os gritos e o silêncio; sem flash e sem tremor, cortes secos', async ({ page }, info) => {
+test('tragédia sem tragedia.mp3 e com animações reduzidas: só os gritos e o silêncio; sem flash e sem tremor, cortes secos', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   test.skip(!umAparelho(info) && info.project.name !== 'paisagem-844x390', 'dois aparelhos bastam');
   await page.route('**/music/tragedia.mp3', (r) => r.fulfill({ status: 404, body: '' }));
@@ -365,7 +365,7 @@ test('tragédia sem tragedia.mp3 e com animações reduzidas: só os gritos e o 
    5. Créditos
    ====================================================================== */
 
-test('créditos: abrem pelo menu inicial e pelas Opções, com música, efeitos e arte (os dois efeitos novos com autor, fonte e licença)', async ({ page }, info) => {
+test('créditos: abrem pelo menu inicial e pelas Opções, com música, efeitos e arte (os dois efeitos novos com autor, fonte e licença)', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.setTimeout(120_000);
   await page.addInitScript((cf) => { if (!localStorage.getItem('fdg.opcoes')) localStorage.setItem('fdg.opcoes', JSON.stringify(cf)); }, CONFIG);
   await irAteMenu(page, './?test=1');

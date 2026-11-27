@@ -34,7 +34,7 @@ const fotoGrande = (nome: string) => nome === 'pixel-7' || nome === 'paisagem-84
    1. Motor lateral e Parte 2 · O túnel
    ====================================================================== */
 
-test('motor lateral: câmera só na horizontal, faixa de chão, pulo (botão e Espaço), parallax da frente e a luz da tocha seguindo o herói', async ({ page }, info) => {
+test('motor lateral: câmera só na horizontal, faixa de chão, pulo (botão e Espaço), parallax da frente e a luz da tocha seguindo o herói', { tag: ['@layout', '@ato1-p2'] }, async ({ page }, info) => {
   test.setTimeout(180_000);
   await vigiarCartoes(page);
   await naLateral(page, 2, { coletados: ['lateral:p2:poca'] });
@@ -92,7 +92,7 @@ test('motor lateral: câmera só na horizontal, faixa de chão, pulo (botão e E
   await expect.poll(async () => (await lat(page)).z, { timeout: 2000, intervals: [30] }).toBeGreaterThan(40);
 });
 
-test('Parte 2: os gatilhos aparecem uma vez; teto baixo com metade da velocidade; termina na Parte 3', async ({ page }) => {
+test('Parte 2: os gatilhos aparecem uma vez; teto baixo com metade da velocidade; termina na Parte 3', { tag: ['@ato1-p2'] }, async ({ page }) => {
   test.setTimeout(180_000);
   await naLateral(page, 2);
   await cenaLateral(page, 't-inicio', 30_000);
@@ -132,7 +132,7 @@ test('Parte 2: os gatilhos aparecem uma vez; teto baixo com metade da velocidade
 });
 
 for (const reduzidas of [false, true]) {
-  test(`Parte 2: a memória da mãe ${reduzidas ? 'sem efeitos (animações reduzidas)' : 'tremula e fragmenta, fica nítida na Liessa e se estilhaça'}`, async ({ page }, info) => {
+  test(`Parte 2: a memória da mãe ${reduzidas ? 'sem efeitos (animações reduzidas)' : 'tremula e fragmenta, fica nítida na Liessa e se estilhaça'}`, { tag: ['@ato1-p2'] }, async ({ page }, info) => {
     test.setTimeout(180_000);
     await naLateral(page, 2, { coletados: ['lateral:p2:inicio', 'lateral:p2:poca', 'lateral:p2:teto'], local: { tela: 'lateral', x: 2900, y: 700 }, cena: null }, { config: { animacoesReduzidas: reduzidas } });
     await livre(page, 40_000);
@@ -167,7 +167,7 @@ const pe = (g: GradeLajes, col: number, lin: number) => { const c = centroLaje(g
 const passouDa = (g: GradeLajes, y: number) => juntaX(g, colunas(g), y) + 60;
 
 for (const [nome, g, painel] of [['corredor-1', G3, 'corredor-1'], ['corredor-2', G4, 'corredor-2']] as const) {
-  test(`grade do ${nome}: 4 fileiras dentro da faixa de chão, uma laje lógica por laje pintada`, () => {
+  test(`grade do ${nome}: 4 fileiras dentro da faixa de chão, uma laje lógica por laje pintada`, { tag: ['@ato1-p3', '@ato1-p4'] }, () => {
     const pn = PAINEIS.find((q) => q.id === painel)!;
     expect(linhas(g)).toBe(4);
     expect(g.tabuleiro.length).toBe(4);
@@ -184,7 +184,7 @@ for (const [nome, g, painel] of [['corredor-1', G3, 'corredor-1'], ['corredor-2'
   });
 }
 
-test('primeiro tabuleiro (corredor-1): a primeira coluna tem uma laje segura; existe um caminho sem Sólem, com pelo menos 4 trocas de fileira', () => {
+test('primeiro tabuleiro (corredor-1): a primeira coluna tem uma laje segura; existe um caminho sem Sólem, com pelo menos 4 trocas de fileira', { tag: ['@ato1-p3'] }, () => {
   expect([0, 1, 2, 3].some((lin) => G3.tabuleiro[lin][0] !== 'S')).toBe(true);
   const trocas = menorTrocas(G3, (l) => l !== 'S');
   expect(trocas).not.toBeNull();
@@ -193,7 +193,7 @@ test('primeiro tabuleiro (corredor-1): a primeira coluna tem uma laje segura; ex
   for (const linha of G3.tabuleiro) expect(linha).toContain('S');
 });
 
-test('segundo tabuleiro (corredor-2): o único caminho seguro é o de Sólem, com 4+ trocas de fileira e duas lajes quebradas nele', () => {
+test('segundo tabuleiro (corredor-2): o único caminho seguro é o de Sólem, com 4+ trocas de fileira e duas lajes quebradas nele', { tag: ['@ato1-p4'] }, () => {
   expect(colunas(G4)).toBeGreaterThanOrEqual(9);
   expect(contarCaminhos(G4, (l) => l === 'S')).toBe(1);
   expect(menorTrocas(G4, (l) => l === 'S')!).toBeGreaterThanOrEqual(4);
@@ -218,7 +218,7 @@ const CAMINHO4: [number, number][] = [[0, 1], [1, 1], [2, 1], [3, 1], [3, 2], [3
    3. Parte 3 · Os símbolos (a tolerância)
    ====================================================================== */
 
-test('Parte 3: os símbolos ficam no centro das lajes pintadas; Religião com a frase de antes e a de depois, e os nomes aparecem', async ({ page }, info) => {
+test('Parte 3: os símbolos ficam no centro das lajes pintadas; Religião com a frase de antes e a de depois, e os nomes aparecem', { tag: ['@ato1-p3'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await naLateral(page, 3, { pvAtual: 12 });
   await cenaLateral(page, 's-inscricao', 30_000);
@@ -252,7 +252,7 @@ test('Parte 3: os símbolos ficam no centro das lajes pintadas; Religião com a 
   expect((await st(page)).flags).toContain('nomes_lajes');
 });
 
-test('Parte 3: na falha de Religião os nomes não aparecem; o passivo que falha não mostra nada', async ({ page }) => {
+test('Parte 3: na falha de Religião os nomes não aparecem; o passivo que falha não mostra nada', { tag: ['@ato1-p3'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await naLateral(page, 3, { pvAtual: 12, coletados: ['lateral:p3:inscricao'] });
   await livre(page, 40_000);
@@ -269,7 +269,7 @@ test('Parte 3: na falha de Religião os nomes não aparecem; o passivo que falha
   expect((await st(page)).flags).not.toContain('nomes_lajes');
 });
 
-test('Parte 3: a primeira flecha traz a visão, sem o "LEVANTE!"; o caminho sem Sólem atravessa o resto sem flechas', async ({ page }, info) => {
+test('Parte 3: a primeira flecha traz a visão, sem o "LEVANTE!"; o caminho sem Sólem atravessa o resto sem flechas', { tag: ['@ato1-p3'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await naLateral(page, 3, { pvAtual: 12, coletados: ['lateral:p3:inscricao', 'lateral:p3:passivo', 'lateral:p3:religiao'] });
   await livre(page, 40_000);
@@ -306,7 +306,7 @@ test('Parte 3: a primeira flecha traz a visão, sem o "LEVANTE!"; o caminho sem 
   await expect.poll(async () => (await salvoAuto(page))?.jogo?.campanha?.parte, { timeout: 20_000 }).toBe(4);
 });
 
-test('Parte 3: atravessar sem nenhuma flecha dá a tolerância (e a visão não aparece)', async ({ page }) => {
+test('Parte 3: atravessar sem nenhuma flecha dá a tolerância (e a visão não aparece)', { tag: ['@ato1-p3'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await naLateral(page, 3, { pvAtual: 12, coletados: ['lateral:p3:inscricao', 'lateral:p3:passivo', 'lateral:p3:religiao'] });
   await livre(page, 40_000);
@@ -322,7 +322,7 @@ test('Parte 3: atravessar sem nenhuma flecha dá a tolerância (e a visão não 
   expect(s.contadores.flechas_p3 ?? 0).toBe(0);
 });
 
-test('LEVANTE: só a 0 PV (volta com 1 PV); a 2ª flecha e a 3ª trazem a ajuda progressiva', async ({ page }) => {
+test('LEVANTE: só a 0 PV (volta com 1 PV); a 2ª flecha e a 3ª trazem a ajuda progressiva', { tag: ['@ato1-p3'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await naLateral(page, 3, {
     pvAtual: 3, flags: ['fim_capitulo_02', 'nyme_caiu', 'visao_vista'], contadores: { flechas_p3: 1 },
@@ -350,7 +350,7 @@ test('LEVANTE: só a 0 PV (volta com 1 PV); a 2ª flecha e a 3ª trazem a ajuda 
    4. Parte 4 · O corredor de Sólem (o inverso)
    ====================================================================== */
 
-test('Parte 4: a voz interior na chegada e diante da primeira laje; o caminho de Sólem com os dois pulos (sucesso, falha e 20 natural); seguiu_a_luz e a visão como recompensa', async ({ page }, info) => {
+test('Parte 4: a voz interior na chegada e diante da primeira laje; o caminho de Sólem com os dois pulos (sucesso, falha e 20 natural); seguiu_a_luz e a visão como recompensa', { tag: ['@ato1-p4'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await naLateral(page, 4, { pvAtual: 30, contadores: { flechas_p3: 0 } });
   await cenaLateral(page, 'c-chegada', 30_000);
@@ -415,7 +415,7 @@ test('Parte 4: a voz interior na chegada e diante da primeira laje; o caminho de
   await expect.poll(async () => (await salvoAuto(page))?.jogo?.campanha?.parte, { timeout: 20_000 }).toBe(5);
 });
 
-test('Parte 4: as lajes dos outros deuses disparam a flecha e racham; a voz interior depois da 1ª e da 2ª; o passivo de Visão; andar no buraco derruba; sem seguiu_a_luz', async ({ page }) => {
+test('Parte 4: as lajes dos outros deuses disparam a flecha e racham; a voz interior depois da 1ª e da 2ª; o passivo de Visão; andar no buraco derruba; sem seguiu_a_luz', { tag: ['@ato1-p4'] }, async ({ page }) => {
   test.setTimeout(300_000);
   await naLateral(page, 4, {
     pvAtual: 30, flags: ['fim_capitulo_02', 'nyme_caiu', 'visao_vista'],
@@ -483,7 +483,7 @@ test('Parte 4: as lajes dos outros deuses disparam a flecha e racham; a voz inte
   expect(ehQuebrada(G4, 2, 1)).toBe(true);
 });
 
-test('Parte 4: a segunda queda a 0 PV é game over e o Continuar volta ao início da parte, sem a flag levantou', async ({ page }) => {
+test('Parte 4: a segunda queda a 0 PV é game over e o Continuar volta ao início da parte, sem a flag levantou', { tag: ['@ato1-p4'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await naLateral(page, 4, { pvAtual: 2, flags: ['fim_capitulo_02', 'nyme_caiu', 'levantou', 'visao_vista'], coletados: ['lateral:p4:chegada', 'lateral:p4:primeira'] });
   await livre(page, 40_000);
@@ -500,7 +500,7 @@ test('Parte 4: a segunda queda a 0 PV é game over e o Continuar volta ao iníci
   expect(s.pv).toBeGreaterThanOrEqual(1);
 });
 
-test('retomar o save no meio de um trecho continua dali (não recomeça a parte)', async ({ page }) => {
+test('retomar o save no meio de um trecho continua dali (não recomeça a parte)', { tag: ['@ato1-p2'] }, async ({ page }) => {
   test.setTimeout(180_000);
   await naLateral(page, 2, { cena: null, local: { tela: 'lateral', x: 2400, y: 700 }, coletados: ['lateral:p2:inicio', 'lateral:p2:poca', 'lateral:p2:teto'] });
   await livre(page, 40_000);
@@ -512,7 +512,7 @@ test('retomar o save no meio de um trecho continua dali (não recomeça a parte)
    ====================================================================== */
 
 for (const leal of [true, false]) {
-  test(`Parte 5: a tocha apaga, voltar é bloqueado, Vontade grava a flag, a lembrança da Nyme ${leal ? 'aparece (Leal)' : 'não aparece'}, as tochas acendem e a porta abre`, async ({ page }, info) => {
+  test(`Parte 5: a tocha apaga, voltar é bloqueado, Vontade grava a flag, a lembrança da Nyme ${leal ? 'aparece (Leal)' : 'não aparece'}, as tochas acendem e a porta abre`, { tag: ['@layout', '@ato1-p5'] }, async ({ page }, info) => {
     test.setTimeout(360_000);
     await naLateral(page, 5, { relacoes: { nyme: leal ? 6 : 2 } });
     await cenaLateral(page, 'e-apaga', 40_000);

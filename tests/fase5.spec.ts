@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { irAteMenu, novoJogo } from './ajudantes';
+import { devagar, irAteMenu, novoJogo } from './ajudantes';
 
 /* Fase 5: Füllmun de chão + objetos, editor, dado animado, panteão novo, celular deitado e tela cheia. */
 
@@ -45,7 +45,7 @@ async function noMapa(page: Page, id = 'fullmun') {
    1. Füllmun: profundidade de verdade (y-sort), copas, marcadores e desempenho
    ====================================================================== */
 
-test('Füllmun: o herói fica atrás e na frente de uma casa, de uma árvore e de uma barraca; nada cobre os moradores', async ({ page }, info) => {
+test('Füllmun: o herói fica atrás e na frente de uma casa, de uma árvore e de uma barraca; nada cobre os moradores', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, FULLMUN());
   await continuar(page);
@@ -85,7 +85,7 @@ test('Füllmun: o herói fica atrás e na frente de uma casa, de uma árvore e d
   }
 });
 
-test('Füllmun: o "!" vermelho da Aylin, a seta de borda e as animações (e Animações reduzidas desligam tudo)', async ({ page }, info) => {
+test('Füllmun: o "!" vermelho da Aylin, a seta de borda e as animações (e Animações reduzidas desligam tudo)', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, FULLMUN({ flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_seguindo'] }));
   await continuar(page);
@@ -103,7 +103,7 @@ test('Füllmun: o "!" vermelho da Aylin, a seta de borda e as animações (e Ani
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fdg.opcoes') ?? '{}').animacoesReduzidas)).toBe(true);
 });
 
-test('Füllmun: desempenho de pelo menos 50 fps com a CPU 4× mais lenta (com GPU)', async ({ browser }, info) => {
+test('Füllmun: desempenho de pelo menos 50 fps com a CPU 4× mais lenta (com GPU)', { tag: ['@cap01'] }, async ({ browser }, info) => {
   test.skip(info.project.name !== 'pixel-7', 'mede num aparelho só (Chromium com GPU)');
   test.setTimeout(300_000);
   // Um navegador com a GPU da máquina: o WebGL por software do modo headless não representa um celular.
@@ -132,7 +132,7 @@ test('Füllmun: desempenho de pelo menos 50 fps com a CPU 4× mais lenta (com GP
    2. Editor (?editor=1)
    ====================================================================== */
 
-test('editor: ?editor=1 abre, arrasta um objeto, mostra o fantasma e exporta um JSON válido', async ({ page }, info) => {
+test('editor: ?editor=1 abre, arrasta um objeto, mostra o fantasma e exporta um JSON válido', { tag: ['@layout', '@cap01'] }, async ({ page }, info) => {
   test.skip(info.project.name !== 'pixel-7', 'ferramenta de ajuste: um aparelho basta');
   test.setTimeout(300_000);
   await page.setViewportSize({ width: 1366, height: 820 });
@@ -183,7 +183,8 @@ async function aoTeste(page: Page, roll: number[], reduzidas = false) {
   await page.locator('.cena-escolha', { hasText: 'Gritar' }).click();
 }
 
-test('dado: azul por padrão; anima (gira, quica) até o resultado; o 20 brilha com "CRÍTICO!"', async ({ page }, info) => {
+test('dado: azul por padrão; anima (gira, quica) até o resultado; o 20 brilha com "CRÍTICO!"', { tag: ['@interface'] }, async ({ page }, info) => {
+  await devagar(page); // mede a animação
   test.setTimeout(240_000);
   await page.addInitScript(() => {
     // Anota cada classe que o dado da rolagem recebe (girando, parado…): máquina lenta não perde o giro.
@@ -210,7 +211,8 @@ test('dado: azul por padrão; anima (gira, quica) até o resultado; o 20 brilha 
   await foto(page, info, 'dado-azul-critico');
 });
 
-test('dado: o 1 natural fica vermelho escuro com "FALHA!"; um toque durante o giro pula para o resultado', async ({ page }, info) => {
+test('dado: o 1 natural fica vermelho escuro com "FALHA!"; um toque durante o giro pula para o resultado', { tag: ['@interface'] }, async ({ page }, info) => {
+  await devagar(page); // mede a animação
   test.setTimeout(240_000);
   await aoTeste(page, [1]);
   const dado = page.locator('.rolagem .dado');
@@ -223,14 +225,14 @@ test('dado: o 1 natural fica vermelho escuro com "FALHA!"; um toque durante o gi
   await expect(dado.locator('.dado-destaque')).toHaveText('FALHA!');
 });
 
-test('dado: com Animações reduzidas, o resultado aparece num fade, sem giro', async ({ page }) => {
+test('dado: com Animações reduzidas, o resultado aparece num fade, sem giro', { tag: ['@interface'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await aoTeste(page, [12], true);
   const dado = page.locator('.rolagem .dado');
   await expect(dado).toHaveAttribute('data-valor', '12', { timeout: 1500 });
 });
 
-test('dado: escolha em Opções (vermelho) vale nas rolagens e aparece no card do save', async ({ page }, info) => {
+test('dado: escolha em Opções (vermelho) vale nas rolagens e aparece no card do save', { tag: ['@interface'] }, async ({ page }, info) => {
   test.setTimeout(240_000);
   await semear(page, { cena: 'c01-grito', modo: 'escolhas', local: { tela: 'capitulo' } });
   await continuar(page);
@@ -258,7 +260,7 @@ test('dado: escolha em Opções (vermelho) vale nas rolagens e aparece no card d
   await foto(page, info, 'dado-vermelho-resultado');
 });
 
-test('dado: escolha na revisão da criação ("Seu dado")', async ({ page }) => {
+test('dado: escolha na revisão da criação ("Seu dado")', { tag: ['@interface'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await irAteMenu(page, './?test=1');
   await novoJogo(page);
@@ -276,7 +278,7 @@ test('dado: escolha na revisão da criação ("Seu dado")', async ({ page }) => 
    4. Panteão
    ====================================================================== */
 
-test('panteão: as 20 imagens novas carregam com os ids certos', async ({ page }, info) => {
+test('panteão: as 20 imagens novas carregam com os ids certos', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.skip(info.project.name !== 'pixel-7', 'um aparelho basta');
   await page.goto('./');
   const r = await page.evaluate(async (ids) => Promise.all(ids.map((id) => new Promise<[string, number]>((ok) => {
@@ -324,7 +326,7 @@ async function alvos44(page: Page, sel: string) {
   }
 }
 
-test('horizontal: menu, cenas, escolhas, teste, mapa, batalha e menus cabem na tela', async ({ page }, info) => {
+test('horizontal: menu, cenas, escolhas, teste, mapa, batalha e menus cabem na tela', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.skip(!deitado(info), 'só deitado');
   test.setTimeout(420_000);
   await semear(page, { cena: 'c01-grito', modo: 'falas', local: { tela: 'capitulo' } });
@@ -356,7 +358,7 @@ test('horizontal: menu, cenas, escolhas, teste, mapa, batalha e menus cabem na t
   await foto(page, info, 'h-teste');
 });
 
-test('horizontal: batalha com os comandos numa coluna à direita, sem cobrir os sprites', async ({ page }, info) => {
+test('horizontal: batalha com os comandos numa coluna à direita, sem cobrir os sprites', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.skip(!deitado(info), 'só deitado');
   test.setTimeout(300_000);
   await semear(page, { cena: 'c01-grito', modo: 'escolhas', local: { tela: 'capitulo' } });
@@ -375,7 +377,7 @@ test('horizontal: batalha com os comandos numa coluna à direita, sem cobrir os 
   await foto(page, info, 'h-batalha');
 });
 
-test('horizontal: mapa, pausa, caderno, Itens, Compêndio, Opções e saves', async ({ page }, info) => {
+test('horizontal: mapa, pausa, caderno, Itens, Compêndio, Opções e saves', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.skip(!deitado(info), 'só deitado');
   test.setTimeout(300_000);
   await semear(page, FULLMUN());
@@ -409,7 +411,7 @@ test('horizontal: mapa, pausa, caderno, Itens, Compêndio, Opções e saves', as
   await foto(page, info, 'h-saves');
 });
 
-test('girar o celular no meio de uma cena, de uma batalha e de um mapa mantém o estado', async ({ page }, info) => {
+test('girar o celular no meio de uma cena, de uma batalha e de um mapa mantém o estado', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.skip(info.project.name !== 'pixel-7', 'gira o Pixel 7 (em pé ↔ deitado)');
   test.setTimeout(420_000);
   const girar = async () => {
@@ -441,7 +443,7 @@ test('girar o celular no meio de uma cena, de uma batalha e de um mapa mantém o
   expect(await page.evaluate(() => (window as any).__semRecarga)).toBe(marca);
 });
 
-test('girar no mapa: o Phaser redimensiona e a câmera mantém o herói no centro', async ({ page }, info) => {
+test('girar no mapa: o Phaser redimensiona e a câmera mantém o herói no centro', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.skip(info.project.name !== 'pixel-7', 'gira o Pixel 7');
   test.setTimeout(300_000);
   await semear(page, FULLMUN());
@@ -464,7 +466,7 @@ test('girar no mapa: o Phaser redimensiona e a câmera mantém o herói no centr
    6. Tela cheia e manifest
    ====================================================================== */
 
-test('tela cheia: botão no Android e no desktop, dica no iPhone; manifest válido', async ({ page }, info) => {
+test('tela cheia: botão no Android e no desktop, dica no iPhone; manifest válido', { tag: ['@layout', '@interface'] }, async ({ page }, info) => {
   test.setTimeout(180_000);
   await semear(page, {});
   await irAteMenu(page, './?test=1');

@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { irAteMenu } from './ajudantes';
+import { devagar, irAteMenu } from './ajudantes';
 
 /* Fase 5B: escala dos personagens, nitidez, itens de missão, balões, biblioteca, teclado e botão MENU. */
 
@@ -50,7 +50,7 @@ const sobrepoe = (a: { x: number; y: number; width: number; height: number }, b:
 const PORTAS: Record<string, number[]> = { fullmun: [95, 92, 97], 'templo-salao': [175], 'templo-biblioteca': [310] };
 
 for (const id of Object.keys(PORTAS)) {
-  test(`proporção (${id}): o herói tem entre 55% e 65% da altura da porta; personagens nítidos (nearest, escala inteira na tela)`, async ({ page }, info) => {
+  test(`proporção (${id}): o herói tem entre 55% e 65% da altura da porta; personagens nítidos (nearest, escala inteira na tela)`, { tag: ['@layout', '@cap01'] }, async ({ page }, info) => {
     test.setTimeout(240_000);
     await semear(page, id === 'fullmun' ? FULLMUN() : TEMPLO(id));
     await continuar(page);
@@ -74,7 +74,7 @@ for (const id of Object.keys(PORTAS)) {
   });
 }
 
-test('sonho: personagens nítidos (nearest, escala inteira na tela)', async ({ page }) => {
+test('sonho: personagens nítidos (nearest, escala inteira na tela)', { tag: ['@layout', '@cap01'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await page.addInitScript((h) => {
     if (sessionStorage.getItem('semeado')) return;
@@ -93,7 +93,7 @@ test('sonho: personagens nítidos (nearest, escala inteira na tela)', async ({ p
    2. Itens de missão
    ====================================================================== */
 
-test('itens de missão: ≥ 90% visíveis, ≥ 60% do herói, camisa sobre a padaria, lençol na frente da cerca; o HUD conta', async ({ page }, info) => {
+test('itens de missão: ≥ 90% visíveis, ≥ 60% do herói, camisa sobre a padaria, lençol na frente da cerca; o HUD conta', { tag: ['@layout', '@cap01'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, FULLMUN({ missoes: { hulda: 'aceita' } }));
   await continuar(page);
@@ -132,7 +132,7 @@ test('itens de missão: ≥ 90% visíveis, ≥ 60% do herói, camisa sobre a pad
    3. Balões de missão e indicadores de borda
    ====================================================================== */
 
-test('balões: ! … ? com 45% do herói (≥ 28 px na tela); indicadores de borda, no máximo 3', async ({ page }, info) => {
+test('balões: ! … ? com 45% do herói (≥ 28 px na tela); indicadores de borda, no máximo 3', { tag: ['@layout', '@cap01'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   // Hulda pronta para entregar (?), Osric em andamento (…), Kobanu e Tobias com missão (!).
   await semear(page, FULLMUN({ missoes: { hulda: 'aceita', osric: 'aceita' }, inventario: { lencol: 1, lenco: 1, camisa: 1 }, flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa', 'falou_hulda', 'falou_osric'] }));
@@ -169,7 +169,7 @@ test('balões: ! … ? com 45% do herói (≥ 28 px na tela); indicadores de bor
    4. Biblioteca: livros e alçapão
    ====================================================================== */
 
-test('biblioteca: livros com ~35% do herói, escuros depois de lidos; alçapão com "!" grande e anel só na hora certa', async ({ page }, info) => {
+test('biblioteca: livros com ~35% do herói, escuros depois de lidos; alçapão com "!" grande e anel só na hora certa', { tag: ['@cap01'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, TEMPLO('templo-biblioteca', { usadas: ['ef:livro-solem'] }));
   await continuar(page);
@@ -217,7 +217,8 @@ test.describe('teclado no PC', () => {
   test.beforeEach(({}, info) => test.skip(!umAparelho(info), 'teclado: um navegador de computador basta'));
   test.use({ viewport: { width: 1280, height: 800 }, hasTouch: false, isMobile: false, deviceScaleFactor: 1 });
 
-  test('Espaço/Enter completam e avançam; a página não rola; a dica "Espaço ▸" aparece', async ({ page }) => {
+  test('Espaço/Enter completam e avançam; a página não rola; a dica "Espaço ▸" aparece', { tag: ['@interface'] }, async ({ page }) => {
+    await devagar(page); // mede a animação
     test.setTimeout(180_000);
     await semear(page, { cena: 'c01-aylin', modo: 'falas', local: { tela: 'capitulo' } });
     await continuar(page);
@@ -240,7 +241,8 @@ test.describe('teclado no PC', () => {
     expect(await page.evaluate(() => (document.scrollingElement?.scrollTop ?? 0) + window.scrollY)).toBe(0);
   });
 
-  test('escolhas: Espaço não escolhe; setas + Enter escolhem; Espaço pula o dado', async ({ page }) => {
+  test('escolhas: Espaço não escolhe; setas + Enter escolhem; Espaço pula o dado', { tag: ['@interface'] }, async ({ page }) => {
+    await devagar(page); // mede a animação
     test.setTimeout(180_000);
     await semear(page, { cena: 'c01-grito', modo: 'escolhas', local: { tela: 'capitulo' } });
     await continuar(page);
@@ -264,7 +266,7 @@ test.describe('teclado no PC', () => {
     expect(await page.evaluate(() => (document.scrollingElement?.scrollTop ?? 0) + window.scrollY)).toBe(0);
   });
 
-  test('escolhas: os números 1 a 4 escolhem direto', async ({ page }) => {
+  test('escolhas: os números 1 a 4 escolhem direto', { tag: ['@interface'] }, async ({ page }) => {
     test.setTimeout(180_000);
     await semear(page, { cena: 'c01-aylin', modo: 'escolhas', local: { tela: 'capitulo' } });
     await continuar(page);
@@ -278,7 +280,7 @@ test.describe('teclado no PC', () => {
     expect(segunda).toContain(ultimo.escolha.slice(0, 12));
   });
 
-  test('mapa: Espaço abre a conversa, avança e fecha; fechar não reabre', async ({ page }) => {
+  test('mapa: Espaço abre a conversa, avança e fecha; fechar não reabre', { tag: ['@layout', '@interface'] }, async ({ page }) => {
     test.setTimeout(240_000);
     await semear(page, FULLMUN({ flags: ['evento_mirtilo', 'evento_mirtilo_fim', 'aylin_em_casa', 'falou_selene'] }));
     await continuar(page);
@@ -322,7 +324,7 @@ async function conferirMenu(page: Page, info: TestInfo, nome: string, evitar: st
   await foto(page, info, `menu-${nome}`);
 }
 
-test('botão MENU no mapa (sem cobrir o relógio), nas cenas e na batalha; o painel se chama "Menu"; Esc abre e fecha', async ({ page }, info) => {
+test('botão MENU no mapa (sem cobrir o relógio), nas cenas e na batalha; o painel se chama "Menu"; Esc abre e fecha', { tag: ['@interface'] }, async ({ page }, info) => {
   test.setTimeout(300_000);
   await semear(page, FULLMUN({ missoes: { hulda: 'aceita' } }));
   await continuar(page);

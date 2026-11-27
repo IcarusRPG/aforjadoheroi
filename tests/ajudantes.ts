@@ -1,5 +1,11 @@
 import { expect, type Locator, type Page, type TestInfo } from '@playwright/test';
 
+/** Desliga o modo turbo (src/core/turbo.ts) neste teste: texto digitado, dado girando e fades normais.
+ *  Para os testes que medem a própria animação. Chamar antes de abrir o jogo. */
+export async function devagar(page: Page): Promise<void> {
+  await page.addInitScript(() => { (window as { __fdgLento?: boolean }).__fdgLento = true; });
+}
+
 /** Do carregamento até o menu: toca em "começar" e pula a abertura assim que der. */
 export async function irAteMenu(page: Page, caminho = './'): Promise<void> {
   await page.goto(caminho);
