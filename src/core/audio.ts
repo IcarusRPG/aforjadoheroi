@@ -11,7 +11,12 @@ interface Canal {
   anim: number;
   /** Foi mandado tocar (e não terminou nem foi parado). Não depende de o navegador já ter começado. */
   ligado: boolean;
+  /** Volume próprio da faixa (0 a 1), por cima das Opções (ex.: a tragédia a 35% sob o fogo do alçapão). */
+  ganho: number;
 }
+
+/** Opções de uma faixa: começar no segundo `inicio` e tocar com volume relativo `ganho`. */
+export interface OpcoesFaixa { inicio?: number; ganho?: number }
 
 /** Estado da música, para os testes e para o Diário. */
 export interface EstadoMusica {
@@ -21,6 +26,11 @@ export interface EstadoMusica {
   loop: boolean;
   /** Faixas que já começaram a tocar, em ordem (para conferir a alternância da playlist). */
   historico: string[];
+  /** Volume próprio da faixa e o volume efetivo agora (com o fade). */
+  ganho: number;
+  volume: number;
+  /** Segundo atual da faixa. */
+  tempo: number;
 }
 
 /**
@@ -44,7 +54,7 @@ class GerenciadorAudio {
   private ctx: AudioContext | null = null;
   private ganhoSfx: GainNode | null = null;
   private buffers = new Map<NomeSfx, AudioBuffer>();
-  private canais: Canal[] = [0, 1].map(() => ({ el: new Audio(), faixa: null, fator: 0, anim: 0, ligado: false }));
+  private canais: Canal[] = [0, 1].map(() => ({ el: new Audio(), faixa: null, fator: 0, anim: 0, ligado: false, ganho: 1 }));
   private ativo = 0;
   private querTocando = false;
   private playlist: string[] | null = null;
@@ -271,7 +281,7 @@ class GerenciadorAudio {
    * Troca de faixa com crossfade: a atual some em `fadeMs` enquanto a nova entra no outro canal.
    * Sem faixa tocando, é só um fade-in.
    */
-  private trocarPara(caminho: string, fadeMs: number, loop: boolean): void {
+  private trocarPara(caminho: string, fadeMs: number, loop: boolean, o: OpcoesFaixa = {}): void {
     this.querTocando = true;
     const velho = this.canal;
     const tinhaSom = !velho.el.paused && velho.fator > 0.01;
@@ -288,9 +298,12 @@ class GerenciadorAudio {
     if (novo.faixa !== caminho) {
       novo.el.src = src(caminho);
       novo.faixa = caminho;
-    } else {
-      novo.el.currentTime = 0;
     }
+    const inicio = o.inicio ?? 0;
+    // Sem os metadados, o navegador ainda não aceita o currentTime: espera por eles.
+    if (novo.el.readyState >= 1) novo.el.currentTime = inicio;
+    else novo.el.addEventListener('loadedmetadata', () => { novo.el.currentTime = inicio; }, { once: true });
+    novo.ganho = o.ganho ?? 1;
     novo.el.loop = loop;
     novo.fator = 0;
     novo.ligado = true;
@@ -302,16 +315,17 @@ class GerenciadorAudio {
   }
 
   /** Toca a faixa em loop com fade (crossfade se outra estiver tocando). Se ela já estiver tocando, não reinicia. */
-  tocarMusica(caminho: string, fadeMs = 2000): void {
+  tocarMusica(caminho: string, fadeMs = 2000, o: OpcoesFaixa = {}): void {
     this.playlist = null;
     this.aoTerminarVinheta = null;
     if (this.tocandoAgora(caminho)) {
       this.querTocando = true;
       this.canal.el.loop = true;
+      if (o.ganho !== undefined) this.canal.ganho = o.ganho;
       this.fade(this.canal, 1, fadeMs);
       return;
     }
-    this.trocarPara(caminho, fadeMs, true);
+    this.trocarPara(caminho, fadeMs, true, o);
   }
 
   /**
@@ -368,6 +382,9 @@ class GerenciadorAudio {
       tocando: this.querTocando && !c.el.paused,
       loop: c.el.loop,
       historico: [...this.historico],
+      ganho: c.ganho,
+      volume: Math.round(c.el.volume * 1000) / 1000,
+      tempo: Math.round(c.el.currentTime * 10) / 10,
     };
   }
 
@@ -405,7 +422,7 @@ class GerenciadorAudio {
     const { config } = getEstado();
     for (const c of this.canais) {
       c.el.muted = config.mudo;
-      c.el.volume = Math.max(0, Math.min(1, config.musica * c.fator * this.fatorAbafar * this.fatorExtra));
+      c.el.volume = Math.max(0, Math.min(1, config.musica * c.fator * c.ganho * this.fatorAbafar * this.fatorExtra));
     }
     if (this.ganhoSfx) this.ganhoSfx.gain.value = config.mudo ? 0 : config.efeitos;
     this.ambiente?.atualizarVolume();

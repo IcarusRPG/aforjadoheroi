@@ -1,6 +1,7 @@
 // Bustos do herói com expressões (Fase 6) e a folha de conferência da orientação dos bustos.
 //
 //   node scripts/prepare-retratos.mjs                  (usa C:\Users\...\Documents\FdG)
+//   node scripts/prepare-retratos.mjs --so-folha       (só a folha de conferência)
 //
 // - Copia (não move) os bustos de FdG\img\herois\portraits nos 5 estados (normal, choque, dor, raiva,
 //   determinado) para public/assets/img/retratos/heroi-<raca>-<m|f>[-<expressao>].webp e imprime a
@@ -45,7 +46,7 @@ async function expressoes() {
   console.log(faltam.length ? `\nFaltam: ${faltam.join(', ')}` : '\nNada falta: 8 × 5 = 40 bustos.');
 }
 
-/** Folha de conferência: cada busto com a seta da orientação gravada (← olha para a esquerda; → direita). */
+/** Folha de conferência: cada busto como aparece no jogo (já espelhado), com a seta para onde ele olha. */
 async function folha() {
   const dados = JSON.parse(await readFile(path.join('src', 'data', 'retratos.json'), 'utf8'));
   const itens = Object.entries(dados.bustos);
@@ -55,10 +56,17 @@ async function folha() {
   for (const [i, [id, info]] of itens.entries()) {
     const arq = path.join('public', 'assets', info.arquivo);
     if (!existsSync(arq)) continue;
-    const img = await sharp(arq).resize(L - 10, A - 50, { fit: 'contain', background: { r: 30, g: 26, b: 22, alpha: 1 } }).flatten({ background: '#1e1a16' }).png().toBuffer();
+    // Como aparece no jogo: o NPC (à esquerda) olha para a direita e o herói (à direita) para a esquerda;
+    // o busto virado para o lado errado é espelhado. A seta mostra a direção DEPOIS do espelhamento.
+    const lado = id.startsWith('heroi-') ? dados.lados.heroi : id.startsWith('npc-') ? dados.lados.npc : null;
+    const espelha = !!lado && info.olhaPara !== 'frente' && info.olhaPara !== lado;
+    const final = espelha ? lado : info.olhaPara;
+    let base = sharp(arq).resize(L - 10, A - 50, { fit: 'contain', background: { r: 30, g: 26, b: 22, alpha: 1 } }).flatten({ background: '#1e1a16' });
+    if (espelha) base = base.flop();
+    const img = await base.png().toBuffer();
     const x = (i % COLS) * L, y = Math.floor(i / COLS) * A;
-    const seta = info.olhaPara === 'esquerda' ? '← esquerda' : info.olhaPara === 'direita' ? '→ direita' : '• de frente';
-    const svg = Buffer.from(`<svg width="${L}" height="44" xmlns="http://www.w3.org/2000/svg"><rect width="${L}" height="44" fill="#120f0c"/><text x="6" y="17" font-family="sans-serif" font-size="13" fill="#f2d48a">${id}</text><text x="6" y="36" font-family="sans-serif" font-size="14" font-weight="bold" fill="${info.olhaPara === 'esquerda' ? '#7fd1ff' : info.olhaPara === 'direita' ? '#ffb27f' : '#cfcfcf'}">${seta}${info.espelhar ? ' (espelhado)' : ''}</text></svg>`);
+    const seta = final === 'esquerda' ? '← esquerda' : final === 'direita' ? '→ direita' : '• de frente';
+    const svg = Buffer.from(`<svg width="${L}" height="44" xmlns="http://www.w3.org/2000/svg"><rect width="${L}" height="44" fill="#120f0c"/><text x="6" y="17" font-family="sans-serif" font-size="13" fill="#f2d48a">${id}</text><text x="6" y="36" font-family="sans-serif" font-size="14" font-weight="bold" fill="${final === 'esquerda' ? '#7fd1ff' : final === 'direita' ? '#ffb27f' : '#cfcfcf'}">${seta}${espelha ? ' (espelhado)' : ''}</text></svg>`);
     comps.push({ input: img, left: x + 5, top: y + 4 }, { input: svg, left: x, top: y + A - 46 });
   }
   await mkdir(path.join('tests', 'screenshots'), { recursive: true });
@@ -67,6 +75,5 @@ async function folha() {
   console.log(`\nFolha de conferência: ${dest} (${itens.length} bustos)`);
 }
 
-console.log('Expressões dos bustos do herói…');
-await expressoes();
+if (!process.argv.includes('--so-folha')) { console.log('Expressões dos bustos do herói…'); await expressoes(); }
 if (process.argv.includes('--folha') || existsSync(path.join('src', 'data', 'retratos.json'))) await folha();

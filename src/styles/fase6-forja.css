@@ -126,4 +126,4 @@
 }
 
 /* Fase 6: bustos frente a frente (retratos.json). O espelho usa a propriedade scale, que soma com as animações de entrada. */
-.cena-busto.espelhado, .cena-busto-troca.espelhado, .cena-busto-heroi.espelhado { scale: -1 1; }
+.cena-busto.espelhado, .cena-busto-troca.espelhado, .cena-busto-heroi.espelhado, .lateral-busto.espelhado { scale: -1 1; }

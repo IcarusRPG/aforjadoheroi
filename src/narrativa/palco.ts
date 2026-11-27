@@ -35,6 +35,9 @@ export function tocarMusicaDaCena(musica: string | null | undefined, fadeMs = 15
   if (musica === undefined) return;
   if (musica === null) return audio.pararMusica(fadeMs);
   if (musica === 'fullmun') return audio.tocarPlaylist(PLAYLIST_FULLMUN.map(ASSETS.musica), fadeMs);
+  // "faixa@segundo*ganho" (Fase 6B): começa no segundo e toca com volume próprio, ex. "tragedia@34*0.35".
+  const m = musica.match(/^([\w-]+)@(\d+(?:\.\d+)?)(?:\*(\d+(?:\.\d+)?))?$/);
+  if (m) return audio.tocarMusica(ASSETS.musica(m[1]), fadeMs, { inicio: Number(m[2]), ganho: m[3] ? Number(m[3]) : 1 });
   if (musica.endsWith('?')) {
     const id = musica.slice(0, -1);
     void existeAsset(ASSETS.musica(id), 'audio').then((ok) => { if (ok) audio.tocarMusica(ASSETS.musica(id), fadeMs); else audio.pararMusica(0); });
@@ -100,6 +103,11 @@ export interface Palco {
 
 /** Orientação dos bustos (src/data/retratos.json): o busto está virado para o lado errado da conversa? */
 const BUSTOS = (RETRATOS as unknown as { lados: Record<'npc' | 'heroi', string>; bustos: Record<string, { arquivo: string; olhaPara: string }> });
+/** A versão própria (<id>-esq / <id>-dir) está declarada em retratos.json? */
+function temVersaoPropria(caminho: string): boolean {
+  return !!BUSTOS.bustos[caminho.split('/').pop()!.replace(/\.webp$/, '')];
+}
+
 export function precisaEspelhar(caminho: string, lado: 'npc' | 'heroi'): boolean {
   const id = caminho.split('/').pop()!.replace(/\.webp$/, '');
   const o = BUSTOS.bustos[id]?.olhaPara;
@@ -215,11 +223,12 @@ export function criarPalco(o: OpcoesPalco): Palco {
     return (await existeAssetCache(comExpressao, 'image')) ? comExpressao : normal;
   }
 
-  /** Versão própria virada para o lado certo (<id>-dir / <id>-esq), quando existir, no lugar do espelho. */
+  /** Versão própria virada para o lado certo (<id>-dir / <id>-esq), no lugar do espelho, só quando está
+   *  declarada em retratos.json: sem consulta à rede (nada pode ser baixado no meio de uma sequência). */
   async function versaoDoLado(caminho: string, lado: 'npc' | 'heroi'): Promise<string> {
     if (!precisaEspelhar(caminho, lado)) return caminho;
     const propria = caminho.replace(/\.webp$/, lado === 'npc' ? '-dir.webp' : '-esq.webp');
-    return (await existeAssetCache(propria, 'image')) ? propria : caminho;
+    return temVersaoPropria(propria) ? propria : caminho;
   }
 
   /** Troca o busto do NPC; na troca de expressão do mesmo NPC, crossfade de 150 ms (sem piscar). */
